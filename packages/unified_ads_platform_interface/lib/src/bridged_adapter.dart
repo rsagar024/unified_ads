@@ -177,7 +177,7 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
   void logMetaBidding(String? adapterClass) {
     if (adapterClass == null) {
       AdsLogger.current.debug(
-        'Meta bidding adapter not present (opt-in; see docs/setup)',
+        'Meta bidding adapter not present (opt-in; see doc/setup)',
         network: network,
       );
     } else {

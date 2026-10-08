@@ -72,7 +72,7 @@ example app tests every network from one screen (verified on device). Phase 6 de
 | A6  | Declarative config               | `ads_config.json` asset + runtime loader (no build_runner required); `pubspec.yaml` section is optional via a small CLI generator | Simpler for consumers, and it works with hot restart.                                                                                                                                                                                                                                                                                                  |
 | A7  | Consent                          | Abstract `ConsentProvider` with a Google UMP implementation in `unified_ads_admob`                                                | Lets other CMPs plug in. Core does not depend on UMP.                                                                                                                                                                                                                                                                                                  |
 | A8  | SDK versions                     | ✅ **Pinned exactly as in `SDK_STATUS.md` §1** (no `+` ranges)                                                                     | Verified 2026-10-07. Re-verify before each adapter release.                                                                                                                                                                                                                                                                                            |
-| A9  | AdMob Android SDK                | ✅ **GMA Next-Gen `ads-mobile-sdk` 1.5.0** (Phase 7, owner: "switch fully", 2026-10-08; was legacy 25.5.0)                         | Google has put it in maintenance mode in favour of GMA Next-Gen (`ads-mobile-sdk` 1.5.0). Migrated in Phase 7 (`docs/migration/1.0.0-admob-next-gen.md`).                                                                                                                                                                                                       |
+| A9  | AdMob Android SDK                | ✅ **GMA Next-Gen `ads-mobile-sdk` 1.5.0** (Phase 7, owner: "switch fully", 2026-10-08; was legacy 25.5.0)                         | Google has put it in maintenance mode in favour of GMA Next-Gen (`ads-mobile-sdk` 1.5.0). Migrated in Phase 7 (`doc/migration/1.0.0-admob-next-gen.md`).                                                                                                                                                                                                       |
 | A10 | Facebook Audience Network (Meta) | ✅ **Full direct adapter** (owner reversal, 2026-10-07; first decided as a documented stub the same day)                           | Bidding-only since 2021: direct loads serve test ads but aren't expected to fill in production; documented prominently. Revenue via mediation bidding: **opt-in Meta bidding glue in the AdMob, MAX and LevelPlay adapters (Phase 7)**.                                                                                                                                                                            |
 | A11 | Unity Ads + LevelPlay together   | ✅ **Runtime-exclusive**                                                                                                           | Unity doesn't support direct and mediated Unity Ads in one process. Core reports `configConflict` and skips `unity` when both are enabled.                                                                                                                                                                                                             |
 
@@ -86,7 +86,7 @@ unified_ads/                      (repo root = pub workspace root)
 ├─ analysis_options.yaml          (strict, shared; packages inherit it)
 ├─ CLAUDE.md  IMPLEMENTATION.md  ARCHITECTURE.md  SDK_STATUS.md
 ├─ README.md  CHANGELOG.md  LICENSE  CONTRIBUTING.md
-├─ docs/
+├─ doc/
 │  ├─ setup/<network>.md          (manifest, Info.plist, SKAdNetwork, R8 notes)
 │  ├─ consent_and_att.md
 │  ├─ single_package_mode.md
@@ -184,7 +184,7 @@ packages.
 **Goal:** Lock down the design and verified SDK facts **before any code**. See the detailed
 checklist in §6.
 
-Files: `ARCHITECTURE.md`, `SDK_STATUS.md`, `docs/single_package_mode.md` (draft).
+Files: `ARCHITECTURE.md`, `SDK_STATUS.md`, `doc/single_package_mode.md` (draft).
 Exit: You have reviewed both docs, and every network has a decision: **full adapter**, **partial
 adapter** (some formats stubbed), or **documented stub**.
 
@@ -309,7 +309,7 @@ Tasks:
   lookup, safe-area handling. The SDK dependency is declared **only** in this package's podspec /
   `Package.swift`.
 - UMP consent implementation of `ConsentProvider`; the ATT helper lives in core iOS.
-- `docs/setup/admob.md`: manifest meta-data, Info.plist `GADApplicationIdentifier`, SKAdNetwork IDs,
+- `doc/setup/admob.md`: manifest meta-data, Info.plist `GADApplicationIdentifier`, SKAdNetwork IDs,
   `NSUserTrackingUsageDescription`.
 - `TEMPLATE.md` in the package: a checklist for creating the next adapter.
 
@@ -336,7 +336,7 @@ emulator and iOS simulator. The APK contains no other network's classes.
       string.
     - Minimal demo screen (ATT → UMP → init; banner, interstitial and rewarded buttons; event log).
     - Device integration test.
-- **Docs:** `docs/setup/admob.md`. SDK_STATUS §2.1 gained the implementation check (verified and ⚠
+- **Docs:** `doc/setup/admob.md`. SDK_STATUS §2.1 gained the implementation check (verified and ⚠
   names), and
   ARCHITECTURE §5.1 the Pigeon notes.
 
@@ -416,11 +416,11 @@ adapter's doc lists the guessed or verified API names.
     - Swift: plugin, banner, ordered event queue;
     - a podspec (exact pin), plus `Package.swift` for MAX and LevelPlay (the vendors with official
       SPM packages);
-    - consumer R8 rules, a privacy manifest, README / CHANGELOG, and `docs/setup/<network>.md`.
+    - consumer R8 rules, a privacy manifest, README / CHANGELOG, and `doc/setup/<network>.md`.
 - **`unified_ads_facebook`** (renamed from `unified_ads_meta`, see below): first a Dart-only
   documented stub; **upgraded to a full adapter the same day** (see "Facebook adapter upgrade"
   below). As a stub it linked no Audience Network SDK,
-  and `docs/setup/facebook.md` explains the bidding-only status and the mediation route.
+  and `doc/setup/facebook.md` explains the bidding-only status and the mediation route.
 - **Network specifics implemented:**
     - MAX: rewarded ad singleton per unit, revenue callback = impression, privacy before init,
       refuses COPPA.
@@ -480,7 +480,7 @@ correctly), so the interstitial step used its existing full-screen placement `re
 ² With an invalid SDK key MAX still reports init success, then never calls the load callbacks. The
 core's load and banner
 timeouts turned this into `AdErrorCode.timeout` with no crash or hang. This is documented in
-`docs/setup/applovin.md`.
+`doc/setup/applovin.md`.
 
 What the results mean:
 
@@ -503,7 +503,7 @@ Audience Network**: `AdNetwork.meta` → `AdNetwork.facebook`, `unified_ads_meta
 `unified_ads_facebook`, `MetaAdapter` →
 `FacebookAdapter`, JSON `"meta"` → `"facebook"` (`"meta"` is no longer accepted). It is still a
 documented stub. Migration note:
-`docs/migration/1.0.0-meta-to-facebook.md`. All analysis and tests are green after the rename.
+`doc/migration/1.0.0-meta-to-facebook.md`. All analysis and tests are green after the rename.
 
 **Facebook adapter upgrade (2026-10-07, owner instruction: "analyze facebook_audience_network and
 write this code under
@@ -558,7 +558,7 @@ unified_ads_facebook"; reverses A10's stub):**
 ** (was 0.0.1): pubspecs,
 inter-package constraints (`^1.0.0`), podspecs, CHANGELOG headings and install snippets. The
 migration note was renamed to
-`docs/migration/1.0.0-meta-to-facebook.md`. Nothing had been published, so no migration is needed.
+`doc/migration/1.0.0-meta-to-facebook.md`. Nothing had been published, so no migration is needed.
 
 **Pending**
 
@@ -616,7 +616,7 @@ screen")
   steps, with `HH:mm:ss.SSS`
   timestamps. Filter by network or errors only, clear, and a tab badge.
 - **`lib/src/test_credentials.dart`:** public test IDs only, already documented in
-  `docs/getting_ids.md`. MAX and LevelPlay are
+  `doc/getting_ids.md`. MAX and LevelPlay are
   disabled by default: MAX has no public key, and LevelPlay conflicts with Unity (A11).
 - **Other changes:**
     - `shared_preferences: ^2.5.5` added to the example;
@@ -666,7 +666,7 @@ screen")
   ** that builds the example with a network subset and checks that `./gradlew :app:dependencies` and
   `Podfile.lock` contain no excluded SDKs.
 - README with a feature matrix (network × format × platform), CHANGELOG per package, CONTRIBUTING,
-  and `docs/single_package_mode.md` (final).
+  and `doc/single_package_mode.md` (final).
 - Run `pana` per package. Fix scoring issues and confirm dartdoc coverage is 100%.
 
 Exit: CI is green, and pana reports the max achievable score per package.
@@ -719,8 +719,8 @@ Owner decisions:
     loader's key sets come from the same constants.
   - CI fixture: `test/fixtures/pubspec_fixture.yaml` → `ads_config.json`.
 - **Docs:**
-  - new `docs/consent_and_att.md` (provider abstraction, UMP, custom CMP, per-network mapping, ATT);
-  - `docs/single_package_mode.md` is now the final design (not shipped; constraints, trade-offs, switching
+  - new `doc/consent_and_att.md` (provider abstraction, UMP, custom CMP, per-network mapping, ATT);
+  - `doc/single_package_mode.md` is now the final design (not shipped; constraints, trade-offs, switching
     modes);
   - README: badges, a feature matrix with package min OS and test-mode columns, the declarative config, the CI
     overview;
@@ -747,7 +747,7 @@ Owner decisions:
 **Not verified (needs the first CI run, after the owner pushes)**
 
 - The workflow itself, in particular the `ios` matrix (the first-ever Swift compile of all adapters) and
-  `verify_opt_in.sh ios`. Expect the ⚠ Swift names in `docs/setup/*.md` to surface here.
+  `verify_opt_in.sh ios`. Expect the ⚠ Swift names in `doc/setup/*.md` to surface here.
 - ⚠ The `macos-26` runner label and Xcode 26.2+ availability on GitHub-hosted runners.
 - **pana scores.** pana cannot run on Windows (its sandbox rejects any path containing `:`), and `dart doc` crashes
   in this Windows SDK install (dartdoc 9.0.4 `RangeError` in an SDK file). Documentation coverage is enforced by
@@ -799,7 +799,7 @@ detect it at runtime.
   - Requests are `AdRequest.Builder(adUnitId)`. Banners use `AdView.loadAd(BannerAdRequest…)`.
   - **Every callback is posted to the main thread**, because Next-Gen calls back on background threads. Errors map by
     enum (`nativeCode` is the enum name; `TIMEOUT` → `timeout`).
-  - Migration note: `docs/migration/1.0.0-admob-next-gen.md`, including the `play-services-ads` exclusion and the
+  - Migration note: `doc/migration/1.0.0-admob-next-gen.md`, including the `play-services-ads` exclusion and the
     incompatibility with the `google_mobile_ads` plugin.
 - **Meta bidding (opt-in):** new `MetaBidding.kt` / `MetaBidding.swift` in the admob, applovin and ironsource packages.
   - It works by reflection or the ObjC runtime only, so there is no dependency.
@@ -815,7 +815,7 @@ detect it at runtime.
   - `verify_opt_in.sh` now checks for Next-Gen and that the legacy GMA is **absent**.
   - New `META_BIDDING=admob|applovin|ironsource` mode, added to the CI opt-in matrix (Android × 3, plus iOS AdMob).
 - **Docs:**
-  - `docs/setup/{admob,applovin,ironsource,facebook}.md`, SDK_STATUS (§1 table, §1.1, §2.1);
+  - `doc/setup/{admob,applovin,ironsource,facebook}.md`, SDK_STATUS (§1 table, §1.1, §2.1);
   - README matrix (RI, App Open and Meta bidding columns);
   - CHANGELOGs and package READMEs.
 

@@ -1,8 +1,8 @@
 name: unified_ads_platform_interface
 description: "Common platform interface for unified_ads: the AdNetworkAdapter contract, shared ad models, and the adapter registry."
 version: 1.0.0
-homepage: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_platform_interface
-repository: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_platform_interface
+homepage: https://github.com/rsagar024/unified_ads/tree/master/packages/unified_ads_platform_interface
+repository: https://github.com/rsagar024/unified_ads/tree/master/packages/unified_ads_platform_interface
 issue_tracker: https://github.com/rsagar024/unified_ads/issues
 topics:
   - ads

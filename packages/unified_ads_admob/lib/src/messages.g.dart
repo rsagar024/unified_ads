@@ -196,7 +196,7 @@ class InitInfo {
   InitInfo({this.metaBiddingAdapter});
 
   /// Class name of the Meta (Facebook) bidding adapter the app added to its
-  /// build, or null when none is present (see docs/setup).
+  /// build, or null when none is present (see doc/setup).
   String? metaBiddingAdapter;
 
   List<Object?> _toList() {

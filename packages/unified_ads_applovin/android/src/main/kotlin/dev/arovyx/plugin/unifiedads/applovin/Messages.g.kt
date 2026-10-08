@@ -292,7 +292,7 @@ data class InitRequest (
 data class InitInfo (
   /**
    * Class name of the Meta (Facebook) bidding adapter the app added to its
-   * build, or null when none is present (see docs/setup).
+   * build, or null when none is present (see doc/setup).
    */
   val metaBiddingAdapter: String? = null
 )

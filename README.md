@@ -31,7 +31,7 @@ if ((await ad.load()).isSuccess) await ad.show();   // tries AdMob → Unity →
 - **Waterfall fallback** with per-network timeouts, **preloading**, **frequency capping**, one `AdError` model, and unified events.
 - **Never crashes the host app:** every native failure becomes an `AdError`.
 - **Consent and ATT:** a Google UMP provider, a pluggable `ConsentProvider`, and an App Tracking Transparency helper
-  ([docs/consent_and_att.md](docs/consent_and_att.md)).
+  ([doc/consent_and_att.md](doc/consent_and_att.md)).
 - **Config in code or in `pubspec.yaml`:** `AdConfig`, or a declarative `unified_ads:` section turned into
   `ads_config.json` by `dart run unified_ads:generate_config`.
 
@@ -61,7 +61,7 @@ if ((await ad.load()).isSuccess) await ad.show();   // tries AdMob → Unity →
 | Start.io | ✅ | ✅ | ✅ | — | — | — | ✅ | ⏳ CI | 24 / 13 | flag | ✅ test ads serve |
 | Facebook Audience Network ¹ | ✅ | ✅ | ✅ | — | — | n/a | ✅ | ⏳ CI | 24 / **15** | test devices | ✅ banner + interstitial test ads; rewarded needs your placement |
 
-¹ Bidding-only: a direct load serves test ads but is not expected to fill in production; see [setup](docs/setup/facebook.md).
+¹ Bidding-only: a direct load serves test ads but is not expected to fill in production; see [setup](doc/setup/facebook.md).
 ² `testMode` cannot force test ads for this network; init logs a warning. Use the vendor's dashboard or test suite.
 ³ Meta (Facebook) demand through the mediation platform's bidding. You opt in by adding the vendor's Meta adapter to your
 app; the package detects it and forwards privacy. No Meta SDK is linked otherwise. See the network's setup doc.
@@ -75,7 +75,7 @@ Column legend:
 
 `RewardedInterstitialAd` and `AppOpenAd` use the same waterfall, cache, frequency caps and callbacks as the other formats.
 AdMob Android uses the **GMA Next-Gen SDK**, which can't share an app with the legacy `play-services-ads` (for example the
-official `google_mobile_ads` plugin); see [the migration note](docs/migration/1.0.0-admob-next-gen.md). Versions and caveats
+official `google_mobile_ads` plugin); see [the migration note](doc/migration/1.0.0-admob-next-gen.md). Versions and caveats
 are in [SDK_STATUS.md](SDK_STATUS.md).
 
 ## Getting your ad IDs
@@ -92,7 +92,7 @@ Every network needs an **app-level credential**, and most also need **one ID per
 | Start.io | App ID | none (optional ad tags) | portal.start.io → Add New App |
 | Facebook Audience Network | none | Placement IDs (one per format; `IMG_16_9_APP_INSTALL#` prefix for test ads) | Monetization Manager → Properties → Placements |
 
-**➡ Step-by-step instructions for every dashboard, plus public test credentials: [docs/getting_ids.md](docs/getting_ids.md)**
+**➡ Step-by-step instructions for every dashboard, plus public test credentials: [doc/getting_ids.md](doc/getting_ids.md)**
 
 ## Quick start
 
@@ -104,9 +104,9 @@ Every network needs an **app-level credential**, and most also need **one ID per
      unified_ads_unity: ^1.0.0
    ```
 2. Follow each network's setup doc (manifest / Info.plist entries, SKAdNetwork IDs, privacy):
-   [AdMob](docs/setup/admob.md) · [AppLovin MAX](docs/setup/applovin.md) · [Unity Ads](docs/setup/unity.md) ·
-   [LevelPlay](docs/setup/ironsource.md) · [InMobi](docs/setup/inmobi.md) · [Start.io](docs/setup/startapp.md) ·
-   [Facebook Audience Network](docs/setup/facebook.md)
+   [AdMob](doc/setup/admob.md) · [AppLovin MAX](doc/setup/applovin.md) · [Unity Ads](doc/setup/unity.md) ·
+   [LevelPlay](doc/setup/ironsource.md) · [InMobi](doc/setup/inmobi.md) · [Start.io](doc/setup/startapp.md) ·
+   [Facebook Audience Network](doc/setup/facebook.md)
 3. At startup: **ATT → consent → init**:
    ```dart
    await UnifiedAds.requestTrackingAuthorization();              // iOS prompt; no-op on Android
@@ -151,13 +151,13 @@ immediately; InMobi initializes but returns no-fill; AppLovin MAX and LevelPlay 
 
 ## Documentation
 
-- [docs/getting_ids.md](docs/getting_ids.md): how to create the account, app and every ID for each network
-- [docs/setup/](docs/setup): per-network platform setup
-- [docs/consent_and_att.md](docs/consent_and_att.md): GDPR/US privacy/COPPA consent, other CMPs, and ATT
+- [doc/getting_ids.md](doc/getting_ids.md): how to create the account, app and every ID for each network
+- [doc/setup/](doc/setup): per-network platform setup
+- [doc/consent_and_att.md](doc/consent_and_att.md): GDPR/US privacy/COPPA consent, other CMPs, and ATT
 - [ARCHITECTURE.md](ARCHITECTURE.md): design, the adapter contract, and how opt-in linking works
 - [SDK_STATUS.md](SDK_STATUS.md): verified SDK versions, deprecations, API names
-- [docs/single_package_mode.md](docs/single_package_mode.md): the alternative build-flag mode (design and trade-offs)
-- [docs/migration/](docs/migration): migration notes for public API changes
+- [doc/single_package_mode.md](doc/single_package_mode.md): the alternative build-flag mode (design and trade-offs)
+- [doc/migration/](doc/migration): migration notes for public API changes
 - [IMPLEMENTATION.md](IMPLEMENTATION.md): roadmap and progress
 - [CONTRIBUTING.md](CONTRIBUTING.md): development setup and rules
 

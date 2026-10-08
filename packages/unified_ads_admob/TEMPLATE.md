@@ -48,6 +48,6 @@
 - [ ] `test/fake_host.dart` + adapter tests: registration, init, load, show, destroy, error mapping, event translation via
       `handlePlatformMessage`, banner params, and unsupported formats.
 - [ ] `test/integration_with_core_test.dart`: drive the adapter through `UnifiedAds`.
-- [ ] `docs/setup/<network>.md`: manifest / Info.plist, SKAdNetwork source, test mode, privacy, R8, frameworks, and the error table.
+- [ ] `doc/setup/<network>.md`: manifest / Info.plist, SKAdNetwork source, test mode, privacy, R8, frameworks, and the error table.
 - [ ] Add the adapter to `example/` and verify **on a device**. Check that `./gradlew :app:dependencies` and `Podfile.lock`
       contain only the opted-in SDKs.

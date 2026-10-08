@@ -6,7 +6,7 @@ import 'messages.g.dart';
 /// unified_ads adapter for Start.io.
 ///
 /// Registered automatically when `unified_ads_startapp` is a dependency of the
-/// app; only the Start.io SDK is linked. Setup: docs/setup/startapp.md.
+/// app; only the Start.io SDK is linked. Setup: doc/setup/startapp.md.
 ///
 /// `NetworkConfig.appId` is the Start.io App ID; a per-format ad-unit ID, if set, is sent as the Start.io ad tag.
 /// Start.io rewards carry no amount: `extras["rewardAmount"]` / `extras["rewardType"]` set the reported RewardItem (default 1 "reward").

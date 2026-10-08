@@ -13,8 +13,8 @@ The common platform interface for [`unified_ads`](https://pub.dev/packages/unifi
 It is meant for **adapter authors**. Most adapters extend `BridgedAdNetworkAdapter`, which implements the contract once:
 it never throws, maps `PlatformException` → `AdError`, tracks loaded ads, and translates native events. A new adapter then
 only provides its Pigeon host API. The step-by-step checklist is
-[`TEMPLATE.md`](https://github.com/rsagar024/unified_ads/blob/main/packages/unified_ads_admob/TEMPLATE.md), and the
-contract is described in [`ARCHITECTURE.md`](https://github.com/rsagar024/unified_ads/blob/main/ARCHITECTURE.md) §5.
+[`TEMPLATE.md`](https://github.com/rsagar024/unified_ads/blob/master/packages/unified_ads_admob/TEMPLATE.md), and the
+contract is described in [`ARCHITECTURE.md`](https://github.com/rsagar024/unified_ads/blob/master/ARCHITECTURE.md) §5.
 
 ```dart
 class MyNetworkAdapter extends BridgedAdNetworkAdapter {

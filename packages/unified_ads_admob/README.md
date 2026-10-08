@@ -17,7 +17,7 @@ await UnifiedAds.init(AdConfig(networks: {
 }));
 ```
 
-The App ID must also be in `AndroidManifest.xml` and `Info.plist`. Full setup: [`docs/setup/admob.md`](https://github.com/rsagar024/unified_ads/blob/main/docs/setup/admob.md).
+The App ID must also be in `AndroidManifest.xml` and `Info.plist`. Full setup: [`doc/setup/admob.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/admob.md).
 
 | | Android | iOS |
 |---|---|---|
@@ -29,6 +29,6 @@ Status: Android verified on a physical device (banner rendered, interstitial loa
 New adapters copy this package: see [`TEMPLATE.md`](TEMPLATE.md).
 
 Android uses the **GMA Next-Gen SDK**, so it can't share an app with the legacy `play-services-ads` (for example, the
-official `google_mobile_ads` plugin). See the [migration note](https://github.com/rsagar024/unified_ads/blob/main/docs/migration/1.0.0-admob-next-gen.md).
+official `google_mobile_ads` plugin). See the [migration note](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.0.0-admob-next-gen.md).
 **Meta (Facebook) bidding** is opt-in: add Google's Meta adapter to your app and this adapter detects it
-([setup](https://github.com/rsagar024/unified_ads/blob/main/docs/setup/admob.md#7-meta-facebook-bidding-opt-in)).
+([setup](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/admob.md#7-meta-facebook-bidding-opt-in)).

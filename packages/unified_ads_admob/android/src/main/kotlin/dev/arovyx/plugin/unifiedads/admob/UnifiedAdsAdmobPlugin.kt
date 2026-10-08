@@ -105,7 +105,7 @@ class UnifiedAdsAdmobPlugin : FlutterPlugin, ActivityAware, AdmobHostApi, AdEven
             throw Errors.of(
                 "invalidConfig",
                 "Missing <meta-data android:name=\"$APP_ID_KEY\"> in AndroidManifest.xml " +
-                    "(see docs/setup/admob.md)",
+                    "(see doc/setup/admob.md)",
             )
         }
         // GMA Next-Gen takes the App ID in code; UMP still reads the manifest

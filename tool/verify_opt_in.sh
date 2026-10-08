@@ -6,7 +6,7 @@
 #   NETWORKS=admob,unity,inmobi   adapters the scratch app depends on (default)
 #   META_BIDDING=admob|applovin|ironsource
 #                                 also add that mediation platform's Meta bidding
-#                                 adapter the way docs/setup/<network>.md says; the
+#                                 adapter the way doc/setup/<network>.md says; the
 #                                 Audience Network SDK must then be present
 #   OPT_IN_WORKDIR=<dir>          where to create the scratch app (default: temp)
 #   OPT_IN_LEAK=<network>         self-test: also depend on this adapter without
@@ -59,7 +59,7 @@ ios_pod() {
 LEGACY_GMA='com.google.android.gms:play-services-ads:'
 
 # App-level opt-in lines for Meta bidding, exactly as documented in
-# docs/setup/{admob,applovin,ironsource}.md.
+# doc/setup/{admob,applovin,ironsource}.md.
 meta_gradle() {
   case "$1" in
     admob)

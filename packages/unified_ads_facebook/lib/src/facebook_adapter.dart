@@ -6,7 +6,7 @@ import 'messages.g.dart';
 /// unified_ads adapter for Facebook Audience Network.
 ///
 /// Registered automatically when `unified_ads_facebook` is a dependency of the
-/// app; only the Facebook Audience Network SDK is linked. Setup: docs/setup/facebook.md.
+/// app; only the Facebook Audience Network SDK is linked. Setup: doc/setup/facebook.md.
 ///
 /// `NetworkConfig.appId` is optional (Audience Network needs no app ID in code); ad-unit IDs are placement IDs (PLACEMENT_ID or the test form IMG_16_9_APP_INSTALL#PLACEMENT_ID).
 /// Audience Network is bidding-only since 2021: a direct integration serves test ads but is not expected to fill in production (use AdMob / MAX / LevelPlay bidding for revenue). `testDeviceIds` are the hashed device IDs printed by the SDK.

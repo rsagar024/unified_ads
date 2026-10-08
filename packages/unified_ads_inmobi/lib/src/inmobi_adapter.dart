@@ -6,7 +6,7 @@ import 'messages.g.dart';
 /// unified_ads adapter for InMobi.
 ///
 /// Registered automatically when `unified_ads_inmobi` is a dependency of the
-/// app; only the InMobi SDK is linked. Setup: docs/setup/inmobi.md.
+/// app; only the InMobi SDK is linked. Setup: doc/setup/inmobi.md.
 ///
 /// `NetworkConfig.appId` is the InMobi account ID; ad-unit IDs are numeric InMobi placement IDs.
 /// InMobi test ads can only be enabled per placement in the InMobi dashboard.

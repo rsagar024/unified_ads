@@ -6,7 +6,7 @@ import 'messages.g.dart';
 /// unified_ads adapter for AppLovin MAX.
 ///
 /// Registered automatically when `unified_ads_applovin` is a dependency of the
-/// app; only the AppLovin MAX SDK is linked. Setup: docs/setup/applovin.md.
+/// app; only the AppLovin MAX SDK is linked. Setup: doc/setup/applovin.md.
 ///
 /// `NetworkConfig.appId` is the MAX SDK key. Formats: banner, interstitial,
 /// rewarded and app open (MAX has no rewarded interstitial).

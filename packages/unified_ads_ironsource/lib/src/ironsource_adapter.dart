@@ -6,7 +6,7 @@ import 'messages.g.dart';
 /// unified_ads adapter for ironSource LevelPlay.
 ///
 /// Registered automatically when `unified_ads_ironsource` is a dependency of the
-/// app; only the ironSource LevelPlay SDK is linked. Setup: docs/setup/ironsource.md.
+/// app; only the ironSource LevelPlay SDK is linked. Setup: doc/setup/ironsource.md.
 ///
 /// `NetworkConfig.appId` is the LevelPlay app key; `extras["userId"]` sets the LevelPlay user ID.
 /// LevelPlay has no code-level test flag; use its test suite. Do not enable it together with Unity Ads.

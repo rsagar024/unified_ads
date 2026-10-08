@@ -114,7 +114,7 @@ public final class UnifiedAdsAdmobPlugin: NSObject, FlutterPlugin, AdmobHostApi 
     guard let appId, !appId.isEmpty else {
       throw Errors.of(
         "invalidConfig",
-        "Add GADApplicationIdentifier to Info.plist (see docs/setup/admob.md)")
+        "Add GADApplicationIdentifier to Info.plist (see doc/setup/admob.md)")
     }
     if let configured = request.appId, !configured.isEmpty, configured != appId {
       NSLog("[unified_ads_admob] NetworkConfig.appId differs from Info.plist; Info.plist is used.")

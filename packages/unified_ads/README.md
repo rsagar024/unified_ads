@@ -84,7 +84,7 @@ JSON path. In CI, `--set-exit-if-changed` fails the build when the JSON is out o
 | Facebook | none (no ID in code) | placement IDs `IMG_16_9_APP_INSTALL#…` for test ads |
 
 Step-by-step dashboard instructions and public test credentials: see
-[docs/getting_ids.md](https://github.com/rsagar024/unified_ads/blob/main/docs/getting_ids.md) in the repository.
+[doc/getting_ids.md](https://github.com/rsagar024/unified_ads/blob/master/doc/getting_ids.md) in the repository.
 
 ## Status
 

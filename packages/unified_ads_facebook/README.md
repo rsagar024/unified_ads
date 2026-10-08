@@ -9,7 +9,7 @@ It links only the Audience Network SDK: `com.facebook.android:audience-network-s
 > **Read this first.** Audience Network has been **bidding-only since 2021**. A direct integration like this one serves
 > **test ads** (test placements `IMG_16_9_APP_INSTALL#<placement id>` or registered test devices), but it is **not
 > expected to fill in production**. For Facebook revenue, add Audience Network as a bidder in AdMob, AppLovin MAX or LevelPlay
-> mediation. See [`docs/setup/facebook.md`](https://github.com/rsagar024/unified_ads/blob/main/docs/setup/facebook.md).
+> mediation. See [`doc/setup/facebook.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/facebook.md).
 
 ## Usage
 

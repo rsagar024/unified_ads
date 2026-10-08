@@ -11,10 +11,10 @@ Initial release: the Facebook Audience Network (branded Meta Audience Network) a
 * Consent: a CCPA opt-out maps to Limited Data Use, and COPPA maps to mixed audience.
 * Every native error maps to an `AdError` with the SDK's own code in `nativeCode`.
 * Renamed from `unified_ads_meta` / `MetaAdapter` / `AdNetwork.meta` before the first release
-  (see `docs/migration/1.0.0-meta-to-facebook.md`).
+  (see `doc/migration/1.0.0-meta-to-facebook.md`).
 
 * For production Meta demand, use opt-in bidding through `unified_ads_admob`, `unified_ads_applovin` or
-  `unified_ads_ironsource` instead (see `docs/setup/facebook.md`).
+  `unified_ads_ironsource` instead (see `doc/setup/facebook.md`).
 
 Known limitations:
 

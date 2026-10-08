@@ -1,5 +1,7 @@
 name: unified_ads_workspace
 description: Workspace root for the unified_ads federated plugin. Not published.
+repository: https://github.com/rsagar024/unified_ads
+version: 1.0.0
 publish_to: none
 
 environment:

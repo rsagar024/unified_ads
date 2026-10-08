@@ -6,7 +6,7 @@ Initial release: the Google AdMob adapter for `unified_ads`.
 * Rewarded interstitial and app open, on both platforms.
 * Pinned SDKs: Android **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk` 1.5.0 +
   `user-messaging-platform` 4.0.0 (it replaced the legacy `play-services-ads` before release; see
-  `docs/migration/1.0.0-admob-next-gen.md`); iOS `Google-Mobile-Ads-SDK` 13.11.0 + `GoogleUserMessagingPlatform` 3.1.0 (CocoaPods and Swift Package Manager).
+  `doc/migration/1.0.0-admob-next-gen.md`); iOS `Google-Mobile-Ads-SDK` 13.11.0 + `GoogleUserMessagingPlatform` 3.1.0 (CocoaPods and Swift Package Manager).
 * Adding this package links only this network's SDK. Apps without it never pull it in, which CI verifies.
 * `AdmobConsentProvider`: a Google UMP implementation of `ConsentProvider` (consent form, privacy options, `canRequestAds`, debug geography).
 * Adaptive, standard and inline banners.

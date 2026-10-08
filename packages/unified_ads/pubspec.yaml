@@ -1,8 +1,8 @@
 name: unified_ads
 description: "One unified Dart API for banner, interstitial and rewarded ads across AdMob, Unity, AppLovin MAX, LevelPlay, Facebook Audience Network, Start.io and InMobi."
 version: 1.0.0
-homepage: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads
-repository: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads
+homepage: https://github.com/rsagar024/unified_ads/tree/master/packages/unified_ads
+repository: https://github.com/rsagar024/unified_ads/tree/master/packages/unified_ads
 issue_tracker: https://github.com/rsagar024/unified_ads/issues
 topics:
   - ads

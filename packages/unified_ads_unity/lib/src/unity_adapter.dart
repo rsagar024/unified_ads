@@ -6,7 +6,7 @@ import 'messages.g.dart';
 /// unified_ads adapter for Unity Ads.
 ///
 /// Registered automatically when `unified_ads_unity` is a dependency of the
-/// app; only the Unity Ads SDK is linked. Setup: docs/setup/unity.md.
+/// app; only the Unity Ads SDK is linked. Setup: doc/setup/unity.md.
 ///
 /// `NetworkConfig.appId` is the Unity Game ID, which differs per platform (use `PlatformValue.select`).
 /// Unity rewards carry no amount: `extras["rewardAmount"]` / `extras["rewardType"]` set the reported RewardItem (default 1 "reward").

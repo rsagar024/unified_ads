@@ -6,7 +6,7 @@ import android.util.Log
  * Optional Meta (Facebook) Audience Network bidding through LevelPlay mediation.
  *
  * This package declares no Meta dependency. An app opts in by adding the
- * vendor's Meta adapter to its own build (see docs/setup/ironsource.md). This object
+ * vendor's Meta adapter to its own build (see doc/setup/ironsource.md). This object
  * then detects the adapter and forwards privacy signals to the Audience Network
  * SDK before LevelPlay initializes it, all by reflection so the package compiles
  * and links without Meta's SDK.

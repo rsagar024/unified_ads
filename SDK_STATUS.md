@@ -84,7 +84,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
   Source: https://developers.google.com/admob/android/next-gen/rel-notes.
   **Owner decision (2026-10-07):** the adapter used legacy 25.5.0 at first.
   **Phase 7 (2026-10-08): the Android adapter now uses Next-Gen 1.5.0** (owner: "switch fully"). See
-  [`docs/migration/1.0.0-admob-next-gen.md`](docs/migration/1.0.0-admob-next-gen.md).
+  [`doc/migration/1.0.0-admob-next-gen.md`](doc/migration/1.0.0-admob-next-gen.md).
   - ✅ **Resolved: legacy and Next-Gen can't coexist.** Google's migration guide requires removing `play-services-ads`
     and excluding `play-services-ads(-lite)` globally to avoid duplicate classes. Mediation adapters, which still
     depend on the legacy SDK, work through that exclusion (https://developers.google.com/admob/android/next-gen/migration,
@@ -296,7 +296,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 - ⚠ Distribution change: a search snippet of Meta's iOS changelog says 6.22.0 is the **last CocoaPods release** (SPM or
   zip after that). The adapter therefore ships both a podspec and a `Package.swift` (SPM product name ⚠ until CI).
 - Other facts: SKAdNetwork IDs `v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork`. Android 9+ needs cleartext to `127.0.0.1`
-  (media cache proxy; AdError 7003 otherwise), and the app must declare it (see docs/setup/facebook.md). Privacy:
+  (media cache proxy; AdError 7003 otherwise), and the app must declare it (see doc/setup/facebook.md). Privacy:
   `AdSettings.setDataProcessingOptions(["LDU"],0,0)`, `setMixedAudience`. On iOS 17+ with SDK 6.15+, `setAdvertiserTrackingEnabled`
   is not needed.
 
@@ -422,7 +422,7 @@ headers / `.swiftinterface` for MAX, LevelPlay, Start.io and InMobi). The Androi
 | InMobi | Banners must be sized through `layoutParams` before `load()` (`setBannerSize` is deprecated). The init callback receives `java.lang.Error?`. |
 | Start.io | The iOS splash / return-ad switches are deprecated no-ops (4.15). Android uses `initParams(...).setReturnAdsEnabled(false)` + `disableSplash()`. |
 
-Each `docs/setup/<network>.md` lists the API names used, split into ✅ compiler-verified (Android) and ⚠ not yet compiled (iOS, Phase 6 CI).
+Each `doc/setup/<network>.md` lists the API names used, split into ✅ compiler-verified (Android) and ⚠ not yet compiled (iOS, Phase 6 CI).
 
 ### 3.7 Platform changes found while documenting credentials (2026-10-07)
 - **ironSource Ads direct demand sunset:** no new publishers from 15 April 2026, direct demand stopped on **30 April 2026**,
@@ -434,4 +434,4 @@ Each `docs/setup/<network>.md` lists the API names used, split into ✅ compiler
   (https://docs.unity.com/en-us/grow/dashboard/ad-units). The direct `unified_ads_unity` integration served on a device with
   Unity's sample game (legacy placements). ⚠ Serving from bidding-only placements in a new project still needs
   confirming with a real Game ID.
-- Credential how-tos for every network, with official links: `docs/getting_ids.md`.
+- Credential how-tos for every network, with official links: `doc/getting_ids.md`.

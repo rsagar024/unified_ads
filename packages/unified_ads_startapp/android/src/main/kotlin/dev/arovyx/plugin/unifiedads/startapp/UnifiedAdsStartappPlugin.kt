@@ -209,7 +209,7 @@ class UnifiedAdsStartappPlugin : FlutterPlugin, ActivityAware, StartappHostApi {
                 .putString("IABUSPrivacy_String", if (it) "1YYN" else "1YNN")
                 .apply()
         }
-        // COPPA is declared through manifest meta-data (see docs/setup/startapp.md).
+        // COPPA is declared through manifest meta-data (see doc/setup/startapp.md).
     }
 
     override fun dispose() {

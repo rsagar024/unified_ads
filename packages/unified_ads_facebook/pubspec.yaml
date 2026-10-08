@@ -1,8 +1,8 @@
 name: unified_ads_facebook
 description: "Facebook Audience Network (Meta) adapter for unified_ads: banner, interstitial and rewarded. Links only the Audience Network SDK; production fill needs bidding."
 version: 1.0.0
-homepage: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_facebook
-repository: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_facebook
+homepage: https://github.com/rsagar024/unified_ads/tree/master/packages/unified_ads_facebook
+repository: https://github.com/rsagar024/unified_ads/tree/master/packages/unified_ads_facebook
 issue_tracker: https://github.com/rsagar024/unified_ads/issues
 topics:
   - ads

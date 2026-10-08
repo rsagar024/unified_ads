@@ -265,7 +265,7 @@ struct InitRequest: Hashable, CustomStringConvertible {
 /// Generated class from Pigeon that represents data sent in messages.
 struct InitInfo: Hashable, CustomStringConvertible {
   /// Class name of the Meta (Facebook) bidding adapter the app added to its
-  /// build, or null when none is present (see docs/setup).
+  /// build, or null when none is present (see doc/setup).
   var metaBiddingAdapter: String? = nil
 
 

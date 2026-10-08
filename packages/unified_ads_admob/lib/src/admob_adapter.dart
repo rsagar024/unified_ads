@@ -7,7 +7,7 @@ import 'messages.g.dart';
 ///
 /// Registered automatically when `unified_ads_admob` is a dependency of the
 /// app. The AdMob App ID must also be declared in `AndroidManifest.xml` and
-/// `Info.plist` (see docs/setup/admob.md).
+/// `Info.plist` (see doc/setup/admob.md).
 ///
 /// Formats: banner, interstitial, rewarded, rewarded interstitial and app
 /// open. Android uses the GMA Next-Gen SDK, iOS the Google Mobile Ads SDK.
@@ -17,7 +17,7 @@ import 'messages.g.dart';
 ///
 /// Meta (Facebook) bidding is opt-in: add Google's Meta mediation adapter to
 /// the app's build and this adapter detects it and forwards privacy settings
-/// (see docs/setup/admob.md).
+/// (see doc/setup/admob.md).
 class AdmobAdapter extends BridgedAdNetworkAdapter implements AdmobEventsApi {
   /// Creates the adapter. `hostApi` and `binaryMessenger` are for tests.
   AdmobAdapter({this._hostApi, this._messenger});

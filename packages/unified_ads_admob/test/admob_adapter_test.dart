@@ -78,7 +78,7 @@ void main() {
       );
       expect(
         messages,
-        contains('Meta bidding adapter not present (opt-in; see docs/setup)'),
+        contains('Meta bidding adapter not present (opt-in; see doc/setup)'),
       );
     });
 

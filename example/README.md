@@ -53,7 +53,7 @@ iOS: `flutter run` on a Mac with Xcode 26.2+. The deployment target is **iOS 15*
   re-runs `UnifiedAds.init`.
 - **Reset to public test IDs:** restores the built-in test credentials.
 
-Where to find every ID: [docs/getting_ids.md](../docs/getting_ids.md).
+Where to find every ID: [doc/getting_ids.md](../doc/getting_ids.md).
 
 ### Log
 
@@ -79,7 +79,7 @@ Most presets are **Android-only**. On iOS, those networks show `invalidConfig` u
 
 ## Using your own IDs
 
-1. Open **Settings**, expand the network and paste your IDs ([how to get them](../docs/getting_ids.md)).
+1. Open **Settings**, expand the network and paste your IDs ([how to get them](../doc/getting_ids.md)).
 2. Keep **Test mode** on while developing. For networks that only do test mode through the dashboard or test devices
    (InMobi, LevelPlay, Facebook), add your device to **Test device IDs** or enable test mode in their dashboard.
 3. Tap **Save & re-initialize**, then use that network's card.
@@ -90,7 +90,7 @@ Notes:
 - Some SDKs accept their App ID **once per process**. If a changed App ID doesn't take effect, restart the app.
 - **Facebook Audience Network** on Android needs cleartext for `127.0.0.1` (already set up in
   `android/app/src/main/res/xml/network_security_config.xml`). Audience Network is bidding-only: expect test ads only
-  ([details](../docs/setup/facebook.md)).
+  ([details](../doc/setup/facebook.md)).
 
 ## Code map
 

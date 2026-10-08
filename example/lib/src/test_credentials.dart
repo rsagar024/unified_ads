@@ -3,7 +3,7 @@ import 'package:unified_ads/unified_ads.dart';
 /// Public **test / demo** credentials, used as the example app's defaults.
 ///
 /// They live only in this example app, never in the packages. Each one is
-/// documented in `docs/getting_ids.md` ("Testing without your own IDs"). Values
+/// documented in `doc/getting_ids.md` ("Testing without your own IDs"). Values
 /// with no known public iOS equivalent are `null` on iOS: enter your own in
 /// Settings.
 abstract final class TestCredentials {

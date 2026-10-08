@@ -29,7 +29,7 @@ dart run melos run test
 | `packages/unified_ads_platform_interface` | `AdNetworkAdapter` contract + shared models |
 | `packages/unified_ads_<network>` | One adapter per ad network, with native Kotlin/Swift code |
 | `example/` | Demo app + integration tests (the only place test ad-unit IDs may appear) |
-| `docs/` | Per-network setup guides, consent/ATT, single-package mode |
+| `doc/` | Per-network setup guides, consent/ATT, single-package mode |
 | `tool/` | CI scripts: opt-in verification, Kotlin tests, iOS build modes, pana |
 | `.github/workflows/ci.yaml` | The CI pipeline |
 
@@ -40,7 +40,7 @@ dart run melos run test
 3. **No real ad-unit or app IDs** in any package. Test IDs belong in `example/` only.
 4. **Never crash the host app.** Map every native exception to `AdError`.
 5. **Document every public symbol** (`public_member_api_docs` is enabled).
-6. **Breaking public API changes** need a migration note in `docs/migration/` and a CHANGELOG entry.
+6. **Breaking public API changes** need a migration note in `doc/migration/` and a CHANGELOG entry.
 7. Don't invent SDK API names. Verify them against `SDK_STATUS.md` and the vendor docs, and
    flag anything unverified in the PR description.
 
@@ -86,7 +86,7 @@ warnings first.
 4. Publish the adapters (any order).
 5. Tag the release as `<package>-v<version>` for each published package.
 
-A breaking change to the public API needs a note in `docs/migration/` (CLAUDE.md non-negotiable).
+A breaking change to the public API needs a note in `doc/migration/` (CLAUDE.md non-negotiable).
 
 ## Pull requests
 

@@ -38,6 +38,6 @@ Future<void> main() async {
 
 Banner: `UnifiedBannerWidget(ad: BannerAd(size: const BannerSize.adaptiveAnchored()), anchored: true)`.
 
-Platform setup (manifest, Info.plist, SKAdNetwork IDs): [`docs/setup/ironsource.md`](https://github.com/rsagar024/unified_ads/blob/main/docs/setup/ironsource.md).
+Platform setup (manifest, Info.plist, SKAdNetwork IDs): [`doc/setup/ironsource.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/ironsource.md).
 For a full app with every network, a settings screen and a live event log, see the
-[example app](https://github.com/rsagar024/unified_ads/tree/main/example).
+[example app](https://github.com/rsagar024/unified_ads/tree/master/example).

@@ -182,7 +182,7 @@ them through CocoaPods while the rest use SPM.
   in core.
 
 ### 4.5 Alternative: single-package mode
-For teams that prefer one dependency, see [`docs/single_package_mode.md`](docs/single_package_mode.md). It is driven
+For teams that prefer one dependency, see [`doc/single_package_mode.md`](doc/single_package_mode.md). It is driven
 by `--dart-define=ADS_NETWORKS=…` + a Gradle property + a Podfile ENV variable. It is documented with trade-offs,
 and the federated mode above is the recommended default.
 

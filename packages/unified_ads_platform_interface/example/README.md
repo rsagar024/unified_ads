@@ -84,6 +84,6 @@ class MyNetworkAdapter extends BridgedAdNetworkAdapter {
 
 The repository's adapters use Pigeon instead of a raw `MethodChannel`, which gives type-safe Kotlin and Swift bindings.
 Copy one of them by following
-[`TEMPLATE.md`](https://github.com/rsagar024/unified_ads/blob/main/packages/unified_ads_admob/TEMPLATE.md).
+[`TEMPLATE.md`](https://github.com/rsagar024/unified_ads/blob/master/packages/unified_ads_admob/TEMPLATE.md).
 The native SDK dependency goes **only** in the adapter's `build.gradle.kts` and podspec. That is what keeps networks
 opt-in.

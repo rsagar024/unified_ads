@@ -99,6 +99,6 @@ class _AdsDemoState extends State<AdsDemo> {
 The same configuration can live in `pubspec.yaml` and be turned into an asset with
 `dart run unified_ads:generate_config` (see the package README).
 
-The repository's [example app](https://github.com/rsagar024/unified_ads/tree/main/example) is the full version. It
+The repository's [example app](https://github.com/rsagar024/unified_ads/tree/master/example) is the full version. It
 enables networks with checkboxes, edits IDs per format, persists settings, forces a network per banner, and shows a live
 event log.
