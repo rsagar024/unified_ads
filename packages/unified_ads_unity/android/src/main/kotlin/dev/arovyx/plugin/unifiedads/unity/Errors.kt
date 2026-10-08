@@ -8,6 +8,13 @@ package dev.arovyx.plugin.unifiedads.unity
 internal object Errors {
     const val NO_FILL = 52100
 
+    /** Init codes from Unity's "Troubleshoot SDK initialization errors" page. */
+    fun initCode(code: Int): String = when (code) {
+        52001, 52002 -> "invalidConfig" // Game ID not found / wrong platform
+        2, 52005 -> "networkError"
+        else -> "initializationFailed"
+    }
+
     fun loadCode(code: Int): String = when (code) {
         52100 -> "noFill"
         52101 -> "notInitialized"
@@ -28,6 +35,9 @@ internal object Errors {
 
     fun show(code: Int, message: String?) =
         FlutterError(showCode(code), message ?: "Unity Ads show failed", code.toString())
+
+    fun init(code: Int, message: String?) =
+        FlutterError(initCode(code), message ?: "Unity Ads initialization failed", code.toString())
 
     fun of(code: String, message: String) = FlutterError(code, message, null)
 }

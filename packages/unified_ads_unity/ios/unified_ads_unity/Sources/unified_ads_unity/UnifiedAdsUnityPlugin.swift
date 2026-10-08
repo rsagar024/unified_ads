@@ -121,7 +121,7 @@ public final class UnifiedAdsUnityPlugin: NSObject, FlutterPlugin, UnityHostApi 
       .build()
     UnityAds.initialize(configuration) { error in
       let failure = error.map {
-        PigeonError(code: "initializationFailed", message: $0.message, details: String($0.code))
+        PigeonError(code: UnityErrors.initCode($0.code), message: $0.message, details: String($0.code))
       }
       DispatchQueue.main.async {
         self.initRunning = false
@@ -201,6 +201,15 @@ public final class UnifiedAdsUnityPlugin: NSObject, FlutterPlugin, UnityHostApi 
 
 /// `UnityAdsError.code` → `AdErrorCode` name.
 enum UnityErrors {
+  /// Init codes from Unity's "Troubleshoot SDK initialization errors" page.
+  static func initCode(_ code: Int) -> String {
+    switch code {
+    case 52001, 52002: return "invalidConfig"  // Game ID not found / wrong platform
+    case 2, 52005: return "networkError"
+    default: return "initializationFailed"
+    }
+  }
+
   static func loadCode(_ code: Int) -> String {
     switch code {
     case 52100: return "noFill"

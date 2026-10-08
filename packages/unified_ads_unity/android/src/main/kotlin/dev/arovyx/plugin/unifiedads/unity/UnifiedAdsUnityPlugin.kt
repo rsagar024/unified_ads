@@ -157,9 +157,7 @@ class UnifiedAdsUnityPlugin : FlutterPlugin, ActivityAware, UnityHostApi {
                     if (error == null) {
                         cont.resume(Unit)
                     } else {
-                        cont.resumeWithException(
-                            FlutterError("initializationFailed", error.message, error.code.toString()),
-                        )
+                        cont.resumeWithException(Errors.init(error.code, error.message))
                     }
                 }
             }

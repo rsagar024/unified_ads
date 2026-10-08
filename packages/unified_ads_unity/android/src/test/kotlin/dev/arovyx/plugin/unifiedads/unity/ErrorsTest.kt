@@ -5,6 +5,14 @@ import kotlin.test.assertEquals
 
 internal class ErrorsTest {
     @Test
+    fun initCodes() {
+        assertEquals("invalidConfig", Errors.initCode(52001))
+        assertEquals("invalidConfig", Errors.initCode(52002))
+        assertEquals("networkError", Errors.initCode(52005))
+        assertEquals("initializationFailed", Errors.initCode(52000))
+    }
+
+    @Test
     fun loadCodes() {
         assertEquals("noFill", Errors.loadCode(52100))
         assertEquals("notInitialized", Errors.loadCode(52101))

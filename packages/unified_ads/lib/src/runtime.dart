@@ -99,6 +99,13 @@ class AdsRuntime {
       }
       lastInitResult = result;
       AdsLogger.current.info('init: $result');
+      for (final MapEntry(key: network, value: error) in result.failed.entries) {
+        AdsLogger.current.warning(
+          'init failed: ${error.code.name} ${error.message}'
+          '${error.nativeCode == null ? '' : ' [${error.nativeCode}]'}',
+          network: network,
+        );
+      }
       return result;
     });
   }
