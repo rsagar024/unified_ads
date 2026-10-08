@@ -1,0 +1,29 @@
+# Fixture for the generate_config CI check (see .github/workflows/ci.yaml).
+# Regenerate ads_config.json with:
+#   dart run unified_ads:generate_config --pubspec test/fixtures/pubspec_fixture.yaml --output test/fixtures/ads_config.json
+name: fixture_app
+
+unified_ads:
+  testMode: true
+  waterfall: [admob, unity, inmobi]
+  preload:
+    formats: [interstitial, rewarded]
+  frequencyCaps:
+    interstitial: {maxShows: 3, perSeconds: 3600}
+  networks:
+    admob:
+      appId:
+        android: ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy
+        ios: ca-app-pub-xxxxxxxxxxxxxxxx~zzzzzzzzzz
+      bannerAdUnitId: your-banner-unit
+      interstitialAdUnitId: your-interstitial-unit
+      rewardedAdUnitId: your-rewarded-unit
+    unity:
+      appId: your-game-id
+      bannerAdUnitId: Banner_Android
+      interstitialAdUnitId: Interstitial_Android
+      rewardedAdUnitId: Rewarded_Android
+    inmobi:
+      appId: your-account-id
+      bannerAdUnitId: '1234567890'
+      testMode: false

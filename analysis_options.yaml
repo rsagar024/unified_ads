@@ -1,0 +1,46 @@
+# Shared strict analysis options for every package in the workspace.
+# Packages without their own analysis_options.yaml inherit this file because the
+# analyzer walks up the directory tree.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    missing_required_param: error
+    missing_return: error
+    unawaited_futures: warning
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.pigeon.dart"
+    - "**/build/**"
+
+linter:
+  rules:
+    # Public API quality (pub.dev scoring, CLAUDE.md "dartdoc on every public symbol").
+    - public_member_api_docs
+    - comment_references
+    # Correctness / safety.
+    - avoid_dynamic_calls
+    - avoid_catching_errors
+    - cancel_subscriptions
+    - close_sinks
+    - unawaited_futures
+    - discarded_futures
+    - only_throw_errors
+    - throw_in_finally
+    - unnecessary_statements
+    - use_build_context_synchronously
+    # Style consistency.
+    - always_declare_return_types
+    - directives_ordering
+    - prefer_final_locals
+    - prefer_final_in_for_each
+    - prefer_single_quotes
+    - sort_constructors_first
+    - sort_pub_dependencies
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - use_super_parameters

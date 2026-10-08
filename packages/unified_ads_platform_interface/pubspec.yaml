@@ -1,0 +1,25 @@
+name: unified_ads_platform_interface
+description: "Common platform interface for unified_ads: the AdNetworkAdapter contract, shared ad models, and the adapter registry."
+version: 1.0.0
+homepage: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_platform_interface
+repository: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_platform_interface
+issue_tracker: https://github.com/rsagar024/unified_ads/issues
+topics:
+  - ads
+  - monetization
+  - advertising
+
+environment:
+  sdk: ^3.12.2
+  flutter: '>=3.44.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter

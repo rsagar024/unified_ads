@@ -1,0 +1,10 @@
+# Local build output. The root .gitignore only covers /build at the repo root,
+# so without this `flutter test` artifacts would be published.
+build/
+.dart_tool/
+android/.gradle/
+android/build/
+android/local.properties
+ios/.build/
+ios/.swiftpm/
+*.iml

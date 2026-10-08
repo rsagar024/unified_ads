@@ -1,0 +1,38 @@
+name: unified_ads
+description: "One unified Dart API for banner, interstitial and rewarded ads across AdMob, Unity, AppLovin MAX, LevelPlay, Facebook Audience Network, Start.io and InMobi."
+version: 1.0.0
+homepage: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads
+repository: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads
+issue_tracker: https://github.com/rsagar024/unified_ads/issues
+topics:
+  - ads
+  - admob
+  - monetization
+  - advertising
+  - mediation
+
+environment:
+  sdk: ^3.12.2
+  flutter: '>=3.44.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  unified_ads_platform_interface: ^1.0.0
+  yaml: ^3.1.3
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: dev.arovyx.plugin.unifiedads
+        pluginClass: UnifiedAdsPlugin
+      ios:
+        pluginClass: UnifiedAdsPlugin

@@ -1,0 +1,3 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The Facebook Audience Network SDK merges its own permissions and activities. -->
+</manifest>

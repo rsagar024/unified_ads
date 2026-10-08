@@ -1,0 +1,61 @@
+name: unified_ads_workspace
+description: Workspace root for the unified_ads federated plugin. Not published.
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+# Pub workspace: one resolution + one pubspec.lock for every package below.
+workspace:
+  - packages/unified_ads
+  - packages/unified_ads_platform_interface
+  - packages/unified_ads_admob
+  - packages/unified_ads_unity
+  - packages/unified_ads_applovin
+  - packages/unified_ads_ironsource
+  - packages/unified_ads_facebook
+  - packages/unified_ads_startapp
+  - packages/unified_ads_inmobi
+  - example
+
+dev_dependencies:
+  melos: ^8.9.0
+
+# Melos >= 7 reads its configuration from here (melos.yaml is no longer used).
+melos:
+  repository: https://github.com/rsagar024/unified_ads
+  scripts:
+    analyze:
+      description: Analyze every package with infos treated as fatal.
+      exec: flutter analyze --fatal-infos .
+    test:
+      description: Run unit/widget tests in packages that have a test/ folder.
+      exec: flutter test
+      packageFilters:
+        dirExists: test
+    format:
+      description: Check formatting across the workspace.
+      run: dart format --set-exit-if-changed .
+    pigeon:
+      description: Regenerate Pigeon bindings in packages that have a pigeons/ folder.
+      exec: dart run pigeon --input pigeons/messages.dart
+      packageFilters:
+        dirExists: pigeons
+    build:example:
+      description: Build the example app (debug APK).
+      run: cd example && flutter build apk --debug
+    test:kotlin:
+      description: Run every adapter's Kotlin unit tests (build the example APK first).
+      run: bash tool/kotlin_tests.sh
+    verify:opt-in:
+      description: Check that an admob+unity+inmobi app links only those SDKs (Android).
+      run: bash tool/verify_opt_in.sh android
+    config:check:
+      description: Check that the generate_config CI fixture is up to date.
+      run: >-
+        cd packages/unified_ads && dart run unified_ads:generate_config
+        --pubspec test/fixtures/pubspec_fixture.yaml --output test/fixtures/ads_config.json
+        --set-exit-if-changed
+    pana:
+      description: Score every package with pana (Linux/macOS only).
+      run: bash tool/pana.sh

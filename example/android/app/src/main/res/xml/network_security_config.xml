@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Facebook Audience Network caches media through a local proxy on 127.0.0.1,
+     which Android 9+ blocks unless cleartext is allowed for that host only
+     (otherwise AdError 7003 CLEAR_TEXT_SUPPORT_NOT_ALLOWED). -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

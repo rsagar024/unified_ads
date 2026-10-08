@@ -1,0 +1,41 @@
+name: unified_ads_unity
+description: "Unity Ads adapter for unified_ads. Add it to link only the Unity Ads SDK into your Android and iOS app."
+version: 1.0.0
+homepage: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_unity
+repository: https://github.com/rsagar024/unified_ads/tree/main/packages/unified_ads_unity
+issue_tracker: https://github.com/rsagar024/unified_ads/issues
+topics:
+  - ads
+  - unity-ads
+  - monetization
+
+environment:
+  sdk: ^3.12.2
+  flutter: '>=3.44.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.16.0
+  unified_ads_platform_interface: ^1.0.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+  pigeon: ^29.0.7
+  # Tests only: drives the adapter through the real core. Not a runtime dependency.
+  unified_ads: ^1.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: dev.arovyx.plugin.unifiedads.unity
+        pluginClass: UnifiedAdsUnityPlugin
+        dartPluginClass: UnityAdapter
+      ios:
+        pluginClass: UnifiedAdsUnityPlugin
+        dartPluginClass: UnityAdapter
