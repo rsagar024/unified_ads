@@ -10,6 +10,14 @@
 # those two must reach pub.dev first.
 set -euo pipefail
 
+# `bash` typed in PowerShell starts WSL, which then runs the Windows Flutter
+# SDK's CRLF scripts and fails with "$'\r': command not found".
+if grep -qi microsoft /proc/version 2>/dev/null && [[ "$(command -v dart)" == /mnt/* ]]; then
+  echo "This is WSL running the Windows Dart SDK. Use .\\tool\\publish.ps1 from" >&2
+  echo "PowerShell, or run this script from Git Bash." >&2
+  exit 1
+fi
+
 cd "$(dirname "$0")/.."
 
 packages=(
