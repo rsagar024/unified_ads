@@ -71,7 +71,7 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
     case .some(false): FBAdSettings.setDataProcessingOptions([])
     case .none: break
     }
-    FBAdSettings.mixedAudience = consent.coppa
+    FBAdSettings.isMixedAudience = consent.coppa
     // ATT: on iOS 17+ with SDK 6.15+ the SDK reads ATTrackingManager itself;
     // the deprecated setAdvertiserTrackingEnabled: is not used.
   }
@@ -113,12 +113,12 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
         let ad = FBRewardedVideoAd(placementID: adUnitId)
         holder.rewarded = ad
         ad.delegate = holder
-        ad.loadAd()  // deprecated in 6.22 (bidding-only); still the direct path
+        ad.load()  // deprecated in 6.22 (bidding-only); still the direct path
       } else {
         let ad = FBInterstitialAd(placementID: adUnitId)
         holder.interstitial = ad
         ad.delegate = holder
-        ad.loadAd()
+        ad.load()
       }
     }
   }
@@ -138,8 +138,8 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       holder.showContinuation = continuation
       let accepted =
-        holder.interstitial?.showAd(fromRootViewController: viewController)
-        ?? holder.rewarded?.showAd(fromRootViewController: viewController) ?? false
+        holder.interstitial?.show(fromRootViewController: viewController)
+        ?? holder.rewarded?.show(fromRootViewController: viewController) ?? false
       if !accepted, holder.showContinuation != nil {
         holder.showContinuation = nil
         remove(adId)

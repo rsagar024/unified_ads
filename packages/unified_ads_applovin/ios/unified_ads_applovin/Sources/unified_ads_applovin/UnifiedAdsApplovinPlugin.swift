@@ -171,7 +171,7 @@ public final class UnifiedAdsApplovinPlugin: NSObject, FlutterPlugin, ApplovinHo
       holder.interstitial?.show(forPlacement: nil, customData: nil, viewController: viewController)
       holder.rewarded?.show(forPlacement: nil, customData: nil, viewController: viewController)
       // MAX presents app open ads from its own window; no view controller.
-      holder.appOpen?.showAd()
+      holder.appOpen?.show()
     }
   }
 

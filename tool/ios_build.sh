@@ -31,4 +31,8 @@ if [[ "$mode" == "cocoapods-static" ]]; then
 fi
 grep -n "platform :ios\|use_frameworks" ios/Podfile
 
+# Xcode stops at the first failing target by default, so a run would only
+# surface one adapter's compile errors; report them all at once instead.
+defaults write com.apple.dt.Xcode IDEBuildingContinueBuildingAfterErrors -bool YES
+
 flutter build ios --debug --no-codesign

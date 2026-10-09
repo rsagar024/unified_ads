@@ -50,7 +50,7 @@ final class StartappBannerView: NSObject, FlutterPlatformView, STABannerDelegate
   func view() -> UIView { container }
 
   @objc(bannerAdIsReadyToDisplay:)
-  func bannerAdIsReadyToDisplay(_ banner: STABannerView) {
+  func bannerAdIsReady(toDisplay banner: STABannerViewBase) {
     plugin?.emit(
       AdEventMessage(
         kind: .bannerSized, adId: adId, format: .banner, width: Double(size.width),
@@ -59,7 +59,7 @@ final class StartappBannerView: NSObject, FlutterPlatformView, STABannerDelegate
   }
 
   @objc(failedLoadBannerAd:withError:)
-  func failedLoadBannerAd(_ banner: STABannerView, withError error: Error) {
+  func failedLoadBannerAd(_ banner: STABannerViewBase, withError error: Error) {
     plugin?.emit(
       AdEventMessage(
         kind: .failedToLoad, adId: adId, format: .banner, errorCode: "noFill",
@@ -67,12 +67,12 @@ final class StartappBannerView: NSObject, FlutterPlatformView, STABannerDelegate
   }
 
   @objc(didSendImpressionForBannerAd:)
-  func didSendImpressionForBannerAd(_ banner: STABannerView) {
+  func didSendImpression(forBannerAd banner: STABannerViewBase) {
     plugin?.emit(AdEventMessage(kind: .impression, adId: adId, format: .banner))
   }
 
   @objc(didClickBannerAd:)
-  func didClickBannerAd(_ banner: STABannerView) {
+  func didClickBannerAd(_ banner: STABannerViewBase) {
     plugin?.emit(AdEventMessage(kind: .clicked, adId: adId, format: .banner))
   }
 }

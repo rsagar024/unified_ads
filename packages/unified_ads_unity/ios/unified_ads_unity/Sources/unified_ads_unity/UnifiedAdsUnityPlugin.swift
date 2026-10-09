@@ -8,9 +8,7 @@ let unityBannerViewType = "dev.arovyx.plugin.unifiedads/unity/banner"
 /// Unity Ads adapter plugin, built only on the 4.19+ instance APIs
 /// (`UADSInterstitialAd`, `UADSRewardedAd`, `UADSBannerAd`).
 ///
-/// ⚠ Unity's docs disagree on several Swift names (for example
-/// `showDidFail` vs `showDidFailed`); these follow the guides and the
-/// AppLovin Unity adapter and must be verified by the CI build.
+/// Swift names are checked against the UnityAds 4.21.0 `.swiftinterface`.
 public final class UnifiedAdsUnityPlugin: NSObject, FlutterPlugin, UnityHostApi {
   private let events: UnityEventsApi
   private var ads: [String: UnityAdHolder] = [:]

@@ -70,7 +70,7 @@ public final class UnifiedAdsIronsourcePlugin: NSObject, FlutterPlugin, Ironsour
     // initializes the adapter (consent is applied before init).
     if MetaBidding.detect() != nil {
       MetaBidding.applyPrivacy(ccpaOptOut: consent.ccpaOptOut, coppa: consent.coppa)
-      LevelPlay.setMetaData(withKey: "Meta_Mixed_Audience", value: consent.coppa ? "true" : "false")
+      LevelPlay.setMetaDataWithKey("Meta_Mixed_Audience", value: consent.coppa ? "true" : "false")
     }
   }
 

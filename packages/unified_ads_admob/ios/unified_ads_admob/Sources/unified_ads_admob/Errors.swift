@@ -19,7 +19,8 @@ enum Errors {
 
   static func showCode(_ code: Int) -> String {
     switch code {
-    case 19: return "notReady"
+    // GADPresentationErrorCode 15 adNotReady / 18 adAlreadyUsed; GADErrorCode 19 adAlreadyUsed.
+    case 15, 18, 19: return "notReady"
     default: return "showFailed"
     }
   }
