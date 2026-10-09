@@ -6,8 +6,9 @@ let startappBannerViewType = "dev.arovyx.plugin.unifiedads/startapp/banner"
 
 /// Start.io adapter plugin. The SDK is Objective-C; delegate methods are
 /// pinned to their Objective-C selectors with `@objc(...)` so dispatch does
-/// not depend on the importer's Swift renaming. iOS splash and return ads
-/// are no-ops in 4.15 (deprecated by Start.io).
+/// not depend on the importer's Swift renaming; the Swift method names
+/// match the SDK's `NS_SWIFT_NAME`s (`didLoad(_:)`, …), which Swift enforces.
+/// iOS splash and return ads are no-ops in 4.15 (deprecated by Start.io).
 public final class UnifiedAdsStartappPlugin: NSObject, FlutterPlugin, StartappHostApi {
   private let events: StartappEventsApi
   private var ads: [String: StartappAdHolder] = [:]
@@ -154,20 +155,20 @@ final class StartappAdHolder: NSObject, STADelegateProtocol {
   }
 
   @objc(didLoadAd:)
-  func didLoadAd(_ ad: STAAbstractAd) {
+  func didLoad(_ ad: STAAbstractAd) {
     loadContinuation?.resume()
     loadContinuation = nil
   }
 
   @objc(failedLoadAd:withError:)
-  func failedLoadAd(_ ad: STAAbstractAd, withError error: Error) {
+  func failedLoad(_ ad: STAAbstractAd, withError error: Error) {
     loadContinuation?.resume(
       throwing: PigeonError(code: "noFill", message: error.localizedDescription, details: String((error as NSError).code)))
     loadContinuation = nil
   }
 
   @objc(didShowAd:)
-  func didShowAd(_ ad: STAAbstractAd) {
+  func didShow(_ ad: STAAbstractAd) {
     send(.shown)
     showContinuation?.resume()
     showContinuation = nil
@@ -177,7 +178,7 @@ final class StartappAdHolder: NSObject, STADelegateProtocol {
   func didSendImpression(_ ad: STAAbstractAd) { send(.impression) }
 
   @objc(failedShowAd:withError:)
-  func failedShowAd(_ ad: STAAbstractAd, withError error: Error) {
+  func failedShow(_ ad: STAAbstractAd, withError error: Error) {
     plugin?.emit(
       AdEventMessage(
         kind: .failedToShow, adId: id, format: format, errorCode: "showFailed",
@@ -189,10 +190,10 @@ final class StartappAdHolder: NSObject, STADelegateProtocol {
   }
 
   @objc(didClickAd:)
-  func didClickAd(_ ad: STAAbstractAd) { send(.clicked) }
+  func didClick(_ ad: STAAbstractAd) { send(.clicked) }
 
   @objc(didCloseAd:)
-  func didCloseAd(_ ad: STAAbstractAd) {
+  func didClose(_ ad: STAAbstractAd) {
     send(.closed)
     plugin?.remove(id)
   }

@@ -142,7 +142,8 @@ for n in "${packages[@]}"; do
   overrides+=$'\n'"  unified_ads_$n:
     path: $(native_path "$repo/packages/unified_ads_$n")"
 done
-awk -v deps="$deps" '{ print } /^dependencies:/ { print deps }' \
+# Multi-line values go through ENVIRON: BSD awk (macOS) rejects newlines in -v.
+DEPS="$deps" awk '{ print } /^dependencies:/ { print ENVIRON["DEPS"] }' \
   "$app/pubspec.yaml" > "$app/pubspec.tmp" && mv "$app/pubspec.tmp" "$app/pubspec.yaml"
 printf '%s\n' "$overrides" > "$app/pubspec_overrides.yaml"
 
@@ -195,7 +196,9 @@ else
   fi
   # CocoaPods mode, so Podfile.lock lists every native pod. (SwiftPM mode is
   # covered by the CI iOS build matrix.)
-  printf '\nflutter:\n  config:\n    enable-swift-package-manager: false\n' >> pubspec.yaml
+  # The template already has a top-level `flutter:` key; nest under it.
+  awk '{ print } /^flutter:/ { print "  config:"; print "    enable-swift-package-manager: false" }' \
+    pubspec.yaml > pubspec.tmp && mv pubspec.tmp pubspec.yaml
   # Audience Network (direct or through a Meta bidding adapter) needs iOS 15.
   ios_min=13.0
   is_expected facebook && ios_min=15.0
@@ -205,7 +208,10 @@ else
   sed -i.bak "s/^# platform :ios.*/platform :ios, '$ios_min'/" ios/Podfile
   if [[ -n "$meta" ]]; then
     pod_line="$(meta_pod "$meta")"
-    sed -i.bak "s|^\( *\)flutter_install_all_ios_pods .*|&\n\1$pod_line|" ios/Podfile
+    # awk, not sed: BSD sed doesn't expand \n in a replacement.
+    POD_LINE="$pod_line" awk '{ print }
+      /^ *flutter_install_all_ios_pods / { match($0, /^ */); print substr($0, 1, RLENGTH) ENVIRON["POD_LINE"] }' \
+      ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
     grep -qF "$pod_line" ios/Podfile
   fi
   (cd ios && pod install --repo-update > /dev/null)
