@@ -184,8 +184,8 @@ public final class UnifiedAdsUnityPlugin: NSObject, FlutterPlugin, UnityHostApi 
     let configuration = UADSShowConfigurationBuilder().with(viewController: viewController).build()
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       holder.showContinuation = continuation
-      holder.interstitial?.show(configuration, delegate: holder)
-      holder.rewarded?.show(configuration, delegate: holder)
+      holder.interstitial?.show(configuration, delegate: holder.interstitialDelegate)
+      holder.rewarded?.show(configuration, delegate: holder.rewardedDelegate)
     }
   }
 
@@ -230,14 +230,16 @@ enum UnityErrors {
   }
 }
 
-/// One loaded Unity interstitial / rewarded ad and its show delegate.
-final class UnityAdHolder: NSObject, UADSInterstitialShowDelegate, UADSRewardedShowDelegate {
+/// One loaded Unity interstitial / rewarded ad and its show delegates.
+final class UnityAdHolder: NSObject {
   let id: String
   let format: AdFormatMessage
   var interstitial: UADSInterstitialAd?
   var rewarded: UADSRewardedAd?
   var showContinuation: CheckedContinuation<Void, Error>?
   private weak var plugin: UnifiedAdsUnityPlugin?
+  fileprivate lazy var interstitialDelegate = InterstitialShowDelegate(holder: self)
+  fileprivate lazy var rewardedDelegate = RewardedShowDelegate(holder: self)
 
   init(id: String, format: AdFormatMessage, plugin: UnifiedAdsUnityPlugin) {
     self.id = id
@@ -245,23 +247,23 @@ final class UnityAdHolder: NSObject, UADSInterstitialShowDelegate, UADSRewardedS
     self.plugin = plugin
   }
 
-  private func send(_ kind: AdEventKind) {
+  fileprivate func send(_ kind: AdEventKind) {
     plugin?.emit(AdEventMessage(kind: kind, adId: id, format: format))
   }
 
-  private func started() {
+  fileprivate func started() {
     send(.shown)
     send(.impression)
     showContinuation?.resume()
     showContinuation = nil
   }
 
-  private func completed() {
+  fileprivate func completed() {
     send(.closed)
     plugin?.remove(id)
   }
 
-  private func failed(_ error: UnityAdsError) {
+  fileprivate func failed(_ error: UnityAdsError) {
     let code = UnityErrors.showCode(error.code)
     plugin?.emit(
       AdEventMessage(
@@ -271,18 +273,32 @@ final class UnityAdHolder: NSObject, UADSInterstitialShowDelegate, UADSRewardedS
     showContinuation = nil
     plugin?.remove(id)
   }
+}
 
-  // UADSInterstitialShowDelegate
-  func showDidStart(_ unityAd: UADSInterstitialAd) { started() }
-  func showDidClick(_ unityAd: UADSInterstitialAd) { send(.clicked) }
-  func showDidComplete(_ unityAd: UADSInterstitialAd, with state: UADSShowFinishState) { completed() }
-  func showDidFail(_ unityAd: UADSInterstitialAd, error: UnityAdsError) { failed(error) }
+// Unity's interstitial and rewarded show delegates share Objective-C selectors
+// (`showDidStart:`, …), so one object can't adopt both; each format gets its
+// own delegate. The holder owns them; the back-reference is weak.
 
-  // UADSRewardedShowDelegate
-  func showDidStart(_ unityAd: UADSRewardedAd) { started() }
-  func showDidClick(_ unityAd: UADSRewardedAd) { send(.clicked) }
+private final class InterstitialShowDelegate: NSObject, UADSInterstitialShowDelegate {
+  private weak var holder: UnityAdHolder?
+
+  init(holder: UnityAdHolder) { self.holder = holder }
+
+  func showDidStart(_ unityAd: UADSInterstitialAd) { holder?.started() }
+  func showDidClick(_ unityAd: UADSInterstitialAd) { holder?.send(.clicked) }
+  func showDidComplete(_ unityAd: UADSInterstitialAd, with state: UADSShowFinishState) { holder?.completed() }
+  func showDidFail(_ unityAd: UADSInterstitialAd, error: UnityAdsError) { holder?.failed(error) }
+}
+
+private final class RewardedShowDelegate: NSObject, UADSRewardedShowDelegate {
+  private weak var holder: UnityAdHolder?
+
+  init(holder: UnityAdHolder) { self.holder = holder }
+
+  func showDidStart(_ unityAd: UADSRewardedAd) { holder?.started() }
+  func showDidClick(_ unityAd: UADSRewardedAd) { holder?.send(.clicked) }
   /// Unity reports no amount/type; Dart fills in the configured default.
-  func showDidReceiveReward(_ unityAd: UADSRewardedAd) { send(.earnedReward) }
-  func showDidComplete(_ unityAd: UADSRewardedAd, with state: UADSShowFinishState) { completed() }
-  func showDidFail(_ unityAd: UADSRewardedAd, error: UnityAdsError) { failed(error) }
+  func showDidReceiveReward(_ unityAd: UADSRewardedAd) { holder?.send(.earnedReward) }
+  func showDidComplete(_ unityAd: UADSRewardedAd, with state: UADSShowFinishState) { holder?.completed() }
+  func showDidFail(_ unityAd: UADSRewardedAd, error: UnityAdsError) { holder?.failed(error) }
 }
