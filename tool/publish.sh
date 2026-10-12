@@ -20,17 +20,9 @@ fi
 
 cd "$(dirname "$0")/.."
 
-packages=(
-  unified_ads_platform_interface
-  unified_ads
-  unified_ads_admob
-  unified_ads_unity
-  unified_ads_applovin
-  unified_ads_ironsource
-  unified_ads_facebook
-  unified_ads_startapp
-  unified_ads_inmobi
-)
+# shellcheck source=lib/packages.sh
+source tool/lib/packages.sh
+packages=("${PACKAGES[@]}")
 
 mode=--dry-run
 [[ "${1:-}" == "--publish" ]] && mode=

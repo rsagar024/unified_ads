@@ -185,6 +185,10 @@ CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs all of these,
 - a publish dry-run per package;
 - pana.
 
+**Releases.** Merges to `development` and `master` both run CI and iOS. A green merge to `master` publishes every package
+whose version changed to pub.dev automatically; `development` never publishes. See
+[CONTRIBUTING.md](CONTRIBUTING.md#branches-and-releases).
+
 **iOS without a Mac.** [`.github/workflows/ios.yml`](.github/workflows/ios.yml) (badge above) runs on free GitHub
 macOS runners, with no signing and no Apple Developer account. It builds the example and a scratch app per adapter for
 the simulator, runs `example/integration_test/ad_smoke_test.dart` against public test ads, and uploads screenshots and
