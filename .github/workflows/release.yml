@@ -27,7 +27,7 @@ jobs:
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'master' &&
       github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Both CI and iOS passed for this commit?
         id: gate
@@ -54,7 +54,7 @@ jobs:
             exit 1
           fi
       - if: steps.gate.outputs.ready == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0

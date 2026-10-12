@@ -17,6 +17,11 @@
 #   SMOKE_DEVICE=<name> simulator to use (default: "iPhone 16"; falls back
 #                       to the first available iPhone)
 #   LOAD_TIMEOUT_S=<s>  per-load timeout passed to the test (default 45)
+#   DRIVE_TIMEOUT_S=<s> flutter drive --timeout for the test run (default 1200)
+#   DRIVE_HARD_TIMEOUT_S=<s>
+#                       kill flutter drive after this long, including a hang
+#                       at launch (default 1800; keep it under the CI job
+#                       timeout so artifacts are still collected)
 #
 # Steps: prepare the app (Info.plist keys, Podfile platform) → check it with
 # tool/verify_ios_plist.dart → flutter build ios --simulator --no-codesign →
@@ -45,6 +50,8 @@ mkdir -p "$art"
 art="$(cd "$art" && pwd)"
 device_name="${SMOKE_DEVICE:-iPhone 16}"
 load_timeout="${LOAD_TIMEOUT_S:-45}"
+drive_timeout="${DRIVE_TIMEOUT_S:-1200}"
+drive_hard_timeout="${DRIVE_HARD_TIMEOUT_S:-1800}"
 
 if [[ "$target" == "all" ]]; then
   app="$repo/example"
@@ -108,6 +115,8 @@ if ((build_status != 0)); then
   echo "==> Build FAILED (exit $build_status); see $art/build.log"
   exit "$build_status"
 fi
+bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' \
+  "$app/build/ios/iphonesimulator/Runner.app/Info.plist" 2> /dev/null || true)"
 
 # Pick a simulator: the requested name on the newest runtime that has it,
 # else the first available iPhone on the newest runtime.
@@ -143,9 +152,16 @@ shooter=$!
 finish() {
   kill "$shooter" 2> /dev/null || true
   shot final
+  # flutter drive runs with --keep-app-running (see below), so stop the app
+  # here; an app that is already gone is reported, not fatal.
+  if [[ -n "$bundle_id" ]] &&
+    ! xcrun simctl terminate "$udid" "$bundle_id" > /dev/null 2>&1; then
+    echo "==> $bundle_id was not running at exit (possible crash; see device.log / *.ips)"
+  fi
   # Native log of the app process, for crashes that never reach Dart.
   xcrun simctl spawn "$udid" log show --last 15m --style compact \
     --predicate 'process == "Runner"' > "$art/device.log" 2> /dev/null || true
+  cp ~/Library/Logs/DiagnosticReports/Runner*.ips "$art/" 2> /dev/null || true
   # The test prints a summary block; keep it on its own for CI summaries.
   sed -n '/==== SMOKE SUMMARY ====/,/==== END SMOKE SUMMARY ====/p' "$art/drive.log" \
     > "$art/summary.txt" 2> /dev/null || true
@@ -153,14 +169,25 @@ finish() {
 trap finish EXIT
 
 echo "==> flutter drive integration_test/ad_smoke_test.dart (networks: $networks)"
+# --keep-app-running: without it flutter drive ends with `simctl terminate`,
+# which exits 1 ("found nothing to terminate") when the app is already gone
+# and turns a passing run into a failure. finish() stops the app instead.
+# perl's alarm (inherited across exec) is the hard timeout; macOS has no
+# `timeout` command.
 set +e
-(cd "$app" && flutter drive \
+(cd "$app" && perl -e 'alarm shift; exec @ARGV' "$drive_hard_timeout" \
+  flutter drive \
   --driver=test_driver/integration_test.dart \
   --target=integration_test/ad_smoke_test.dart \
   -d "$udid" \
+  --keep-app-running \
+  --timeout "$drive_timeout" \
   --dart-define=NETWORKS="$networks" \
   --dart-define=LOAD_TIMEOUT_S="$load_timeout") 2>&1 | tee "$art/drive.log"
 drive_status=${PIPESTATUS[0]}
 set -e
+if ((drive_status == 142)); then
+  echo "==> flutter drive timed out after ${drive_hard_timeout}s (SIGALRM)"
+fi
 echo "==> flutter drive exited $drive_status; artifacts in $art"
 exit "$drive_status"
