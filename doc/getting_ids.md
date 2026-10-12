@@ -375,3 +375,30 @@ Android also needs cleartext allowed for `127.0.0.1`, and iOS needs a deployment
 
 Use these **only for development**, and only in the example or a test build. The `example/` app's
 `integration_test/network_smoke_test.dart` runs any of them with `--dart-define`, so nothing is written to your code.
+
+### Public test IDs used by CI
+
+The iOS simulator pipeline (`.github/workflows/ios.yml`) runs `example/integration_test/ad_smoke_test.dart` with these
+**interstitial** credentials. They are defined in `example/integration_test/smoke_ids.dart`; keep the two in sync.
+Results: [SDK_STATUS.md](../SDK_STATUS.md#0-verification-status).
+
+| Network | Platform | App / account ID | Interstitial unit | Source | Tier in the smoke test |
+|---|---|---|---|---|---|
+| AdMob | iOS | `ca-app-pub-3940256099942544~1458002511` | `ca-app-pub-3940256099942544/4411468910` | [Google iOS test ads](https://developers.google.com/admob/ios/test-ads) | **required** (must load + show) |
+| AdMob | Android | `ca-app-pub-3940256099942544~3347511713` | `ca-app-pub-3940256099942544/1033173712` | [Google Android test ads](https://developers.google.com/admob/android/test-ads) | required |
+| Unity Ads | iOS | Game ID `14850` | `video` | [unity-ads-ios sample](https://github.com/Unity-Technologies/unity-ads-ios/blob/master/Example/UnityAdsExample/ViewController.m) | best-effort |
+| Unity Ads | Android | Game ID `14851` | `rewardedVideo` | [unity-ads-android sample](https://github.com/Unity-Technologies/unity-ads-android) | best-effort |
+| LevelPlay | iOS | app key `25c43a4a5` | `obg6ohwts3y690ks` | [Mediation-Demo-Apps (iOS)](https://github.com/ironsource-mobile/Mediation-Demo-Apps/blob/master/iOS/Swift/LevelPlayDemo/DemoViewController.swift) | best-effort |
+| LevelPlay | Android | app key `25b63cf85` | `h3xw38h9214adgxo` | [Mediation-Demo-Apps](https://github.com/ironsource-mobile/Mediation-Demo-Apps) | best-effort |
+| InMobi | iOS | account `4028cb8b2c3a0b45012c406824e800ba` | `1672200162238` | [sdk-sample-code-ios](https://github.com/InMobi/sdk-sample-code-ios) | best-effort |
+| InMobi | Android | account `8ba05e170e914971a0b45d977809a6cf` | `1476878485960` | [sdk-sample-code-android](https://github.com/InMobi/sdk-sample-code-android) | best-effort |
+| Facebook | both | (none needed) | `IMG_16_9_APP_INSTALL#2312433698835503_2650502525028617` | `facebook_audience_network` example (an Android app; ⚠ unverified on iOS) | best-effort |
+| Start.io | iOS | ⛔ none public (Start.io's iOS samples use a placeholder) | n/a | [ios-swift-sample](https://github.com/StartApp-SDK/ios-swift-sample) | skipped |
+| Start.io | Android | `205489527` | (no unit IDs) | [android-sdk-demo](https://github.com/StartApp-SDK/android-sdk-demo) | best-effort |
+| AppLovin MAX | both | ⛔ no public SDK key | n/a | [MAX integration](https://support.applovin.com/en/max/ios/overview/integration) | skipped |
+
+- **required**: init, load and show must succeed, or the run fails.
+- **best-effort**: init must succeed. A `noFill`, `timeout` or `networkError` on load is reported as **SKIP** with the
+  reason, because these demo accounts don't reliably fill a CI simulator.
+- **skipped**: there are no public credentials. The adapter is still built and linked in CI.
+- An uncaught platform exception always fails the run.

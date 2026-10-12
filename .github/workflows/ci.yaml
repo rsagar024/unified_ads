@@ -30,6 +30,12 @@ jobs:
       - run: dart run melos run format
       - run: dart run melos run analyze
       - run: dart run melos run test
+      - name: Analyze + test tool/ (verify_ios_plist)
+        run: |
+          dart analyze --fatal-infos tool
+          dart test tool/test
+      - name: Example Info.plist + privacy manifest have every network's entries
+        run: dart run melos run verify:ios-plist
       - name: ads_config.json fixture is up to date
         working-directory: packages/unified_ads
         run: >

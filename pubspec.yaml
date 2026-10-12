@@ -21,7 +21,10 @@ workspace:
   - example
 
 dev_dependencies:
+  args: ^2.7.0
   melos: ^8.9.0
+  test: ^1.26.0
+  xml: ^7.0.1
 
 # Melos >= 7 reads its configuration from here (melos.yaml is no longer used).
 melos:
@@ -61,3 +64,15 @@ melos:
     pana:
       description: Score every package with pana (Linux/macOS only).
       run: bash tool/pana.sh
+    test:tool:
+      description: Analyze and test the repo tools (verify_ios_plist).
+      run: dart analyze --fatal-infos tool && dart test tool/test
+    verify:ios-plist:
+      description: Check the example app's Info.plist + privacy manifest for every network.
+      run: >-
+        dart run tool/verify_ios_plist.dart --plist example/ios/Runner/Info.plist
+        --networks admob,unity,applovin,ironsource,facebook,startapp,inmobi
+        --privacy example/ios/Runner/PrivacyInfo.xcprivacy
+    smoke:ios:
+      description: iOS simulator build + ad smoke test (macOS; pass all or a network).
+      run: bash tool/ios_sim_smoke.sh

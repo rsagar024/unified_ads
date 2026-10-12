@@ -20,9 +20,10 @@ esac
 cd "$(dirname "${BASH_SOURCE[0]}")/../example"
 flutter pub get
 
-# Generate ios/Podfile. pod install may fail on this first pass because the
-# template leaves the platform unset (iOS 13 default), while unified_ads_facebook
-# needs iOS 15, so the error is ignored.
+# example/ios/Podfile is committed with `platform :ios, '15.0'`
+# (unified_ads_facebook needs iOS 15). The sed below only matters if it is ever
+# regenerated from Flutter's template, which leaves the platform commented
+# out; the first pod install would then fail, so that error is ignored.
 flutter build ios --config-only --no-codesign || true
 sed -i '' "s/^# platform :ios.*/platform :ios, '15.0'/" ios/Podfile
 if [[ "$mode" == "cocoapods-static" ]]; then

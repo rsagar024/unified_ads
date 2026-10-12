@@ -116,36 +116,15 @@ if [[ -n "$meta" ]]; then
   $found || selected+=("$meta")
 fi
 
-repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Flutter on Windows needs C:/... paths; elsewhere this is a no-op.
-native_path() { if command -v cygpath > /dev/null; then cygpath -m "$1"; else echo "$1"; fi; }
+# shellcheck source=lib/scratch_app.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/scratch_app.sh"
 
 workdir="${OPT_IN_WORKDIR:-$(mktemp -d)}"
 app="$workdir/opt_in_app"
-rm -rf "$app"
 echo "==> Creating scratch app in $app (networks: ${selected[*]}${meta:+; Meta bidding via $meta})"
-flutter create --quiet --platforms android,ios --org dev.arovyx.optin "$app" > /dev/null
-
-# Depend on the packages the way a consumer would (hosted-style constraints),
-# and point them at this checkout with overrides (the packages may not be
-# published yet).
-deps="  unified_ads: ^1.0.0"
-overrides="dependency_overrides:
-  unified_ads:
-    path: $(native_path "$repo/packages/unified_ads")
-  unified_ads_platform_interface:
-    path: $(native_path "$repo/packages/unified_ads_platform_interface")"
 packages=("${selected[@]}")
 [[ -n "${OPT_IN_LEAK:-}" ]] && packages+=("$OPT_IN_LEAK")
-for n in "${packages[@]}"; do
-  deps+=$'\n'"  unified_ads_$n: ^1.0.0"
-  overrides+=$'\n'"  unified_ads_$n:
-    path: $(native_path "$repo/packages/unified_ads_$n")"
-done
-# Multi-line values go through ENVIRON: BSD awk (macOS) rejects newlines in -v.
-DEPS="$deps" awk '{ print } /^dependencies:/ { print ENVIRON["DEPS"] }' \
-  "$app/pubspec.yaml" > "$app/pubspec.tmp" && mv "$app/pubspec.tmp" "$app/pubspec.yaml"
-printf '%s\n' "$overrides" > "$app/pubspec_overrides.yaml"
+create_scratch_app "$app" "${packages[@]}"
 
 # A network's SDK is expected when it was selected; Audience Network is also
 # expected when Meta bidding was added through a mediation platform.
@@ -203,9 +182,7 @@ else
   ios_min=13.0
   is_expected facebook && ios_min=15.0
   echo "==> flutter build ios --config-only (iOS $ios_min)"
-  flutter pub get > /dev/null
-  flutter build ios --config-only --no-codesign > /dev/null || true
-  sed -i.bak "s/^# platform :ios.*/platform :ios, '$ios_min'/" ios/Podfile
+  prepare_ios_podfile "$app" "$ios_min"
   if [[ -n "$meta" ]]; then
     pod_line="$(meta_pod "$meta")"
     # awk, not sed: BSD sed doesn't expand \n in a replacement.

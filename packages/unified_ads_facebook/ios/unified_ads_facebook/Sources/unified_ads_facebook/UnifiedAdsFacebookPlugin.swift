@@ -82,8 +82,15 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
 
   @MainActor
   private func initializeOnMain(_ request: InitRequest) async throws {
-    if request.testMode && !request.testDeviceIds.isEmpty {
-      FBAdSettings.addTestDevices(request.testDeviceIds)
+    if request.testMode {
+      if request.testDeviceIds.isEmpty {
+        // Without a registered test device iOS serves no test ads, not even
+        // on the simulator; register this device so testMode works as
+        // documented.
+        FBAdSettings.addTestDevice(FBAdSettings.testDeviceHash())
+      } else {
+        FBAdSettings.addTestDevices(request.testDeviceIds)
+      }
     }
     if initialized { return }
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

@@ -52,7 +52,9 @@ AdNetwork.facebook: NetworkConfig(
 - **Test mode** (`TestModeSupport.testDevices`): the SDK logs a hashed device ID on first request
   (logcat: `Test mode device hash: …`; Xcode console on iOS). Put it in `testDeviceIds` and set `testMode: true`. The
   adapter then calls `AdSettings.addTestDevices` / `FBAdSettings.addTestDevices`. The `IMG_16_9_APP_INSTALL#` prefix also
-  forces a test creative without registering a device.
+  forces a test creative without registering a device. On iOS (since 1.0.1), `testMode: true` with an empty
+  `testDeviceIds` registers the current device (`FBAdSettings.testDeviceHash()`), because iOS serves no test ads, even
+  on the simulator, to an unregistered device.
 - **Rewards:** Audience Network reports "video completed" without an amount or type. `onEarnedReward` uses
   `extras['rewardAmount']` / `extras['rewardType']` (default `1` / `'reward'`). Server-side reward verification (Meta's
   `RewardData` S2S callback) is **not implemented yet**: `extras['userId']` reaches the native side but is not used.

@@ -1,0 +1,90 @@
+name: iOS simulator
+
+# Builds every adapter for the iOS simulator and runs the ad smoke test
+# (example/integration_test/ad_smoke_test.dart) against public test ad units.
+# Free GitHub macOS runners only: no code signing, no Apple Developer account,
+# no secrets. Screenshots and logs are uploaded as artifacts, even on failure.
+# Results feed SDK_STATUS.md ("Verification status").
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in sync with ci.yaml.
+  FLUTTER_VERSION: 3.44.6
+
+jobs:
+  smoke:
+    name: iOS sim (${{ matrix.target }})
+    # ⚠ Google Mobile Ads 13.4+ needs Xcode 26.2+ (SDK_STATUS.md); macos-26
+    # ships it.
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        # all = the root example app (every adapter); the rest are scratch
+        # apps that depend on that one adapter only.
+        target: [all, admob, unity, applovin, ironsource, facebook, startapp, inmobi]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods/repos
+          key: pods-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('packages/*/ios/*.podspec') }}
+          restore-keys: |
+            pods-${{ runner.os }}-${{ matrix.target }}-
+            pods-${{ runner.os }}-
+      - name: Tool versions
+        run: |
+          xcodebuild -version
+          flutter --version
+          pod --version
+          xcrun simctl list devices available | grep -i iphone | head -20
+      # CocoaPods mode; Swift Package Manager is covered by ci.yaml's iOS build matrix.
+      - run: flutter config --no-enable-swift-package-manager
+      - run: flutter pub get
+      - name: Build + smoke test
+        run: bash tool/ios_sim_smoke.sh ${{ matrix.target }}
+        env:
+          ARTIFACTS_DIR: ${{ github.workspace }}/artifacts/${{ matrix.target }}
+          SMOKE_WORKDIR: ${{ runner.temp }}
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### iOS simulator: ${{ matrix.target }}"
+            echo '```'
+            if [[ -s artifacts/${{ matrix.target }}/summary.txt ]]; then
+              cat artifacts/${{ matrix.target }}/summary.txt
+            else
+              echo "no smoke summary (build or launch failed; see the artifact logs)"
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload screenshots + logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-sim-${{ matrix.target }}
+          path: artifacts/${{ matrix.target }}
+          if-no-files-found: warn
+          retention-days: 30

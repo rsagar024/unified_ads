@@ -1,6 +1,7 @@
 # unified_ads
 
 [![CI](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml)
+[![iOS simulator](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml)
 [![pub package](https://img.shields.io/pub/v/unified_ads.svg)](https://pub.dev/packages/unified_ads)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -153,6 +154,8 @@ immediately; InMobi initializes but returns no-fill; AppLovin MAX and LevelPlay 
 
 - [doc/getting_ids.md](doc/getting_ids.md): how to create the account, app and every ID for each network
 - [doc/setup/](doc/setup): per-network platform setup
+- [doc/ios_setup.md](doc/ios_setup.md): iOS requirements per network (Info.plist, SKAdNetwork, privacy manifest) and the
+  `tool/verify_ios_plist.dart` checker
 - [doc/consent_and_att.md](doc/consent_and_att.md): GDPR/US privacy/COPPA consent, other CMPs, and ATT
 - [ARCHITECTURE.md](ARCHITECTURE.md): design, the adapter contract, and how opt-in linking works
 - [SDK_STATUS.md](SDK_STATUS.md): verified SDK versions, deprecations, API names
@@ -170,6 +173,9 @@ dart run melos run analyze      # --fatal-infos, every package
 dart run melos run test         # Dart unit + widget tests
 dart run melos run build:example && dart run melos run test:kotlin
 dart run melos run verify:opt-in   # AdMob + Unity + InMobi app links only those SDKs
+dart run melos run test:tool       # tool/ tests (verify_ios_plist)
+dart run melos run verify:ios-plist  # example Info.plist + privacy manifest
+bash tool/ios_sim_smoke.sh all     # macOS: simulator build + ad smoke test (also: a network id)
 ```
 
 CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs all of these, plus:
@@ -178,6 +184,11 @@ CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs all of these,
 - the iOS opt-in check;
 - a publish dry-run per package;
 - pana.
+
+**iOS without a Mac.** [`.github/workflows/ios.yml`](.github/workflows/ios.yml) (badge above) runs on free GitHub
+macOS runners, with no signing and no Apple Developer account. It builds the example and a scratch app per adapter for
+the simulator, runs `example/integration_test/ad_smoke_test.dart` against public test ads, and uploads screenshots and
+logs as artifacts. What it has proven so far is recorded in [SDK_STATUS.md](SDK_STATUS.md#0-verification-status).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
