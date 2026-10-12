@@ -22,8 +22,9 @@ workspace:
 
 dev_dependencies:
   args: ^2.7.0
+  flutter_test:
+    sdk: flutter
   melos: ^8.9.0
-  test: ^1.26.0
   xml: ^7.0.1
 
 # Melos >= 7 reads its configuration from here (melos.yaml is no longer used).
@@ -66,7 +67,7 @@ melos:
       run: bash tool/pana.sh
     test:tool:
       description: Analyze and test the repo tools (verify_ios_plist).
-      run: dart analyze --fatal-infos tool && dart test tool/test
+      run: dart analyze --fatal-infos tool && flutter test tool/test
     verify:ios-plist:
       description: Check the example app's Info.plist + privacy manifest for every network.
       run: >-

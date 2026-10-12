@@ -13,7 +13,7 @@ concurrency:
 
 env:
   # Keep in sync with the local toolchain (packages require Flutter >= 3.44).
-  FLUTTER_VERSION: 3.44.6
+  FLUTTER_VERSION: 3.47.2
   JAVA_VERSION: 17
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
       - name: Analyze + test tool/ (verify_ios_plist)
         run: |
           dart analyze --fatal-infos tool
-          dart test tool/test
+          flutter test tool/test
       - name: Example Info.plist + privacy manifest have every network's entries
         run: dart run melos run verify:ios-plist
       - name: ads_config.json fixture is up to date

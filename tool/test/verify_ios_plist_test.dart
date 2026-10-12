@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../src/plist.dart';
 import '../src/verify_ios_plist.dart';
@@ -102,10 +102,13 @@ void main() {
   });
 
   group('CLI', () {
-    Future<ProcessResult> run(List<String> args) => Process.run(
-      Platform.resolvedExecutable,
-      ['run', 'tool/verify_ios_plist.dart', ...args],
-    );
+    // `dart` from PATH: under `flutter test`, Platform.resolvedExecutable is
+    // flutter_tester, not the Dart VM.
+    Future<ProcessResult> run(List<String> args) => Process.run('dart', [
+      'run',
+      'tool/verify_ios_plist.dart',
+      ...args,
+    ], runInShell: Platform.isWindows);
 
     test('exits 0 when complete', () async {
       final result = await run([
