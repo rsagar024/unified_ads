@@ -28,6 +28,7 @@ const configRootKeys = {
   'networks',
   'loadTimeoutMs',
   'initTimeoutMs',
+  'showTimeoutMs',
   'cacheTtlSeconds',
   'preload',
   'frequencyCaps',
@@ -106,6 +107,7 @@ void _validateRoot(Map<String, Object?> json) {
   }
   _opt<int>(json, 'loadTimeoutMs', p);
   _opt<int>(json, 'initTimeoutMs', p);
+  _opt<int>(json, 'showTimeoutMs', p);
   _opt<int>(json, 'cacheTtlSeconds', p);
   final preload = _opt<Map<String, Object?>>(json, 'preload', p);
   if (preload != null) {

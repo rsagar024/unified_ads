@@ -7,7 +7,11 @@
   `Package.swift`, ⚠ to be confirmed by CI), so the plugin still loads on iOS 13.
 * The iOS privacy manifest (`PrivacyInfo.xcprivacy`) is bundled as an SPM resource.
 * Constraints on the other unified_ads packages are now `^1.1.0`.
-* No Dart API changes.
+* **Fix:** `show()` on a full-screen ad no longer waits forever when the network's SDK sends neither a
+  "shown" nor a "failed to show" callback (seen with Unity Ads and AppLovin MAX on the iOS simulator).
+  It now fails with `AdErrorCode.timeout` after the new `AdConfig.showTimeout` (default 15 s;
+  `showTimeoutMs` in `ads_config.json`). Additive, non-breaking.
+* `FakeAdNetworkAdapter.showDelay` (testing).
 
 ## 1.0.0
 

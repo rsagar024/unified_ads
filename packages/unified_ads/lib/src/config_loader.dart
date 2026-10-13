@@ -16,6 +16,7 @@ import 'config_schema.dart';
 ///   "waterfall": ["admob", "unity", "inmobi"],
 ///   "loadTimeoutMs": 10000,
 ///   "initTimeoutMs": 20000,
+///   "showTimeoutMs": 15000,
 ///   "cacheTtlSeconds": 3600,
 ///   "preload": { "formats": ["interstitial", "rewarded"], "onInit": false },
 ///   "frequencyCaps": { "interstitial": { "maxShows": 3, "perSeconds": 3600 } },
@@ -136,6 +137,7 @@ abstract final class AdConfigLoader {
         'waterfall': [for (final n in config.waterfall) n.id],
       'loadTimeoutMs': config.loadTimeout.inMilliseconds,
       'initTimeoutMs': config.initTimeout.inMilliseconds,
+      'showTimeoutMs': config.showTimeout.inMilliseconds,
       'cacheTtlSeconds': config.cacheTtl.inSeconds,
       'preload': {
         'formats': [for (final f in config.preload.formats) f.id],
@@ -185,6 +187,8 @@ class _Parser {
           _duration(json, 'loadTimeoutMs', p, ms: true) ?? defaults.loadTimeout,
       initTimeout:
           _duration(json, 'initTimeoutMs', p, ms: true) ?? defaults.initTimeout,
+      showTimeout:
+          _duration(json, 'showTimeoutMs', p, ms: true) ?? defaults.showTimeout,
       cacheTtl:
           _duration(json, 'cacheTtlSeconds', p, ms: false) ?? defaults.cacheTtl,
       preload: _preload(json, p) ?? defaults.preload,

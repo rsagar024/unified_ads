@@ -252,7 +252,24 @@ class AdsSession {
         ),
       );
     }
-    return guardCall(handle.network, 'show', () => adapter.show(handle));
+    // A native show only completes on the SDK's "shown" or "failed to show"
+    // callback; an SDK that sends neither must not hang the caller.
+    return guardCall(
+      handle.network,
+      'show',
+      () => adapter.show(handle),
+    ).timeout(
+      config.showTimeout,
+      onTimeout: () => AdFailure(
+        AdError(
+          code: AdErrorCode.timeout,
+          message:
+              'show timed out after ${config.showTimeout.inSeconds} s without '
+              'a shown or failed-to-show callback',
+          network: handle.network,
+        ),
+      ),
+    );
   }
 
   /// Releases [handle] through its adapter.

@@ -112,6 +112,31 @@ void main() {
       expect((await other.show()).isSuccess, isTrue, reason: 'not blocked');
     });
 
+    test('a show the SDK never answers times out', () async {
+      admob.showDelay = const Duration(milliseconds: 300);
+      await UnifiedAds.init(
+        configFor([
+          AdNetwork.admob,
+        ]).copyWith(showTimeout: const Duration(milliseconds: 50)),
+        adapters: [admob],
+      );
+      final errors = <AdError>[];
+      final ad = InterstitialAd(onFailedToShow: (_, e) => errors.add(e));
+      await ad.load();
+
+      final result = await ad.show();
+
+      expect(result.errorOrNull?.code, AdErrorCode.timeout);
+      expect(result.errorOrNull?.network, AdNetwork.admob);
+      expect(errors.single.code, AdErrorCode.timeout);
+      expect(ad.isShowing, isFalse);
+
+      // The late native answer must not break anything.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await flush();
+      expect(errors, hasLength(1));
+    });
+
     test('an AdFailedToShow event ends the show', () async {
       await init();
       final errors = <AdError>[];
