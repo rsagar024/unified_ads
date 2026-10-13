@@ -6,7 +6,7 @@ InMobi adapter for [`unified_ads`](https://pub.dev/packages/unified_ads): banner
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` | `InMobiSDK 11.5.0` |
-| Distribution | Gradle (Maven Central) | CocoaPods |
+| Distribution | Gradle (Maven Central) | Swift Package Manager |
 
 Setup, config, privacy and error mapping: [`doc/setup/inmobi.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/inmobi.md).
 

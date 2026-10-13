@@ -8,7 +8,7 @@ SDKs (pinned, see [`SDK_STATUS.md`](../../SDK_STATUS.md) §2.1):
 | Platform | SDK | Consent (UMP) |
 |---|---|---|
 | Android | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0` | `com.google.android.ump:user-messaging-platform:4.0.0` |
-| iOS | `Google-Mobile-Ads-SDK` 13.11.0 (CocoaPods / SPM) | `GoogleUserMessagingPlatform` 3.1.0 |
+| iOS | `GoogleMobileAds` 13.11.0 (Swift Package Manager) | `GoogleUserMessagingPlatform` 3.1.0 |
 
 **Minimums:** Android minSdk **24**, compileSdk 35+, Kotlin 1.9+; iOS **13.0**, Xcode 26.2+ (⚠ per Google's release
 notes; the quick-start page still says 16).
@@ -21,8 +21,8 @@ notes; the quick-start page still says 16).
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_admob: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_admob: ^1.1.0
 ```
 
 The adapter registers itself. No other network's SDK is pulled in.
@@ -67,13 +67,12 @@ The adapter registers itself. No other network's SDK is pulled in.
 If `GADApplicationIdentifier` is missing, `UnifiedAds.init` reports `AdErrorCode.invalidConfig` for AdMob instead of
 crashing.
 
-- `ios/Podfile`: `platform :ios, '13.0'`.
-- **CocoaPods:** works with and without `use_frameworks!`. The adapter pod is a `static_framework`, matching the
-  statically linked Google Mobile Ads xcframework (⚠ static vs dynamic not stated by Google). Also compatible with
-  `use_frameworks! :linkage => :static`.
-- **Swift Package Manager:** supported. The adapter's `Package.swift` depends on
-  `googleads/swift-package-manager-google-mobile-ads` (exact 13.11.0) and
-  `googleads/swift-package-manager-google-user-messaging-platform` (exact 3.1.0).
+- Deployment target: **13.0** on the Runner target in Xcode (`IPHONEOS_DEPLOYMENT_TARGET`).
+- **Swift Package Manager only** (since 1.1.0; CocoaPods is not supported, see
+  [the migration guide](../migration/1.1.0-swift-package-manager.md)). The adapter's `Package.swift` depends on
+  `googleads/swift-package-manager-google-mobile-ads` (exact 13.11.0, product `GoogleMobileAds`) and
+  `googleads/swift-package-manager-google-user-messaging-platform` (exact 3.1.0, product
+  `GoogleUserMessagingPlatform`).
 - Privacy manifest: Google's frameworks ship their own. The adapter declares its `UserDefaults` use (reason `CA92.1`).
 
 ## 4. Consent (GDPR / US states) and ATT
@@ -168,16 +167,14 @@ configurations.configureEach {
 
 Audience Network also needs cleartext to `127.0.0.1`. See [facebook.md](facebook.md#android).
 
-**iOS:** CocoaPods or Swift Package Manager, iOS **15.0+**.
+**iOS:** Swift Package Manager, iOS **15.0+** (Runner target deployment target). In Xcode, **File > Add Package
+Dependencies…**, add it to the **Runner** target:
 
-```ruby
-# ios/Podfile, inside `target 'Runner'`, and `platform :ios, '15.0'`
-pod 'GoogleMobileAdsMediationFacebook', '6.22.0.0'
-```
+| Package | Dependency rule | Product |
+|---|---|---|
+| `https://github.com/googleads/googleads-mobile-ios-mediation-meta` | **Commit** `0a3d0597402162334fb5e11816ca612478180095` (= tag `6.22.000`; that tag is not valid semver, so pin the revision) | `MetaAdapterTarget` |
 
-With SwiftPM, add `https://github.com/googleads/googleads-mobile-ios-mediation-meta.git` (product `MetaAdapterTarget`)
-to the Runner target in Xcode. ⚠ Google publishes it on the `main` branch without tags, so CocoaPods is the more
-reproducible route. Also add Meta's SKAdNetwork IDs.
+Also add Meta's SKAdNetwork IDs.
 
 The adapter does **not** call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
 ATT status itself.

@@ -54,6 +54,9 @@ ValidationReport validateConfig(AdConfig config) {
   if (config.initTimeout <= Duration.zero) {
     global.add(invalid('initTimeout must be positive'));
   }
+  if (config.showTimeout <= Duration.zero) {
+    global.add(invalid('showTimeout must be positive'));
+  }
   if (config.cacheTtl <= Duration.zero) {
     global.add(invalid('cacheTtl must be positive'));
   }

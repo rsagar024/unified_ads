@@ -6,7 +6,7 @@
 #
 # The repository root is the pub workspace (`publish_to: none`) and is never
 # published: running `dart pub publish` there fails with "missing requirement".
-# The adapters depend on `^1.0.0` of the platform interface and the core, so
+# The adapters depend on `^1.1.0` of the platform interface and the core, so
 # those two must reach pub.dev first.
 set -euo pipefail
 
@@ -20,17 +20,9 @@ fi
 
 cd "$(dirname "$0")/.."
 
-packages=(
-  unified_ads_platform_interface
-  unified_ads
-  unified_ads_admob
-  unified_ads_unity
-  unified_ads_applovin
-  unified_ads_ironsource
-  unified_ads_facebook
-  unified_ads_startapp
-  unified_ads_inmobi
-)
+# shellcheck source=lib/packages.sh
+source tool/lib/packages.sh
+packages=("${PACKAGES[@]}")
 
 mode=--dry-run
 [[ "${1:-}" == "--publish" ]] && mode=

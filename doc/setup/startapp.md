@@ -6,7 +6,7 @@
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
 | Android | `com.startapp:inapp-sdk:5.4.0` | API 23 per AAR (project: 24) |
-| iOS | `StartAppSDK` 4.15.0 (**CocoaPods only**) | iOS 9 (project: 13) |
+| iOS | `StartAppSDK` 4.15.0 (Swift Package Manager: official `StartApp-SDK/StartAppSDK-SwiftPackage`, product `StartApp`) | iOS 9 (project: 13) |
 
 ## Config
 
@@ -44,7 +44,7 @@ AdNetwork.startapp: NetworkConfig(
 - **Android:** Maven Central. The AAR ships its ProGuard rules and permissions. `com.startapp.sdk.APPLICATION_ID` meta-data is not
   needed, because the App ID is passed in code.
 - **iOS:** add `SKAdNetworkItems` from https://www.start.io/skadnetworkids.json and `NSUserTrackingUsageDescription`
-  (the pod links AppTrackingTransparency).
+  (the SDK links AppTrackingTransparency).
 
 ## Errors
 

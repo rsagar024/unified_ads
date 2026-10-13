@@ -4,7 +4,7 @@ import ObjectiveC
 /// Optional Meta (Facebook) Audience Network bidding through LevelPlay mediation.
 ///
 /// This package declares no Meta dependency. An app opts in by adding the
-/// vendor's Meta adapter (`IronSourceFacebookAdapter`, via CocoaPods or Swift Package Manager; see
+/// vendor's Meta adapter (Swift package `LevelPlay-Facebook-Adapter-Swift-Package`, product `FacebookAdapter`; see
 /// doc/setup/ironsource.md). This type then detects the adapter and forwards
 /// privacy signals to the Audience Network SDK before LevelPlay initializes it,
 /// through the Objective-C runtime so the package builds without Meta's SDK.

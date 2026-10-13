@@ -7,10 +7,10 @@ InMobi, Start.io and Facebook Audience Network. Each network is a separate adapt
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
+  unified_ads: ^1.1.0
   # add only the networks you want:
-  unified_ads_admob: ^1.0.0
-  unified_ads_unity: ^1.0.0
+  unified_ads_admob: ^1.1.0
+  unified_ads_unity: ^1.1.0
 ```
 
 | Adapter | Network |
@@ -91,5 +91,7 @@ Step-by-step dashboard instructions and public test credentials: see
 Android: every adapter compiles against its pinned SDK. AdMob, Unity Ads, Start.io and Facebook have been verified serving
 test ads on a device. iOS compiles only in CI (pending its first run) and has not yet run on a device.
 
-Requirements: Android minSdk 24; iOS 13, or iOS 15 with `unified_ads_facebook`; Flutter 3.44+.
+Requirements: Android minSdk 24; iOS 13, or iOS 15 with `unified_ads_facebook`; Flutter 3.44+. On iOS, every
+`unified_ads` package is Swift Package Manager only since 1.1.0 (Xcode 26.2+; CocoaPods is not supported). See the
+[migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
 See the repository `README.md`, `SDK_STATUS.md` and `IMPLEMENTATION.md`.

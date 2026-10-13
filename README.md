@@ -1,6 +1,7 @@
 # unified_ads
 
 [![CI](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml)
+[![iOS simulator](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml)
 [![pub package](https://img.shields.io/pub/v/unified_ads.svg)](https://pub.dev/packages/unified_ads)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -26,7 +27,7 @@ if ((await ad.load()).isSuccess) await ad.show();   // tries AdMob → Unity →
 
 - **Opt-in networks:** each network is its own package. Depend on `unified_ads_admob` + `unified_ads_unity` and *only*
   those SDKs end up in your APK / IPA. CI checks this on every push: [`tool/verify_opt_in.sh`](tool/verify_opt_in.sh)
-  builds an app with AdMob + Unity + InMobi and fails if any other network's Gradle artifact or pod is resolved. See
+  builds an app with AdMob + Unity + InMobi and fails if any other network's Gradle artifact or Swift package is resolved. See
   [ARCHITECTURE.md §4](ARCHITECTURE.md).
 - **Waterfall fallback** with per-network timeouts, **preloading**, **frequency capping**, one `AdError` model, and unified events.
 - **Never crashes the host app:** every native failure becomes an `AdError`.
@@ -70,8 +71,8 @@ app; the package detects it and forwards privacy. No Meta SDK is linked otherwis
 Column legend:
 
 - ✅ **Android:** compiled against the pinned SDK, with Kotlin and Dart unit tests.
-- ⏳ **CI (iOS):** Swift sources are built by the CI macOS job (`flutter build ios --no-codesign`, SPM + CocoaPods
-  dynamic/static). That job hasn't had its first run yet, and iOS hasn't run on a device.
+- ⏳ **CI (iOS):** Swift sources are built by the CI macOS job (`flutter build ios --no-codesign`, Swift Package
+  Manager only since 1.1.0). That job hasn't had its first run yet, and iOS hasn't run on a device.
 
 `RewardedInterstitialAd` and `AppOpenAd` use the same waterfall, cache, frequency caps and callbacks as the other formats.
 AdMob Android uses the **GMA Next-Gen SDK**, which can't share an app with the legacy `play-services-ads` (for example the
@@ -99,9 +100,9 @@ Every network needs an **app-level credential**, and most also need **one ID per
 1. Add the core and the networks you want:
    ```yaml
    dependencies:
-     unified_ads: ^1.0.0
-     unified_ads_admob: ^1.0.0
-     unified_ads_unity: ^1.0.0
+     unified_ads: ^1.1.0
+     unified_ads_admob: ^1.1.0
+     unified_ads_unity: ^1.1.0
    ```
 2. Follow each network's setup doc (manifest / Info.plist entries, SKAdNetwork IDs, privacy):
    [AdMob](doc/setup/admob.md) · [AppLovin MAX](doc/setup/applovin.md) · [Unity Ads](doc/setup/unity.md) ·
@@ -131,6 +132,8 @@ Every network needs an **app-level credential**, and most also need **one ID per
    ```
 
 > Android **minSdk 24** · iOS **13.0** (**15.0** with `unified_ads_facebook`) · Flutter 3.44+ / Dart 3.12+.
+> iOS builds use **Swift Package Manager only** (since 1.1.0; CocoaPods is not supported) with Xcode 26.2+. Upgrading
+> from 1.0.x: [doc/migration/1.1.0-swift-package-manager.md](doc/migration/1.1.0-swift-package-manager.md).
 > Don't enable Unity Ads and LevelPlay together: the Unity SDK initializes once per process, so unified_ads skips Unity.
 
 ## Example app: try every network in one screen
@@ -153,6 +156,8 @@ immediately; InMobi initializes but returns no-fill; AppLovin MAX and LevelPlay 
 
 - [doc/getting_ids.md](doc/getting_ids.md): how to create the account, app and every ID for each network
 - [doc/setup/](doc/setup): per-network platform setup
+- [doc/ios_setup.md](doc/ios_setup.md): iOS requirements per network (Info.plist, SKAdNetwork, privacy manifest) and the
+  `tool/verify_ios_plist.dart` checker
 - [doc/consent_and_att.md](doc/consent_and_att.md): GDPR/US privacy/COPPA consent, other CMPs, and ATT
 - [ARCHITECTURE.md](ARCHITECTURE.md): design, the adapter contract, and how opt-in linking works
 - [SDK_STATUS.md](SDK_STATUS.md): verified SDK versions, deprecations, API names
@@ -170,14 +175,26 @@ dart run melos run analyze      # --fatal-infos, every package
 dart run melos run test         # Dart unit + widget tests
 dart run melos run build:example && dart run melos run test:kotlin
 dart run melos run verify:opt-in   # AdMob + Unity + InMobi app links only those SDKs
+dart run melos run test:tool       # tool/ tests (verify_ios_plist)
+dart run melos run verify:ios-plist  # example Info.plist + privacy manifest
+bash tool/ios_sim_smoke.sh all     # macOS: simulator build + ad smoke test (also: a network id)
 ```
 
 CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs all of these, plus:
 
-- the iOS build matrix (SPM, CocoaPods dynamic, CocoaPods static);
+- the iOS build (Swift Package Manager);
 - the iOS opt-in check;
 - a publish dry-run per package;
 - pana.
+
+**Releases.** Merges to `development` and `master` both run CI and iOS. A green merge to `master` publishes every package
+whose version changed to pub.dev automatically; `development` never publishes. See
+[CONTRIBUTING.md](CONTRIBUTING.md#branches-and-releases).
+
+**iOS without a Mac.** [`.github/workflows/ios.yml`](.github/workflows/ios.yml) (badge above) runs on free GitHub
+macOS runners, with no signing and no Apple Developer account. It builds the example and a scratch app per adapter for
+the simulator, runs `example/integration_test/ad_smoke_test.dart` against public test ads, and uploads screenshots and
+logs as artifacts. What it has proven so far is recorded in [SDK_STATUS.md](SDK_STATUS.md#0-verification-status).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 

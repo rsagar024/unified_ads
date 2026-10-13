@@ -4,7 +4,7 @@ import ObjectiveC
 /// Optional Meta (Facebook) Audience Network bidding through AppLovin MAX mediation.
 ///
 /// This package declares no Meta dependency. An app opts in by adding the
-/// vendor's Meta adapter (`AppLovinMediationFacebookAdapter`, via CocoaPods or Swift Package Manager; see
+/// vendor's Meta adapter (Swift package `AppLovin-MAX-Swift-Package-Meta`, product `AppLovinMediationFacebookAdapter`; see
 /// doc/setup/applovin.md). This type then detects the adapter and forwards
 /// privacy signals to the Audience Network SDK before AppLovin MAX initializes it,
 /// through the Objective-C runtime so the package builds without Meta's SDK.

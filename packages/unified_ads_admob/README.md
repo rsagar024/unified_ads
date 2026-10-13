@@ -5,8 +5,8 @@ Google AdMob adapter for [`unified_ads`](https://pub.dev/packages/unified_ads): 
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_admob: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_admob: ^1.1.0
 ```
 
 ```dart
@@ -23,7 +23,7 @@ The App ID must also be in `AndroidManifest.xml` and `Info.plist`. Full setup: [
 |---|---|---|
 | SDK | GMA Next-Gen `ads-mobile-sdk` 1.5.0, UMP 4.0.0 | Google-Mobile-Ads-SDK 13.11.0, UMP 3.1.0 |
 | Minimum | API 24 | iOS 13 |
-| Distribution | Gradle | CocoaPods + Swift Package Manager |
+| Distribution | Gradle | Swift Package Manager |
 
 Status: Android verified on a physical device (banner rendered, interstitial loaded + shown, rewarded loaded); iOS compiles only in CI (`flutter build ios --no-codesign`, pending its first run) and has not yet run on a device.
 New adapters copy this package: see [`TEMPLATE.md`](TEMPLATE.md).

@@ -1,0 +1,71 @@
+name: Release
+
+# Auto-release from master ONLY: after a push to master (a merge) passes BOTH
+# CI and the iOS simulator workflow, tag every package whose pubspec version is
+# not on pub.dev yet (tool/release_tags.sh). Each tag push runs publish.yml.
+# Pushes to development run CI + iOS but never reach this workflow.
+# One-time setup: CONTRIBUTING.md → "Branches and releases".
+
+on:
+  workflow_run:
+    workflows: [CI, iOS simulator]
+    types: [completed]
+    branches: [master]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: release-master
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Tag unreleased versions
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Both CI and iOS passed for this commit?
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          ok=true
+          for wf in ci.yaml ios.yml; do
+            conclusion="$(gh api "repos/${{ github.repository }}/actions/workflows/$wf/runs?head_sha=$SHA&event=push&branch=master&per_page=1" \
+              --jq '.workflow_runs[0].conclusion // "pending"')"
+            echo "$wf: $conclusion"
+            [[ "$conclusion" == success ]] || ok=false
+          done
+          # The other workflow's completion triggers this again.
+          echo "ready=$ok" >> "$GITHUB_OUTPUT"
+      - name: Release token configured?
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          RELEASE_TAG_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+        run: |
+          if [[ -z "$RELEASE_TAG_TOKEN" ]]; then
+            echo "::error::Secret RELEASE_TAG_TOKEN is missing. Tags pushed with GITHUB_TOKEN don't trigger publish.yml. Add a fine-grained PAT (this repo, Contents: read/write); see CONTRIBUTING.md."
+            exit 1
+          fi
+      - if: steps.gate.outputs.ready == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Tag and wait for pub.dev
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          RELEASE_TAG_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${RELEASE_TAG_TOKEN}@github.com/${{ github.repository }}.git"
+          bash tool/release_tags.sh --dry-run
+          bash tool/release_tags.sh

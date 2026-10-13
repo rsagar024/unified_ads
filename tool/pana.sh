@@ -6,7 +6,7 @@
 #   PANA_KEEP=1              keep the temp copies and pana logs
 #
 # The packages aren't published yet, so pana can't resolve
-# `unified_ads_platform_interface: ^1.0.0` from pub.dev. Each package is
+# `unified_ads_platform_interface: ^1.1.0` from pub.dev. Each package is
 # therefore copied to a temp dir, `resolution: workspace` is stripped, and a
 # pubspec_overrides.yaml points the sibling packages at this checkout.
 # Requires: dart pub global activate pana

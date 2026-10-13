@@ -15,7 +15,8 @@
 # It creates a scratch Flutter app OUTSIDE the workspace (as a consumer would),
 # then checks the resolved native dependencies:
 #   android: ./gradlew :app:dependencies --configuration releaseRuntimeClasspath
-#   ios:     Podfile.lock after `pod install` (CocoaPods mode; macOS only)
+#   ios:     Package.resolved after `xcodebuild -resolvePackageDependencies`
+#            (Swift Package Manager; macOS only)
 # Every selected network's SDK must be present; every other network's SDK
 # must be absent. On Android the legacy Google Mobile Ads SDK must never be
 # resolved (the AdMob adapter uses GMA Next-Gen, and the two can't coexist).
@@ -33,7 +34,7 @@ IFS=',' read -r -a selected <<< "${NETWORKS:-admob,unity,inmobi}"
 meta="${META_BIDDING:-}"
 
 # Native SDK coordinates per network. Keep in sync with each adapter's
-# android/build.gradle.kts and ios/*.podspec (pinned in SDK_STATUS.md).
+# android/build.gradle.kts and ios/<pkg>/Package.swift (pinned in SDK_STATUS.md).
 android_sdk() {
   case "$1" in
     admob) echo 'com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:' ;;
@@ -45,15 +46,17 @@ android_sdk() {
     inmobi) echo 'com.inmobi.monetization:inmobi-ads-kotlin:' ;;
   esac
 }
-ios_pod() {
+# SwiftPM package identity (lowercased repository name) as it appears,
+# quoted, in Package.resolved.
+ios_spm() {
   case "$1" in
-    admob) echo 'Google-Mobile-Ads-SDK' ;;
-    unity) echo 'UnityAds' ;;
-    applovin) echo 'AppLovinSDK' ;;
-    ironsource) echo 'IronSourceSDK' ;;
-    facebook) echo 'FBAudienceNetwork' ;;
-    startapp) echo 'StartAppSDK' ;;
-    inmobi) echo 'InMobiSDK' ;;
+    admob) echo '"swift-package-manager-google-mobile-ads"' ;;
+    unity) echo '"unity-ads-swift-package"' ;;
+    applovin) echo '"applovin-max-swift-package"' ;;
+    ironsource) echo '"levelplay-swift-package"' ;;
+    facebook) echo '"fbaudiencenetwork"' ;;
+    startapp) echo '"startappsdk-swiftpackage"' ;;
+    inmobi) echo '"inmobisdk-swift-package"' ;;
   esac
 }
 LEGACY_GMA='com.google.android.gms:play-services-ads:'
@@ -94,12 +97,43 @@ EOF
     *) echo "META_BIDDING must be admob, applovin or ironsource" >&2; exit 2 ;;
   esac
 }
-meta_pod() {
+# Meta bidding on iOS: the Swift package an app adds to its Runner target
+# (Xcode > Add Package Dependencies), as "<url> <requirement> <product>".
+# Requirement is exact:<version> or revision:<sha>. Google's Meta adapter tag
+# 6.22.000 isn't valid semver, so it is pinned by that tag's commit.
+meta_spm() {
   case "$1" in
-    admob) echo "pod 'GoogleMobileAdsMediationFacebook', '6.22.0.0'" ;;
-    applovin) echo "pod 'AppLovinMediationFacebookAdapter', '6.22.0.4'" ;;
-    ironsource) echo "pod 'IronSourceFacebookAdapter', '5.5.0.0'" ;;
+    admob) echo "https://github.com/googleads/googleads-mobile-ios-mediation-meta.git revision:0a3d0597402162334fb5e11816ca612478180095 MetaAdapterTarget" ;;
+    applovin) echo "https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta.git exact:6220004.0.0 AppLovinMediationFacebookAdapter" ;;
+    ironsource) echo "https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package.git exact:5.5.0 FacebookAdapter" ;;
   esac
+}
+
+# add_spm_package <url> <requirement> <product>: adds a remote Swift package
+# product to the Runner target with the xcodeproj gem (what Xcode's "Add
+# Package Dependencies" does).
+add_spm_package() {
+  gem list -i xcodeproj > /dev/null || gem install --user-install --no-document xcodeproj > /dev/null
+  PKG_URL="$1" PKG_REQ="$2" PKG_PRODUCT="$3" ruby -e '
+    require "xcodeproj"
+    kind, value = ENV["PKG_REQ"].split(":", 2)
+    project = Xcodeproj::Project.open("ios/Runner.xcodeproj")
+    target = project.targets.find { |t| t.name == "Runner" } or abort("no Runner target")
+    pkg = project.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
+    pkg.repositoryURL = ENV["PKG_URL"]
+    pkg.requirement = kind == "revision" ?
+      { "kind" => "revision", "revision" => value } :
+      { "kind" => "exactVersion", "version" => value }
+    project.root_object.package_references << pkg
+    dep = project.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
+    dep.package = pkg
+    dep.product_name = ENV["PKG_PRODUCT"]
+    target.package_product_dependencies << dep
+    file = project.new(Xcodeproj::Project::Object::PBXBuildFile)
+    file.product_ref = dep
+    target.frameworks_build_phase.files << file
+    project.save
+  '
 }
 
 for n in "${selected[@]}"; do
@@ -116,36 +150,15 @@ if [[ -n "$meta" ]]; then
   $found || selected+=("$meta")
 fi
 
-repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Flutter on Windows needs C:/... paths; elsewhere this is a no-op.
-native_path() { if command -v cygpath > /dev/null; then cygpath -m "$1"; else echo "$1"; fi; }
+# shellcheck source=lib/scratch_app.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/scratch_app.sh"
 
 workdir="${OPT_IN_WORKDIR:-$(mktemp -d)}"
 app="$workdir/opt_in_app"
-rm -rf "$app"
 echo "==> Creating scratch app in $app (networks: ${selected[*]}${meta:+; Meta bidding via $meta})"
-flutter create --quiet --platforms android,ios --org dev.arovyx.optin "$app" > /dev/null
-
-# Depend on the packages the way a consumer would (hosted-style constraints),
-# and point them at this checkout with overrides (the packages may not be
-# published yet).
-deps="  unified_ads: ^1.0.0"
-overrides="dependency_overrides:
-  unified_ads:
-    path: $(native_path "$repo/packages/unified_ads")
-  unified_ads_platform_interface:
-    path: $(native_path "$repo/packages/unified_ads_platform_interface")"
 packages=("${selected[@]}")
 [[ -n "${OPT_IN_LEAK:-}" ]] && packages+=("$OPT_IN_LEAK")
-for n in "${packages[@]}"; do
-  deps+=$'\n'"  unified_ads_$n: ^1.0.0"
-  overrides+=$'\n'"  unified_ads_$n:
-    path: $(native_path "$repo/packages/unified_ads_$n")"
-done
-# Multi-line values go through ENVIRON: BSD awk (macOS) rejects newlines in -v.
-DEPS="$deps" awk '{ print } /^dependencies:/ { print ENVIRON["DEPS"] }' \
-  "$app/pubspec.yaml" > "$app/pubspec.tmp" && mv "$app/pubspec.tmp" "$app/pubspec.yaml"
-printf '%s\n' "$overrides" > "$app/pubspec_overrides.yaml"
+create_scratch_app "$app" "${packages[@]}"
 
 # A network's SDK is expected when it was selected; Audience Network is also
 # expected when Meta bidding was added through a mediation platform.
@@ -191,32 +204,24 @@ if [[ "$platform" == "android" ]]; then
   fi
 else
   if [[ "$(uname)" != "Darwin" ]]; then
-    echo "The iOS check needs macOS (CocoaPods)." >&2
+    echo "The iOS check needs macOS (Xcode)." >&2
     exit 2
   fi
-  # CocoaPods mode, so Podfile.lock lists every native pod. (SwiftPM mode is
-  # covered by the CI iOS build matrix.)
-  # The template already has a top-level `flutter:` key; nest under it.
-  awk '{ print } /^flutter:/ { print "  config:"; print "    enable-swift-package-manager: false" }' \
-    pubspec.yaml > pubspec.tmp && mv pubspec.tmp pubspec.yaml
   # Audience Network (direct or through a Meta bidding adapter) needs iOS 15.
   ios_min=13.0
   is_expected facebook && ios_min=15.0
-  echo "==> flutter build ios --config-only (iOS $ios_min)"
-  flutter pub get > /dev/null
-  flutter build ios --config-only --no-codesign > /dev/null || true
-  sed -i.bak "s/^# platform :ios.*/platform :ios, '$ios_min'/" ios/Podfile
+  echo "==> flutter build ios --config-only (iOS $ios_min, Swift Package Manager)"
+  flutter config --enable-swift-package-manager > /dev/null
+  prepare_ios_project "$app" "$ios_min"
   if [[ -n "$meta" ]]; then
-    pod_line="$(meta_pod "$meta")"
-    # awk, not sed: BSD sed doesn't expand \n in a replacement.
-    POD_LINE="$pod_line" awk '{ print }
-      /^ *flutter_install_all_ios_pods / { match($0, /^ */); print substr($0, 1, RLENGTH) ENVIRON["POD_LINE"] }' \
-      ios/Podfile > ios/Podfile.tmp && mv ios/Podfile.tmp ios/Podfile
-    grep -qF "$pod_line" ios/Podfile
+    read -r meta_url meta_req meta_product <<< "$(meta_spm "$meta")"
+    echo "==> Adding $meta_product ($meta_url, $meta_req) to the Runner target"
+    add_spm_package "$meta_url" "$meta_req" "$meta_product"
   fi
-  (cd ios && pod install --repo-update > /dev/null)
-  listing="$app/ios/Podfile.lock"
-  for n in "${ALL_NETWORKS[@]}"; do check "$listing" "$(ios_pod "$n")" "$n"; done
+  echo "==> xcodebuild -resolvePackageDependencies"
+  (cd ios && xcodebuild -resolvePackageDependencies -workspace Runner.xcworkspace -scheme Runner > /dev/null)
+  listing="$app/ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+  for n in "${ALL_NETWORKS[@]}"; do check "$listing" "$(ios_spm "$n")" "$n"; done
 fi
 
 if ((failures > 0)); then

@@ -1,3 +1,18 @@
+## 1.1.0
+
+* **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
+  deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
+  target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
+* The iOS ATT helper still weak-links `AppTrackingTransparency` (now via a `-weak_framework` linker flag in
+  `Package.swift`, ⚠ to be confirmed by CI), so the plugin still loads on iOS 13.
+* The iOS privacy manifest (`PrivacyInfo.xcprivacy`) is bundled as an SPM resource.
+* Constraints on the other unified_ads packages are now `^1.1.0`.
+* **Fix:** `show()` on a full-screen ad no longer waits forever when the network's SDK sends neither a
+  "shown" nor a "failed to show" callback (seen with Unity Ads and AppLovin MAX on the iOS simulator).
+  It now fails with `AdErrorCode.timeout` after the new `AdConfig.showTimeout` (default 15 s;
+  `showTimeoutMs` in `ads_config.json`). Additive, non-breaking.
+* `FakeAdNetworkAdapter.showDelay` (testing).
+
 ## 1.0.0
 
 Initial release.

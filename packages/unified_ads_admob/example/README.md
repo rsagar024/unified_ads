@@ -4,8 +4,8 @@ Add the core package and this adapter. Only the AdMob SDK is linked into your ap
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_admob: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_admob: ^1.1.0
 ```
 
 The adapter registers itself through Flutter's plugin registrant. Import it only for `AdmobConsentProvider`.

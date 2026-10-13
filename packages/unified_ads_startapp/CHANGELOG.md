@@ -1,3 +1,16 @@
+## 1.1.0
+
+* **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
+  deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
+  target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
+* New `Package.swift`: the iOS SDK now comes from Start.io's official Swift package
+  `https://github.com/StartApp-SDK/StartAppSDK-SwiftPackage` 4.15.0 (`StartApp`); version unchanged.
+* Opt-in linking on iOS now works through SPM: the vendor SDK is declared only in this package's `Package.swift`,
+  so `FlutterGeneratedPluginSwiftPackage` resolves it only when the app depends on this package (checked against
+  `Package.resolved` in CI).
+* Pigeon bindings regenerated with pigeon ^29.0.8.
+* No Dart API changes.
+
 ## 1.0.0
 
 Initial release: the Start.io (formerly StartApp) adapter for `unified_ads`.

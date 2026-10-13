@@ -8,7 +8,7 @@ artifacts still carry the Facebook name. In unified_ads it is `AdNetwork.faceboo
 
 | | Android | iOS |
 |---|---|---|
-| SDK | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 (pod, or SPM `github.com/facebook/FBAudienceNetwork`) |
+| SDK | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 (Swift Package Manager: `github.com/facebook/FBAudienceNetwork`) |
 | Minimum OS | minSdk 24 (plugin-wide) | **iOS 15.0**: higher than the other adapters (iOS 13) |
 | Formats | banner, interstitial, rewarded | banner, interstitial, rewarded |
 
@@ -52,7 +52,9 @@ AdNetwork.facebook: NetworkConfig(
 - **Test mode** (`TestModeSupport.testDevices`): the SDK logs a hashed device ID on first request
   (logcat: `Test mode device hash: …`; Xcode console on iOS). Put it in `testDeviceIds` and set `testMode: true`. The
   adapter then calls `AdSettings.addTestDevices` / `FBAdSettings.addTestDevices`. The `IMG_16_9_APP_INSTALL#` prefix also
-  forces a test creative without registering a device.
+  forces a test creative without registering a device. On iOS (since 1.0.1), `testMode: true` with an empty
+  `testDeviceIds` registers the current device (`FBAdSettings.testDeviceHash()`), because iOS serves no test ads, even
+  on the simulator, to an unregistered device.
 - **Rewards:** Audience Network reports "video completed" without an amount or type. `onEarnedReward` uses
   `extras['rewardAmount']` / `extras['rewardType']` (default `1` / `'reward'`). Server-side reward verification (Meta's
   `RewardData` S2S callback) is **not implemented yet**: `extras['userId']` reaches the native side but is not used.
@@ -83,10 +85,11 @@ R8 rules ship inside the SDK AAR; the plugin adds a keep rule for its entry poin
 
 ## iOS
 
-- **Deployment target 15.0** (FBAudienceNetwork 6.22). In `ios/Podfile`: `platform :ios, '15.0'`.
-- **CocoaPods:** the podspec pins `FBAudienceNetwork` 6.22.0, which ships as a **dynamic** xcframework (⚠ linkage with
-  and without `use_frameworks!` to be confirmed by the CI iOS build). ⚠ Meta has said 6.22 is the last CocoaPods release. Later versions are SPM-only; the plugin's
-  `Package.swift` already declares the SPM package (product name `FBAudienceNetwork` ⚠ to be confirmed by CI).
+- **Deployment target 15.0** (FBAudienceNetwork 6.22). Set it on the Runner target in Xcode
+  (`IPHONEOS_DEPLOYMENT_TARGET`).
+- **Swift Package Manager only** (since 1.1.0): the adapter's `Package.swift` pins
+  `https://github.com/facebook/FBAudienceNetwork` exact 6.22.0, product `FBAudienceNetwork`, which ships as a
+  **dynamic** xcframework. Meta has said 6.22 is the last CocoaPods release, so later upgrades stay on SPM.
 - **SKAdNetwork:** add Meta's IDs `v9wttpbfk9.skadnetwork` and `n38lu8286q.skadnetwork` to `SKAdNetworkItems` in Info.plist.
 - **ATT:** request tracking authorization with `UnifiedAds.requestTrackingAuthorization()` before init. Since SDK 6.15 /
   iOS 17 the SDK reads the ATT status itself; the deprecated `setAdvertiserTrackingEnabled:` is not used.

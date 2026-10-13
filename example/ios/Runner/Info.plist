@@ -29,13 +29,45 @@
 	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This identifier will be used to deliver personalized ads to you.</string>
-	<!-- SKAdNetwork IDs: Google's own ID. Add the full list from
-	     https://developers.google.com/admob/ios/3p-skadnetworks and every other network you enable. -->
+	<!-- SKAdNetwork IDs: each enabled network's OWN ID (checked by
+	     tool/verify_ios_plist.dart). A production app should also add the networks' full
+	     partner lists; links in doc/ios_setup.md. -->
 	<key>SKAdNetworkItems</key>
 	<array>
+		<!-- Google AdMob -->
 		<dict>
 			<key>SKAdNetworkIdentifier</key>
 			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+		<!-- Unity Ads -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>4dzt52r2t5.skadnetwork</string>
+		</dict>
+		<!-- AppLovin -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>ludvb6z3bs.skadnetwork</string>
+		</dict>
+		<!-- ironSource / LevelPlay -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>su67r6k2v3.skadnetwork</string>
+		</dict>
+		<!-- Meta Audience Network -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>v9wttpbfk9.skadnetwork</string>
+		</dict>
+		<!-- Meta Audience Network -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>n38lu8286q.skadnetwork</string>
+		</dict>
+		<!-- InMobi -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>wzmmz9fp6w.skadnetwork</string>
 		</dict>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
