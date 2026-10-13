@@ -6,7 +6,7 @@ Start.io adapter for [`unified_ads`](https://pub.dev/packages/unified_ads): bann
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK 4.15.0` |
-| Distribution | Gradle (Maven Central) | CocoaPods |
+| Distribution | Gradle (Maven Central) | Swift Package Manager |
 
 Setup, config, privacy and error mapping: [`doc/setup/startapp.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/startapp.md).
 

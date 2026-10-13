@@ -71,7 +71,7 @@ graph TD
 | Package | May depend on | Must never depend on |
 |---|---|---|
 | `unified_ads_platform_interface` | `flutter`, `plugin_platform_interface`, `meta` | core, any adapter, any ad SDK |
-| `unified_ads` (core) | platform interface | **any adapter**, any ad SDK (Gradle/Pod/SPM) |
+| `unified_ads` (core) | platform interface | **any adapter**, any ad SDK (Gradle/SPM) |
 | `unified_ads_<network>` | platform interface, **its own** native SDK | core, other adapters, other SDKs |
 | `example` | core + the adapters it demos | — |
 
@@ -82,7 +82,7 @@ Because core knows only the abstract `AdNetworkAdapter`, adding or removing an a
 |---|---|
 | platform interface | `AdNetwork`, `AdFormat`, `AdConfig`, `NetworkConfig`, `BannerSize`, `AdError`/`AdErrorCode`, `RewardItem`, sealed `AdEvent`, `AdNetworkAdapter`, `AdapterRegistry`, `ConsentProvider`/`ConsentState`, `TrackingAuthorization`, `AdsLogger`, `TestModeSupport` |
 | core | `UnifiedAds` facade, `InterstitialAd`, `RewardedAd`, `BannerAd`, `UnifiedBannerWidget`, `WaterfallEngine`, `AdCache`, `FrequencyCap`, `AdConfigLoader` (JSON), error mapping, the iOS ATT helper (native) |
-| adapter | the Dart `AdNetworkAdapter` subclass, the Pigeon schema + generated code, Kotlin + Swift implementation, banner PlatformView factory, `consumer-rules.pro`, podspec / `Package.swift` declaring **only** its SDK, setup doc |
+| adapter | the Dart `AdNetworkAdapter` subclass, the Pigeon schema + generated code, Kotlin + Swift implementation, banner PlatformView factory, `consumer-rules.pro`, `Package.swift` declaring **only** its SDK, setup doc |
 
 ---
 
@@ -156,35 +156,41 @@ no classes in the dex, and no merged manifest entries. Each adapter also ships `
 `./gradlew :app:dependencies --configuration releaseRuntimeClasspath` must not contain any excluded group
 (`com.unity3d.ads`, `com.applovin`, …), and `apkanalyzer dex packages app-release.apk` must not list excluded packages.
 
-### 4.2 iOS (CocoaPods)
-1. The app `Podfile` calls `flutter_install_all_ios_pods`, which reads `.flutter-plugins-dependencies` and adds a
-   `pod '<plugin>', :path => …` **only** for listed plugins.
-2. `packages/unified_ads_admob/ios/unified_ads_admob.podspec` is the **only** podspec with
-   `s.dependency 'Google-Mobile-Ads-SDK', '13.11.0'`.
-3. Core's podspec depends only on `Flutter`.
+### 4.2 iOS (Swift Package Manager only, since 1.1.0)
+iOS builds use Flutter's SwiftPM integration only (Flutter >= 3.44, Xcode 26.2+). CocoaPods support and the podspecs
+were removed in 1.1.0; see [`doc/migration/1.1.0-swift-package-manager.md`](doc/migration/1.1.0-swift-package-manager.md).
 
-Result: an excluded adapter means no pod, no download, no linker input, no `-framework` flags, and therefore no linker
-warnings. **Verification:** `Podfile.lock` must contain only the opted-in SDK pods.
+1. `flutter pub get` / `flutter build ios` generates `FlutterGeneratedPluginSwiftPackage`, which adds each plugin's
+   `ios/<plugin>/Package.swift` as a local package **only** for plugins listed in `.flutter-plugins-dependencies`.
+2. `packages/unified_ads_admob/ios/unified_ads_admob/Package.swift` is the **only** manifest with
+   `.package(url: "https://github.com/googleads/swift-package-manager-google-mobile-ads", exact: "13.11.0")`. Every
+   adapter declares its vendor package (exact pin) only in its own manifest.
+3. Core's `Package.swift` depends only on `FlutterFramework`.
 
-### 4.3 iOS (Swift Package Manager)
-When the app enables Flutter's SwiftPM integration, each plugin's `ios/<plugin>/Package.swift` is added as a local
-package, and the SDK is a `.package(url:…)` dependency in **that adapter's** manifest only. The same exclusion
-guarantee holds.
-Vendors without SPM (Start.io, InMobi; Unity ⚠) ship **CocoaPods-only** adapters, and Flutter's mixed mode builds
-them through CocoaPods while the rest use SPM.
+Result: an excluded adapter means no package resolution, no download, no linker input, and therefore no linker
+warnings. **Verification:** `tool/verify_opt_in.sh ios` resolves packages with `xcodebuild -resolvePackageDependencies`;
+`ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved` must contain only the opted-in vendor packages.
 
-### 4.4 Static vs dynamic frameworks
-- Adapters are compatible with both `use_frameworks!` and `use_frameworks! :linkage => :static`. CI builds both
-  variants.
-- InMobi ships a dynamic xcframework, while most others ship static or vendored xcframeworks (see SDK_STATUS §2).
-  CocoaPods embeds dynamic vendored frameworks automatically.
-- Any adapter needing `-ObjC` sets it in its own podspec `pod_target_xcconfig`/`user_target_xcconfig`, never
-  in core.
+### 4.3 Vendor Swift packages
+Every vendor now ships an official Swift package (Unity Ads, Start.io and InMobi added theirs after 1.0.0), so no
+adapter needs Flutter's CocoaPods mixed mode. The URLs and exact pins are in [SDK_STATUS.md](SDK_STATUS.md). An app may
+keep a `Podfile` for **other** CocoaPods-only plugins (Flutter's mixed mode still works for them), but the
+`unified_ads` packages always come through SPM.
+
+### 4.4 Linking
+- SwiftPM decides static vs dynamic linkage for each product; there is no `use_frameworks!` switch any more. Vendor
+  binary targets (static or dynamic xcframeworks, see SDK_STATUS §2) are embedded by Xcode.
+- Linker flags live in the adapter's own `Package.swift`, never in core: the inmobi and ironsource manifests pass
+  `-ObjC` (`linkerSettings: [.unsafeFlags(["-ObjC"])]`, ⚠ to be confirmed by CI; fallback: add `-ObjC` to the Runner
+  target's Other Linker Flags). Core weak-links `AppTrackingTransparency` with a `-weak_framework` flag (⚠ CI).
+- The deployment target is set on the Runner target in Xcode: 13.0, or 15.0 with `unified_ads_facebook` or a Meta
+  bidding adapter.
 
 ### 4.5 Alternative: single-package mode
 For teams that prefer one dependency, see [`doc/single_package_mode.md`](doc/single_package_mode.md). It is driven
-by `--dart-define=ADS_NETWORKS=…` + a Gradle property + a Podfile ENV variable. It is documented with trade-offs,
-and the federated mode above is the recommended default.
+by `--dart-define=ADS_NETWORKS=…` + a Gradle property. Its iOS layer relied on Podfile `ENV`, which SPM manifests
+can't read, so it is Android-only since 1.1.0. It is documented with trade-offs, and the federated mode above is the
+recommended default.
 
 ---
 

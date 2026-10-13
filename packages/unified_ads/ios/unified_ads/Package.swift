@@ -23,6 +23,12 @@ let package = Package(
             resources: [
                 // Privacy manifest: nothing collected, no required-reason API.
                 .process("PrivacyInfo.xcprivacy")
+            ],
+            linkerSettings: [
+                // ATT (iOS 14+) is weak-linked so the plugin still loads on
+                // iOS 13. Unsafe flags are accepted because Flutter adds
+                // plugins as local path packages.
+                .unsafeFlags(["-weak_framework", "AppTrackingTransparency"])
             ]
         )
     ]

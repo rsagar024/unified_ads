@@ -20,7 +20,7 @@ create_scratch_app() {
   rm -rf "$app"
   flutter create --quiet --platforms android,ios --org dev.arovyx.optin "$app" > /dev/null
 
-  local deps="  unified_ads: ^1.0.0"
+  local deps="  unified_ads: ^1.1.0"
   local overrides="dependency_overrides:
   unified_ads:
     path: $(native_path "$SCRATCH_REPO/packages/unified_ads")
@@ -28,7 +28,7 @@ create_scratch_app() {
     path: $(native_path "$SCRATCH_REPO/packages/unified_ads_platform_interface")"
   local n
   for n in "$@"; do
-    deps+=$'\n'"  unified_ads_$n: ^1.0.0"
+    deps+=$'\n'"  unified_ads_$n: ^1.1.0"
     overrides+=$'\n'"  unified_ads_$n:
     path: $(native_path "$SCRATCH_REPO/packages/unified_ads_$n")"
   done
@@ -38,19 +38,21 @@ create_scratch_app() {
   printf '%s\n' "$overrides" > "$app/pubspec_overrides.yaml"
 }
 
-# prepare_ios_podfile <app dir> <min iOS version>
+# prepare_ios_project <app dir> <min iOS version>
 #
-# Generates ios/Podfile (CocoaPods mode) and sets its platform. The template
-# leaves the platform commented out (iOS 13 default), so the first
-# `pod install` may fail when an adapter needs a newer iOS; that error is
-# ignored. Audience Network needs iOS 15.
-prepare_ios_podfile() {
+# Sets the Runner project's deployment target (Swift Package Manager reads it
+# from the Xcode project; there is no Podfile), then generates the Flutter
+# plugin Swift package with `flutter build ios --config-only`. Audience Network
+# needs iOS 15.
+prepare_ios_project() {
   local app="$1" min="$2"
   (
     cd "$app"
+    local pbxproj=ios/Runner.xcodeproj/project.pbxproj
+    sed -i.bak -E "s/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]+;/IPHONEOS_DEPLOYMENT_TARGET = $min;/" "$pbxproj"
+    rm -f "$pbxproj.bak"
+    grep -q "IPHONEOS_DEPLOYMENT_TARGET = $min;" "$pbxproj"
     flutter pub get > /dev/null
-    flutter build ios --config-only --no-codesign > /dev/null 2>&1 || true
-    sed -i.bak "s/^# platform :ios.*/platform :ios, '$min'/" ios/Podfile
-    grep -q "^platform :ios, '$min'" ios/Podfile
+    flutter build ios --config-only --no-codesign > /dev/null
   )
 }

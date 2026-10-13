@@ -230,7 +230,8 @@ approval** until you answer the verification emails. ([help](https://docs.unity.
    ([help](https://docs.unity.com/en-us/grow/levelplay/platform/get-started/instances))
 
 > The native SDK of every network you enable here must also be in your app (LevelPlay adapters). unified_ads ships only
-> the LevelPlay core SDK. Adding LevelPlay network adapters is your app's Gradle / Podfile job.
+> the LevelPlay core SDK. Adding LevelPlay network adapters is your app's job: Gradle on Android, and Swift packages
+> added to the Runner target in Xcode on iOS.
 
 ### 5. Testing
 - **LevelPlay → Settings → Test devices** → **Add test device** (name, advertising ID, platform) → pick a network and ad units →

@@ -4,8 +4,8 @@ Add the core package and this adapter. Only the AppLovin MAX SDK is linked into 
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_applovin: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_applovin: ^1.1.0
 ```
 
 The adapter registers itself through Flutter's plugin registrant, so you don't need to import it.

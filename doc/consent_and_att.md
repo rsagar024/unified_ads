@@ -125,8 +125,8 @@ final status = await UnifiedAds.requestTrackingAuthorization();
 final current = await UnifiedAds.trackingAuthorizationStatus(); // no prompt
 ```
 
-- The helper lives in the core package's iOS code, so it needs no ad SDK. `AppTrackingTransparency` is weak-linked, so
-  iOS 13 builds still work.
+- The helper lives in the core package's iOS code, so it needs no ad SDK. `AppTrackingTransparency` is weak-linked (a
+  `-weak_framework` linker flag in the core's `Package.swift`, ⚠ to be confirmed by CI), so iOS 13 builds still work.
 - `Info.plist` must contain `NSUserTrackingUsageDescription`. Without it iOS terminates the app when the prompt is
   requested.
 

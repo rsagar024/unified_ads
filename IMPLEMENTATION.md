@@ -40,7 +40,7 @@ example app tests every network from one screen (verified on device). Phase 6 de
 
 ## 2. Identifiers & Naming
 
-| Dart package (pub)               | Android namespace / package               | iOS plugin class                                                 | Pod / SwiftPM target                             |
+| Dart package (pub)               | Android namespace / package               | iOS plugin class                                                 | SwiftPM target (Pod in 1.0.x)                      |
 |----------------------------------|-------------------------------------------|------------------------------------------------------------------|--------------------------------------------------|
 | `unified_ads`                    | `dev.arovyx.plugin.unifiedads`            | `UnifiedAdsPlugin`                                               | `unified_ads`                                    |
 | `unified_ads_platform_interface` | *(pure Dart, no native code)*             | n/a                                                              | n/a                                              |
@@ -67,7 +67,7 @@ example app tests every network from one screen (verified on device). Phase 6 de
 | A1  | Monorepo tooling                 | **Dart pub workspaces** (`workspace:` in root pubspec) + **melos 8.x** for scripts only                                           | Pub workspaces give one resolution and one lockfile natively (Dart ≥ 3.6). Melos adds `analyze`/`test`/`publish` fan-out scripts and versioning. Melos ≥ 7 reads its config from the root `pubspec.yaml` `melos:` key, so there is **no `melos.yaml`**. Melos is a root dev dependency and runs as `dart run melos …`, so no global install is needed. |
 | A2  | Native bridge                    | **Pigeon**                                                                                                                        | Type-safe, generates Kotlin + Swift, and handles main-thread marshalling consistently.                                                                                                                                                                                                                                                                 |
 | A3  | Android toolchain                | ✅ **minSdk 24**, AGP 9.x, Kotlin 2.3.x (current Flutter template)                                                                 | **Resolved by Phase 1 research:** AdMob 25.5.0 and AppLovin MAX 13.6.3+ require minSdk 24, so CLAUDE.md's minSdk 23 / AGP 8.x is superseded. Kotlin ≥ 2.1 (AdMob, InMobi) and compileSdk ≥ 35 are satisfied. See SDK_STATUS §3.4.                                                                                                                      |
-| A4  | iOS distribution                 | ✅ **CocoaPods for every adapter; SwiftPM where the vendor ships SPM**                                                             | Vendor SPM exists for AdMob, UMP, LevelPlay and MAX. Start.io and InMobi are CocoaPods-only, and Unity Ads SPM is ⚠. Those adapters are CocoaPods-only, and Flutter's mixed mode handles them.                                                                                                                                                         |
+| A4  | iOS distribution                 | ✅ **Revised 2026-10-12 (1.1.0): Swift Package Manager only.** (1.0.x: CocoaPods for every adapter; SwiftPM where the vendor shipped SPM) | Every vendor now ships an official Swift package (Unity Ads, Start.io and InMobi added theirs), Flutter ≥ 3.44 enables SPM by default, and FAN 6.22 is the last CocoaPods release. Podspecs and `example/ios/Podfile` are deleted; each adapter's `Package.swift` pins its vendor package. Requires Flutter ≥ 3.44 and Xcode 26.2+. Migration: `doc/migration/1.1.0-swift-package-manager.md`. |
 | A5  | iOS minimum                      | ✅ iOS 13                                                                                                                          | All adapters support iOS 13 except `unified_ads_facebook`, which needs **iOS 15** (FBAudienceNetwork 6.22). CI needs **Xcode 26.2+** ⚠ (AdMob 13.4+).                                                                                                                                                                                                  |
 | A6  | Declarative config               | `ads_config.json` asset + runtime loader (no build_runner required); `pubspec.yaml` section is optional via a small CLI generator | Simpler for consumers, and it works with hot restart.                                                                                                                                                                                                                                                                                                  |
 | A7  | Consent                          | Abstract `ConsentProvider` with a Google UMP implementation in `unified_ads_admob`                                                | Lets other CMPs plug in. Core does not depend on UMP.                                                                                                                                                                                                                                                                                                  |
@@ -664,7 +664,7 @@ screen")
 - `.github/workflows/ci.yaml`: format check, analyze, unit/widget tests,
   `flutter build apk --debug`, `flutter build ios --no-codesign`, plus an **opt-in verification job
   ** that builds the example with a network subset and checks that `./gradlew :app:dependencies` and
-  `Podfile.lock` contain no excluded SDKs.
+  `Package.resolved` (iOS; `Podfile.lock` in 1.0.x) contain no excluded SDKs.
 - README with a feature matrix (network × format × platform), CHANGELOG per package, CONTRIBUTING,
   and `doc/single_package_mode.md` (final).
 - Run `pana` per package. Fix scoring issues and confirm dartdoc coverage is 100%.
@@ -688,19 +688,21 @@ Owner decisions:
   |---|---|---|
   | `dart` | ubuntu | melos format → analyze → test, `generate_config --set-exit-if-changed` on the fixture, then a publish dry-run for all 9 packages |
   | `android` | ubuntu | example APK with all 7 adapters, then `tool/kotlin_tests.sh` |
-  | `ios` | `macos-26` + latest-stable Xcode | `tool/ios_build.sh` matrix `spm` / `cocoapods-dynamic` / `cocoapods-static` |
+  | `ios` | `macos-26` + latest-stable Xcode | `tool/ios_build.sh` (one job, "iOS build (SPM)", since 1.1.0; 1.0.x had a `spm` / `cocoapods-dynamic` / `cocoapods-static` matrix) |
   | `opt-in` | ubuntu + macos-26 | `tool/verify_opt_in.sh android` / `ios` |
   | `pana` | ubuntu | `tool/pana.sh` |
 
 - **`tool/` scripts:**
   - `verify_opt_in.sh`:
     - creates a scratch app outside the workspace with hosted-style constraints plus path overrides;
-    - checks the resolved `releaseRuntimeClasspath` (Android) or `Podfile.lock` (iOS, CocoaPods mode);
+    - checks the resolved `releaseRuntimeClasspath` (Android) or, since 1.1.0,
+      `ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved` after `xcodebuild -resolvePackageDependencies`
+      (iOS; `Podfile.lock` in 1.0.x);
     - verifies every selected SDK is present and every other one absent;
     - `NETWORKS=` picks the subset, and `OPT_IN_LEAK=` is a self-test that must fail.
   - `kotlin_tests.sh`.
-  - `ios_build.sh`: generates the Podfile, sets `platform :ios, '15.0'` (Facebook), and applies static linkage
-    for that mode.
+  - `ios_build.sh`: builds the example with SPM only since 1.1.0 (in 1.0.x it generated the Podfile, set
+    `platform :ios, '15.0'` for Facebook, and applied static linkage per mode).
   - `pana.sh`: copies each package, strips `resolution: workspace`, and overrides siblings by path, since they are
     unpublished.
 - **New melos scripts:** `test:kotlin`, `verify:opt-in`, `config:check`, `pana`. melos runs `run:` through cmd on
@@ -850,6 +852,25 @@ detect it at runtime.
 - **Real Meta fill through any mediation platform:** needs owner dashboard setup (bidding enabled in AdMob, MAX or
   LevelPlay, plus Monetization Manager).
 
+#### 1.1.0: iOS Swift Package Manager only (2026-10-12)
+
+Decision A4 was revised: every package is **SPM-only** on iOS, released as **1.1.0** (breaking for iOS builds only; the
+Dart API is unchanged).
+
+- All 8 podspecs and `example/ios/Podfile` are deleted. Requirements: Flutter ≥ 3.44 (SPM on by default), Xcode 26.2+.
+- New `Package.swift` for unity, startapp and inmobi, on the vendors' new official Swift packages (versions unchanged).
+  The inmobi and ironsource manifests pass `-ObjC`, and core weak-links `AppTrackingTransparency` with
+  `-weak_framework` (⚠ both to be confirmed by CI).
+- Deployment target is set on the Runner target in Xcode (13.0; 15.0 with Facebook or Meta bidding). Meta bidding on
+  iOS is now a Swift package the app adds to the Runner target (SDK_STATUS §1.1).
+- CI: one "iOS build (SPM)" job; `verify_opt_in.sh ios` checks `Package.resolved`; the `ios_sim_smoke` artifacts
+  include `Package.resolved` instead of `Podfile.lock`.
+- Single-package mode (design only) is Android-only now: its iOS layer needed Podfile `ENV`.
+- Dependency updates: ironsource Android `play-services-appset` 16.1.0 and `play-services-ads-identifier` 18.3.0;
+  pigeon ^29.0.8 (bindings regenerated); `xml` ^7.1.0 (dev); example `cupertino_icons` ^2.0.0. All ad SDKs were
+  already at their latest versions (checked 2026-10-12).
+- Migration guide: `doc/migration/1.1.0-swift-package-manager.md`.
+
 ---
 
 ## 6. Phase 1: Detailed Checklist
@@ -892,8 +913,8 @@ Per network, decide: **Full adapter / Partial adapter / Documented stub**, with 
 - [x] Adapter registration flow (`dartPluginClass` / `registerWith` → `AdapterRegistry`)
 - [x] **Opt-in linking on Android**: SDK `implementation` lives only in the adapter's
   `build.gradle.kts`, so an unused adapter means no Gradle module and no SDK in the APK
-- [x] **Opt-in linking on iOS**: SDK dependencies live only in the adapter's podspec /
-  `Package.swift`, so an unused adapter means no pod, no linker input, and no warnings
+- [x] **Opt-in linking on iOS**: SDK dependencies live only in the adapter's `Package.swift` (podspec too in 1.0.x),
+  so an unused adapter means no package resolution, no linker input, and no warnings
 - [x] Waterfall, cache/preload, and frequency-cap sequence diagrams
 - [x] Banner PlatformView design: sizing negotiation, safe area, gesture handling, Hybrid
   Composition vs Texture Layer choice
@@ -903,7 +924,8 @@ Per network, decide: **Full adapter / Partial adapter / Documented stub**, with 
 - [x] Consent + ATT abstraction
 - [x] Logging design (`AdsLogger`)
 - [x] **Alternative single-package mode**: `--dart-define=ADS_NETWORKS=...`, Gradle
-  properties/flavors that add dependencies conditionally, Podfile `ENV` conditionals, plus a
+  properties/flavors that add dependencies conditionally, Podfile `ENV` conditionals (iOS layer unsupported since
+  1.1.0: SPM manifests can't read `ENV`), plus a
   trade-offs table (simplicity vs. tree-shaking risk, harder versioning, and dart-define plus native
   flags having to stay in sync)
 
@@ -927,10 +949,11 @@ documents.*
 | Unity Ads + LevelPlay in one app                                              | No duplicate symbols (shared artifact), but "whichever initializes first wins" | **Decided: runtime-exclusive guard** (A11) + docs                                         |
 | AdMob Android legacy SDK in maintenance mode                                  | No new features; eventual deprecation                                          | ✅ Resolved in Phase 7: Android on Next-Gen 1.5.0 (A9); apps must keep legacy `play-services-ads` out |
 | Unity Ads static API removed in 5.0                                           | Adapter breaks on upgrade                                                      | Adapter built only on 4.19+ instance APIs                                                 |
-| Facebook Audience Network CocoaPods distribution reportedly ends after 6.22 ⚠ | Later FAN versions can't use CocoaPods                                         | Adapter ships a podspec (6.22.0) **and** `Package.swift`; go SPM-only on the next upgrade |
+| Facebook Audience Network CocoaPods distribution reportedly ends after 6.22 ⚠ | Later FAN versions can't use CocoaPods                                         | ✅ Resolved in 1.1.0 (2026-10-12): every package is SPM-only                               |
 | Xcode floor (AdMob iOS 13.4+ says Xcode 26.2 ⚠)                               | CI iOS build fails on older runners                                            | CI uses `macos-26` + latest-stable Xcode (⚠ label unverified until the first run)         |
 | Test mode not enforceable for InMobi / LevelPlay                              | Real ads during development → policy risk                                      | `testModeSupport` capability, an init-time warning, and setup docs                        |
-| iOS static vs dynamic framework conflicts                                     | Link errors under `use_frameworks!`                                            | Per-adapter notes, and a CI matrix with and without `use_frameworks! :linkage => :static` |
+| iOS static vs dynamic framework conflicts                                     | Link errors (1.0.x: under `use_frameworks!`)                                     | 1.1.0: SPM only, so no `use_frameworks!` variants; `-ObjC` set in the inmobi / ironsource `Package.swift` (⚠ CI) |
+| iOS SPM-only (1.1.0) excludes CocoaPods-only apps                             | Apps that can't enable SPM can't build `unified_ads` 1.1.0+ on iOS                | Migration guide `doc/migration/1.1.0-swift-package-manager.md`; such apps stay on 1.0.x      |
 | PlatformView perf / touch issues                                              | Jank, clicks lost                                                              | Benchmark Hybrid Composition vs TLHC in Phase 3 and document the choice                   |
 | Toolchain drift (AGP 9, Kotlin 2.3, Dart 3.12) vs SDK requirements            | Build failures                                                                 | Phase 1 records each SDK's Gradle/Kotlin constraints                                      |
 | Store policy (ATT, UMP, SKAdNetwork)                                          | App rejection                                                                  | Setup docs + example app wiring                                                           |

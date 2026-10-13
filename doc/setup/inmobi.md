@@ -6,7 +6,7 @@
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
 | Android | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` (the old Java artifact `inmobi-ads` is abandoned) | API 21 (project: 24); **Kotlin 2.x, AGP ≥ 8.9.3** |
-| iOS | `InMobiSDK` 11.5.0 (**CocoaPods only**; no official SPM package) | iOS 12 (project: 13) |
+| iOS | `InMobiSDK` 11.5.0 (Swift Package Manager: official `InMobi/InMobiSDK-Swift-Package`, product `InMobiSDK`) | iOS 12 (project: 13) |
 
 ## Config
 
@@ -41,7 +41,9 @@ AdNetwork.inmobi: NetworkConfig(
 - **iOS:**
   - InMobi recommends `NSAllowsArbitraryLoads = YES` under `NSAppTransportSecurity`. **Flag this for App Store review.**
   - Add `SKAdNetworkItems` from InMobi's list (linked from InMobi's iOS overview page) and `NSUserTrackingUsageDescription`.
-  - It's a dynamic xcframework; the pod sets `-ObjC`.
+  - It's a dynamic xcframework and needs `-ObjC`. The adapter's `Package.swift` passes it to the linker (⚠ to be
+    confirmed by CI). If InMobi fails with undefined symbols or unrecognized selectors, add `-ObjC` to the Runner
+    target's Other Linker Flags.
 
 ## Error mapping (`InMobiAdRequestStatus.StatusCode` / `IMStatusCode`)
 

@@ -5,8 +5,8 @@
 
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
-| Android | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` (+ `play-services-appset` 16.0.0, `play-services-ads-identifier` 18.1.0) | API 19 (project: 24) |
-| iOS | `IronSourceSDK` 9.6.1.0 (CocoaPods; SPM `ironsource-mobile/LevelPlay-Swift-Package`, product `UnityMediationSDK`) | iOS 13 |
+| Android | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` (+ `play-services-appset` 16.1.0, `play-services-ads-identifier` 18.3.0) | API 19 (project: 24) |
+| iOS | LevelPlay 9.6.1 (Swift Package Manager: `ironsource-mobile/LevelPlay-Swift-Package`, product `UnityMediationSDK`) | iOS 13 |
 
 Only the **LevelPlay 9.x ad-unit APIs** are used. 9.0 removed every legacy `IronSource.*` API.
 
@@ -51,7 +51,9 @@ AdNetwork.ironsource: NetworkConfig(
   - `NSAppTransportSecurity` → `NSAllowsArbitraryLoads = YES`, per the LevelPlay docs. **Flag this for App Store review.**
   - `SKAdNetworkItems` (`su67r6k2v3.skadnetwork` plus each mediated network's IDs).
   - Optionally `NSAdvertisingAttributionReportEndpoint = https://postbacks-is.com/`.
-  - **SPM needs `-ObjC`** in the app's Other Linker Flags. CocoaPods sets it.
+  - **LevelPlay needs `-ObjC`.** The adapter's `Package.swift` passes it to the linker (⚠ to be confirmed by CI). If
+    LevelPlay fails with undefined symbols or unrecognized selectors, add `-ObjC` to the Runner target's Other Linker
+    Flags.
 
 ## Error mapping (LevelPlay error codes)
 
@@ -88,14 +90,14 @@ dependencies {
 
 Audience Network also needs cleartext to `127.0.0.1`. See [facebook.md](facebook.md#android).
 
-**iOS:** iOS **15.0+**.
+**iOS:** iOS **15.0+** (Runner target deployment target). In Xcode, **File > Add Package Dependencies…**, add it to
+the **Runner** target:
 
-```ruby
-# ios/Podfile, inside `target 'Runner'`, and `platform :ios, '15.0'`
-pod 'IronSourceFacebookAdapter', '5.5.0.0'
-```
+| Package | Dependency rule | Product |
+|---|---|---|
+| `https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package` | Exact `5.5.0` | `FacebookAdapter` (brings `FBAudienceNetwork` 6.22.0) |
 
-⚠ LevelPlay documents no Swift package for its Meta adapter, so use CocoaPods for it. The adapter does not call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
+The adapter does not call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
 ATT status itself. Also add Meta's SKAdNetwork IDs.
 
 **Dashboards:** In Monetization Manager, create the placement. In LevelPlay, go to Monetize → Setup → SDK Networks → Meta, then

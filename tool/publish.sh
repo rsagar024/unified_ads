@@ -6,7 +6,7 @@
 #
 # The repository root is the pub workspace (`publish_to: none`) and is never
 # published: running `dart pub publish` there fails with "missing requirement".
-# The adapters depend on `^1.0.0` of the platform interface and the core, so
+# The adapters depend on `^1.1.0` of the platform interface and the core, so
 # those two must reach pub.dev first.
 set -euo pipefail
 

@@ -6,7 +6,7 @@
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
 | Android | `com.unity3d.ads:unity-ads:4.21.0` | API 19 (project: 24); compileSdk 33+ |
-| iOS | `UnityAds` 4.21.0 (**CocoaPods only**: Unity publishes no SPM package) | iOS 13 |
+| iOS | `UnityAds` 4.21.0 (Swift Package Manager: official `Unity-Technologies/Unity-Ads-Swift-Package`, product `UnityAds`) | iOS 13 |
 
 Only the **4.19+ instance APIs** (`InterstitialAd`, `RewardedAd`, `BannerAd`) are used. The static API
 (`UnityAds.load/show`, `BannerView`) is deprecated and removed in 5.0.

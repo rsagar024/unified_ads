@@ -4,7 +4,7 @@ import ObjectiveC
 /// Optional Meta (Facebook) Audience Network bidding through AdMob mediation.
 ///
 /// This package declares no Meta dependency. An app opts in by adding the
-/// vendor's Meta adapter (`GoogleMobileAdsMediationFacebook`, via CocoaPods or Swift Package Manager; see
+/// vendor's Meta adapter (Swift package `googleads-mobile-ios-mediation-meta`, product `MetaAdapterTarget`; see
 /// doc/setup/admob.md). This type then detects the adapter and forwards
 /// privacy signals to the Audience Network SDK before AdMob initializes it,
 /// through the Objective-C runtime so the package builds without Meta's SDK.

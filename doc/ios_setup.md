@@ -14,30 +14,31 @@ Windows and Linux too, and it only reads XML plists (Xcode's default; convert a 
 `plutil -convert xml1`). The rules live in `tool/src/ios_plist_rules.dart`; keep them in sync with this page.
 `tool/verify_ios_plist.dart --list-skadnetwork-ids --networks …` prints the SKAdNetwork IDs that the checker expects.
 
-## 1. Deployment target and Podfile
+## 1. Swift Package Manager and deployment target
+
+Since **1.1.0**, every `unified_ads` package is **Swift Package Manager only** on iOS; CocoaPods is not supported.
+You need Flutter **3.44+** with SPM enabled (the default on stable; `flutter config --enable-swift-package-manager`).
+Upgrading from 1.0.x: see [`doc/migration/1.1.0-swift-package-manager.md`](migration/1.1.0-swift-package-manager.md).
 
 | Adapter | Min iOS | Why |
 |---|---|---|
 | `unified_ads` (core), admob, unity, applovin, ironsource, startapp, inmobi | 13.0 | plugin floor (the SDKs themselves need ≤ 13; see [SDK_STATUS.md](../SDK_STATUS.md)) |
-| `unified_ads_facebook` | **15.0** | Audience Network 6.22 |
+| `unified_ads_facebook`, or any Meta bidding adapter | **15.0** | Audience Network 6.22 |
 
-Flutter's Podfile template leaves the platform commented out (iOS 13 default). Set it explicitly, or `pod install`
-fails as soon as `unified_ads_facebook` is added:
-
-```ruby
-# ios/Podfile
-platform :ios, '15.0'   # 13.0 if you don't use unified_ads_facebook
-```
-
-Also raise **Runner → Build Settings → iOS Deployment Target** to the same value. The example app commits
-[`example/ios/Podfile`](../example/ios/Podfile) for this reason.
+Set the deployment target in Xcode: open `ios/Runner.xcworkspace`, select the **Runner** project and **Runner** target,
+and set **Build Settings → iOS Deployment Target** (`IPHONEOS_DEPLOYMENT_TARGET`) to 15.0 if you use
+`unified_ads_facebook` (13.0 otherwise). With 13.0, the build fails as soon as `unified_ads_facebook` is added.
 
 - **Xcode:** 26.2+ (Google Mobile Ads 13.4+ requires it; UnityAds 4.18+ requires 26.0.1+).
-- **`use_frameworks!`:** works both ways. Every adapter pod is `static_framework = true` (the vendor SDKs ship static
-  or xcframework binaries), and CI builds dynamic (Flutter's default) and `use_frameworks! :linkage => :static`.
-- **Swift Package Manager:** admob, applovin, ironsource, facebook and the core ship `Package.swift`; unity, startapp and
-  inmobi are CocoaPods-only, so Flutter uses its mixed mode when they are present. CI builds both modes
-  (`tool/ios_build.sh spm|cocoapods-dynamic|cocoapods-static`).
+- **Swift packages:** each adapter's `ios/<package>/Package.swift` declares its vendor's official Swift package (exact
+  pin; see [SDK_STATUS.md](../SDK_STATUS.md)), so only the adapters you depend on are resolved. Check
+  `ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved`. CI builds one configuration (`tool/ios_build.sh`).
+- **Other CocoaPods plugins:** if another plugin in your app is still CocoaPods-only, keep its `Podfile`; Flutter's
+  mixed mode builds that plugin through CocoaPods while the `unified_ads` packages come through SPM. Don't add pods for
+  unified_ads networks there.
+- **`-ObjC`:** the inmobi and ironsource manifests pass it to the linker (⚠ to be confirmed by CI). If InMobi or
+  LevelPlay fail with undefined symbols or unrecognized selectors, add `-ObjC` to **Runner → Build Settings → Other
+  Linker Flags**.
 
 ## 2. Info.plist keys
 
@@ -88,7 +89,8 @@ iOS 14. Audience Network 6.15+ reads the ATT status itself on iOS 17+, so the de
 ## 4. Privacy manifests
 
 - **SDK manifests:** every vendor SDK ships its own `PrivacyInfo.xcprivacy`. Each `unified_ads` package bundles one too
-  (`<package>_privacy` resource bundle; the core's was added in 1.0.1). The packages themselves collect nothing.
+  (an SPM resource bundle, `<package>_<package>.bundle`; it was `<package>_privacy` under CocoaPods in 1.0.x). The
+  packages themselves collect nothing.
 - **App manifest:** Xcode merges all of these into the privacy report, but the **app** still declares what it does with
   the data. An app that shows ads with the IDFA should have an app-level `ios/Runner/PrivacyInfo.xcprivacy` (add it to
   the Runner target) with:

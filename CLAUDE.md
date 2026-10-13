@@ -41,16 +41,21 @@ A consumer app must be able to enable ONLY the networks it wants. If a developer
 wants only AdMob + Unity + InMobi, then:
 - Only those 3 native SDKs must be linked/compiled into their app.
 - The other 4 SDKs must NOT be present in the final AAR/IPA.
-- No linker warnings, no unused pod dependencies, no Gradle pulls of other SDKs.
+- No linker warnings, no unused Swift package dependencies, no Gradle pulls of other SDKs.
 
 Design this with a federated plugin architecture + `AdNetworkAdapter` interface.
 Use `implements`/`extends` on a platform-interface package. Explain in the
-architecture doc exactly how Gradle dependencies and CocoaPods subspecs are pulled
-in per adapter package, and how the core package avoids depending on any adapter.
+architecture doc exactly how Gradle dependencies and Swift Package Manager packages
+(each adapter's `ios/<package>/Package.swift`) are pulled in per adapter package,
+and how the core package avoids depending on any adapter.
+
+iOS is **Swift Package Manager only** (since 1.1.0): no podspecs, no CocoaPods.
+Every native SDK is declared only in its adapter's `Package.swift`.
 
 Also provide an ALTERNATIVE single-package mode driven by build flags
-(`--dart-define=ADS_NETWORKS=admob,unity,inmobi` + Gradle flavor / Podfile
-conditionals) for teams that prefer one package. Document trade-offs.
+(`--dart-define=ADS_NETWORKS=admob,unity,inmobi` + Gradle flavor conditionals)
+for teams that prefer one package. It is Android-only: SPM manifests can't read
+build flags. Document trade-offs.
 
 # Configuration Requirements
 
@@ -110,8 +115,9 @@ Every ad class must expose which network actually served the ad.
 - Write Android in **Kotlin** and iOS in **Swift**.
 - Android: minSdk 23 (document if a network needs higher), Gradle 8.x,
   AGP 8.x, namespace declaration, ProGuard/R8 consumer rules per adapter.
-- iOS: iOS 13+ deployment target, Podfile instructions, `use_frameworks!`
-  compatibility notes, static vs dynamic framework notes.
+- iOS: iOS 13+ deployment target (15 with Meta Audience Network), set in the
+  Xcode project. Swift Package Manager only (Flutter >= 3.44 with SPM enabled;
+  no CocoaPods/podspecs). Note required linker flags (e.g. `-ObjC`).
 - Handle banner rendering via PlatformView (AndroidView / UiKitView) with
   correct sizing, safe-area, and no touch-eating issues.
 - Correct threading: all UI work on main thread; Dart callbacks marshalled properly.

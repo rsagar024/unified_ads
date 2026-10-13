@@ -5,16 +5,20 @@
 > [`tool/verify_opt_in.sh`](../tool/verify_opt_in.sh). This document is the complete design for teams that want a
 > single dependency. Building it is an optional Phase 7 item, and it would ship as an extra package (`unified_ads_all`)
 > next to the federated ones, not instead of them.
+>
+> **iOS: unsupported since 1.1.0.** The iOS layer below relied on Podfile `ENV`. Since 1.1.0 the `unified_ads`
+> packages are Swift Package Manager only, and SPM manifests can't read `ENV`, so this design no longer has a working
+> iOS layer. The Android (Gradle property) and Dart layers are unchanged. The iOS sections are kept for reference.
 
 ## Idea
 Ship one package, `unified_ads_all`, containing every adapter's Dart, Kotlin and Swift code. The app selects networks
-with **three flags that must agree**:
+with **flags that must agree** (three in the original design; Dart + Android since 1.1.0):
 
 | Layer | Flag | Effect |
 |---|---|---|
 | Dart | `--dart-define=ADS_NETWORKS=admob,unity,inmobi` | Only the listed adapters are registered, and the others are tree-shaken |
 | Android | `unifiedAds.networks=admob,unity,inmobi` in `android/gradle.properties` | Only the listed source sets and `implementation(...)` SDK deps are compiled |
-| iOS | `ENV['UNIFIED_ADS_NETWORKS'] = 'admob,unity,inmobi'` at the top of `ios/Podfile` | Only the listed `source_files` and `s.dependency` entries are used |
+| iOS (**unsupported since 1.1.0**) | `ENV['UNIFIED_ADS_NETWORKS'] = 'admob,unity,inmobi'` at the top of `ios/Podfile` | Only the listed `source_files` and `s.dependency` entries are used. Not possible with SPM-only packages |
 
 ## Mechanics
 
@@ -35,8 +39,8 @@ void registerSelectedAdapters() {
 }
 ```
 The user-facing `--dart-define=ADS_NETWORKS=admob,unity` is expanded into `--dart-define=ADS_ADMOB=true …` by a
-`dart run unified_ads_all:flags` helper, which also prints the matching Gradle and Podfile lines so all three layers
-stay in sync. ⚠ If it is built, Phase 7 must verify that excluded adapters are tree-shaken (`--analyze-size`).
+`dart run unified_ads_all:flags` helper, which also prints the matching Gradle line (and, in the original design, the
+Podfile line) so the layers stay in sync. ⚠ If it is built, Phase 7 must verify that excluded adapters are tree-shaken (`--analyze-size`).
 
 A Flutter plugin has one `dartPluginClass`, so `unified_ads_all` registers `UnifiedAdsAll.registerWith()`, which
 calls `registerSelectedAdapters()`. The per-network adapters move to `lib/src/<network>/` and are no longer
@@ -60,7 +64,10 @@ The plugin's `GeneratedPluginRegistrant` entry is a single `UnifiedAdsAllPlugin`
 native handlers by reflection-free lookup of the classes compiled in (a generated `EnabledNetworks.kt` is written
 by a Gradle task from the same property).
 
-### iOS (`unified_ads_all.podspec`)
+### iOS (`unified_ads_all.podspec`, original design; unsupported since 1.1.0)
+⚠ Historical: the `unified_ads` packages dropped CocoaPods in 1.1.0, and a `Package.swift` can't read `ENV`, so this
+layer can't be built any more. An SPM equivalent would need one Swift package per network, which is the federated
+mode.
 ```ruby
 networks = (ENV['UNIFIED_ADS_NETWORKS'] || '').split(',').map(&:strip)
 s.source_files = ['Classes/Core/**/*'] + networks.map { |n| "Classes/#{n}/**/*" }
@@ -75,24 +82,24 @@ s.pod_target_xcconfig = { 'SWIFT_ACTIVE_COMPILATION_CONDITIONS' => networks.map 
 - **Android:** minSdk 24, AGP 9, Kotlin 2.3. Each network's consumer R8 rules move to `proguard/<network>.pro`, and
   only the selected ones are passed to `consumerProguardFiles`. Facebook's cleartext-to-`127.0.0.1` rule stays an
   app-level step.
-- **iOS:** iOS 13, or **15 when `facebook` is selected** (the podspec raises `s.platform` conditionally). Every
-  network's SKAdNetwork IDs stay an app `Info.plist` step either way.
+- **iOS (original design, unsupported since 1.1.0):** iOS 13, or **15 when `facebook` is selected** (the podspec
+  raised `s.platform` conditionally). Every network's SKAdNetwork IDs stay an app `Info.plist` step either way.
 - **Unity Ads + LevelPlay** stay runtime-exclusive (A11). The flags helper rejects selecting both.
 - **Verification:** the same `tool/verify_opt_in.sh` checks apply. Only the scratch app's dependency block changes,
-  to one package plus the three flags.
+  to one package plus the flags.
 
 ## Trade-offs
 
 | | Federated (recommended) | Single package |
 |---|---|---|
 | Dependency lines in pubspec | one per network | one |
-| Selecting networks | add or remove a package | three flags (Dart, Gradle, Podfile) that **must match** |
+| Selecting networks | add or remove a package | flags (Dart, Gradle) that **must match** |
 | Misconfiguration | impossible: the package is either there or not | flags drift, so you get a runtime `adapterMissing` or a native "class not found" |
-| SwiftPM | supported where the vendor ships SPM | **CocoaPods only** (SPM manifests can't read ENV) |
+| iOS | Swift Package Manager (the only iOS mode since 1.1.0) | **unsupported** since 1.1.0 (the design needed CocoaPods; SPM manifests can't read ENV) |
 | Versioning | each adapter versioned and released independently | one version bumps for any SDK change; consumers update all networks together |
 | CI / caching | small, focused builds | every build must specify flags; harder to cache |
 | Tree-shaking risk | none (code absent) | relies on const-evaluation (Dart) and source-set filtering (native) being correct |
-| Hot reload of the network set | needs `pub get` + rebuild | needs a full native rebuild (Gradle/Pod re-sync) |
+| Hot reload of the network set | needs `pub get` + rebuild | needs a full native rebuild (Gradle re-sync) |
 | pub.dev score / discoverability | per-network packages are discoverable | one package; harder to document per-network setup |
 
 **Recommendation:** use federated mode. Single-package mode is offered only for teams with tooling that already
@@ -103,5 +110,5 @@ centralises build flags (e.g. flavor-based monorepos).
 The public Dart API (`unified_ads`) is the same in both modes, so app code doesn't change. Switching means:
 
 1. Replace the adapter dependencies with `unified_ads_all`, or the reverse.
-2. Add or remove the three flags.
-3. Do a clean native rebuild (`flutter clean`, then `pod install`).
+2. Add or remove the flags.
+3. Do a clean native rebuild (`flutter clean`). Single-package mode is Android-only since 1.1.0.

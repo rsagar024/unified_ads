@@ -1,8 +1,10 @@
 # SDK Status: verified research
 
-> **Verified on:** 2026-10-07
+> **Verified on:** 2026-10-07. iOS Swift packages re-verified 2026-10-12 (1.1.0: iOS is Swift Package Manager only;
+> CocoaPods support and the podspecs were removed. See
+> [`doc/migration/1.1.0-swift-package-manager.md`](doc/migration/1.1.0-swift-package-manager.md)).
 > **Method:** official vendor sources only: vendor docs and release notes, Maven Central `maven-metadata.xml`,
-> CocoaPods trunk API, vendor GitHub repositories. Where vendor sources conflicted, the conflict is recorded.
+> CocoaPods trunk API (version research, 1.0.x), vendor GitHub repositories. Where vendor sources conflicted, the conflict is recorded.
 > **Legend:** ✅ verified · ✗ not supported · ⚠ unverified / best understanding (must be confirmed when the
 > adapter is implemented) · B/I/R = Banner/Interstitial/Rewarded · RI = Rewarded Interstitial
 >
@@ -12,28 +14,30 @@
 
 ## 1. Summary
 
-| Network | Android artifact (latest stable) | iOS pod (latest stable) | SwiftPM | Min Android API | Min iOS | B | I | R | RI | App Open | Status | **Decision** |
+| Network | Android artifact (latest stable) | iOS SDK (latest stable) | SwiftPM package (used since 1.1.0) | Min Android API | Min iOS | B | I | R | RI | App Open | Status | **Decision** |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| AdMob | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0` (Phase 7; was `play-services-ads:25.5.0`) | `Google-Mobile-Ads-SDK` 13.11.0 | ✅ | **24** | 13 | ✅ | ✅ | ✅ | ✅ | ✅ | Active. Legacy Android SDK in maintenance mode, so the adapter moved to Next-Gen (see §2.1) | **Full adapter** (all 5 formats) |
-| Google UMP (consent) | `com.google.android.ump:user-messaging-platform:4.0.0` | `GoogleUserMessagingPlatform` 3.1.0 | ✅ | 23 | ⚠ | n/a | n/a | n/a | n/a | n/a | Active | Used by the AdMob adapter's `ConsentProvider` |
-| Unity Ads | `com.unity3d.ads:unity-ads:4.21.0` | `UnityAds` 4.21.0 | ⚠ | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗⚠ | ✗⚠ | Active. Static API deprecated (4.19) and removed in 5.0 | **Full adapter** (instance APIs) |
-| ironSource / Unity LevelPlay | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` | `IronSourceSDK` 9.6.1.0 | ✅ | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗⚠ | ✗⚠ | Active. Renamed to LevelPlay; 9.0 removed all `IronSource.*` APIs | **Full adapter** (LevelPlay 9.x APIs) |
-| AppLovin MAX | `com.applovin:applovin-sdk:13.6.4` | `AppLovinSDK` 13.6.4 | ✅ | **24** | 12 | ✅ | ✅ | ✅ | ✗⚠ | ✅ | Active. COPPA support removed in 13.0 | **Full adapter** (+ app open, Phase 7) |
-| Facebook Audience Network (branded Meta) | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 | ✅ | 14 (AAR manifest) | 15 (6.22) | ✅ | ✅ | ✅ | (✅) | ✗ | **Bidding-only since 2021.** Direct load serves test ads only; production fill needs mediation bidding | **Full adapter** (owner request, 2026-10-07; was a stub) |
-| Start.io (StartApp) | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK` 4.15.0 | ✗⚠ | ⚠ (21 per third party) | 9 | ✅ | ✅ | ✅ | ✗ | ✗ (splash only) | Active. Rebranded, but artifacts keep the StartApp names | **Full adapter** |
-| InMobi | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` | `InMobiSDK` 11.5.0 | ✗⚠ | 21 | 12–13 ⚠ | ✅ | ✅ | ✅ | ✗ | ✗ | Active. Java artifact `inmobi-ads` abandoned at 10.1.4 | **Full adapter** |
+| AdMob | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0` (Phase 7; was `play-services-ads:25.5.0`) | `GoogleMobileAds` 13.11.0 | ✅ `googleads/swift-package-manager-google-mobile-ads` | **24** | 13 | ✅ | ✅ | ✅ | ✅ | ✅ | Active. Legacy Android SDK in maintenance mode, so the adapter moved to Next-Gen (see §2.1) | **Full adapter** (all 5 formats) |
+| Google UMP (consent) | `com.google.android.ump:user-messaging-platform:4.0.0` | `GoogleUserMessagingPlatform` 3.1.0 | ✅ `googleads/swift-package-manager-google-user-messaging-platform` | 23 | ⚠ | n/a | n/a | n/a | n/a | n/a | Active | Used by the AdMob adapter's `ConsentProvider` |
+| Unity Ads | `com.unity3d.ads:unity-ads:4.21.0` | `UnityAds` 4.21.0 | ✅ `Unity-Technologies/Unity-Ads-Swift-Package` | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗⚠ | ✗⚠ | Active. Static API deprecated (4.19) and removed in 5.0 | **Full adapter** (instance APIs) |
+| ironSource / Unity LevelPlay | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` | `IronSourceSDK` 9.6.1.0 (SPM 9.6.1) | ✅ `ironsource-mobile/LevelPlay-Swift-Package` (product `UnityMediationSDK`) | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗⚠ | ✗⚠ | Active. Renamed to LevelPlay; 9.0 removed all `IronSource.*` APIs | **Full adapter** (LevelPlay 9.x APIs) |
+| AppLovin MAX | `com.applovin:applovin-sdk:13.6.4` | `AppLovinSDK` 13.6.4 | ✅ `AppLovin/AppLovin-MAX-Swift-Package` | **24** | 12 | ✅ | ✅ | ✅ | ✗⚠ | ✅ | Active. COPPA support removed in 13.0 | **Full adapter** (+ app open, Phase 7) |
+| Facebook Audience Network (branded Meta) | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 | ✅ `facebook/FBAudienceNetwork` | 14 (AAR manifest) | 15 (6.22) | ✅ | ✅ | ✅ | (✅) | ✗ | **Bidding-only since 2021.** Direct load serves test ads only; production fill needs mediation bidding | **Full adapter** (owner request, 2026-10-07; was a stub) |
+| Start.io (StartApp) | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK` 4.15.0 | ✅ `StartApp-SDK/StartAppSDK-SwiftPackage` (product `StartApp`) | ⚠ (21 per third party) | 9 | ✅ | ✅ | ✅ | ✗ | ✗ (splash only) | Active. Rebranded, but artifacts keep the StartApp names | **Full adapter** |
+| InMobi | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` | `InMobiSDK` 11.5.0 | ✅ `InMobi/InMobiSDK-Swift-Package` | 21 | 12–13 ⚠ | ✅ | ✅ | ✅ | ✗ | ✗ | Active. Java artifact `inmobi-ads` abandoned at 10.1.4 | **Full adapter** |
 
 **Plugin-wide consequences**
 - **Android minSdk = 24.** AdMob 25.5.0 and AppLovin MAX 13.6.3+ both require it. This supersedes the
   minSdk 23 in CLAUDE.md.
-- **iOS deployment target = 13.0**, except `unified_ads_facebook`, whose podspec / Package.swift require **15.0**
-  (FBAudienceNetwork 6.22). An app that adds the Facebook adapter must target iOS 15.
+- **iOS deployment target = 13.0**, except `unified_ads_facebook`, whose `Package.swift` requires **15.0**
+  (FBAudienceNetwork 6.22). An app that adds the Facebook adapter (or a Meta bidding adapter) must target iOS 15.
+  The app sets it on the Runner target in Xcode.
 - **Xcode floor:** AdMob iOS release notes for 13.4.0 say "minimum supported Xcode version 26.2", but the
   quick-start still says 16.0. Unity Ads needs Xcode 26.0.1+. ⚠ CI is planned for Xcode 26.2+ until verified.
 - **Kotlin:** AdMob needs Kotlin 2.1.0+ and InMobi 11.1+ needs Kotlin 2.x. Our toolchain uses Kotlin 2.3.20 ✅.
-- **SwiftPM:** available for AdMob, UMP, LevelPlay and MAX. Start.io and InMobi are CocoaPods-only, and Unity
-  Ads SPM is ⚠. Adapters ship `Package.swift` only where the vendor ships SPM. Otherwise they are CocoaPods-only,
-  and Flutter falls back to CocoaPods for those plugins.
+- **SwiftPM (1.1.0, verified 2026-10-12):** every vendor ships an official Swift package, so every adapter is
+  **SPM-only** and pins it exactly in its own `Package.swift`: AdMob 13.11.0 + UMP 3.1.0, Unity Ads 4.21.0, LevelPlay
+  9.6.1, MAX 13.6.4, FAN 6.22.0, Start.io 4.15.0, InMobi 11.5.0. (In 1.0.x, Start.io, InMobi and Unity Ads were
+  CocoaPods-only.) The inmobi and ironsource manifests pass `-ObjC` (⚠ to be confirmed by CI).
 
 ---
 
@@ -42,11 +46,11 @@
 The app adds these itself to opt in; our packages declare no Meta dependency and only detect them (by class name) and
 forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 
-| Mediation | Android (Maven) | Brings FAN? | iOS pod | Detected class (Android / iOS) |
+| Mediation | Android (Maven) | Brings FAN? | iOS Swift package (app adds it to the Runner target) | Detected class (Android / iOS) |
 |---|---|---|---|---|
-| AdMob | `com.google.ads.mediation:facebook:6.22.0.1` | yes, and also legacy `play-services-ads:25.4.0`, which **must be excluded** with Next-Gen | `GoogleMobileAdsMediationFacebook` 6.22.0.0 (SPM `googleads-mobile-ios-mediation-meta`, `main` branch, no tags ⚠) | `com.google.ads.mediation.facebook.FacebookMediationAdapter` / `GADMediationAdapterFacebook` |
-| AppLovin MAX | `com.applovin.mediation:facebook-adapter:6.22.0.1` | yes | `AppLovinMediationFacebookAdapter` 6.22.0.4 | `com.applovin.mediation.adapters.FacebookMediationAdapter` / `ALFacebookMediationAdapter` |
-| LevelPlay | `com.unity3d.ads-mediation:facebook-adapter:5.5.0` | **no** (empty POM), so the app adds `audience-network-sdk:6.22.0` | `IronSourceFacebookAdapter` 5.5.0.0 | `com.ironsource.adapters.facebook.FacebookAdapter` / `ISFacebookAdapter` |
+| AdMob | `com.google.ads.mediation:facebook:6.22.0.1` | yes, and also legacy `play-services-ads:25.4.0`, which **must be excluded** with Next-Gen | `https://github.com/googleads/googleads-mobile-ios-mediation-meta`, product `MetaAdapterTarget`, revision `0a3d0597402162334fb5e11816ca612478180095` (= tag `6.22.000`, not valid semver). Pod in 1.0.x: `GoogleMobileAdsMediationFacebook` 6.22.0.0 | `com.google.ads.mediation.facebook.FacebookMediationAdapter` / `GADMediationAdapterFacebook` |
+| AppLovin MAX | `com.applovin.mediation:facebook-adapter:6.22.0.1` | yes | `https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta` exact `6220004.0.0`, product `AppLovinMediationFacebookAdapter`. Pod in 1.0.x: 6.22.0.4 | `com.applovin.mediation.adapters.FacebookMediationAdapter` / `ALFacebookMediationAdapter` |
+| LevelPlay | `com.unity3d.ads-mediation:facebook-adapter:5.5.0` | **no** (empty POM), so the app adds `audience-network-sdk:6.22.0` | `https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package` exact `5.5.0`, product `FacebookAdapter` (brings `FBAudienceNetwork` 6.22.0). Pod in 1.0.x: `IronSourceFacebookAdapter` 5.5.0.0 | `com.ironsource.adapters.facebook.FacebookAdapter` / `ISFacebookAdapter` |
 
 - How the names were checked:
   - the class names come from the AARs / xcframework headers;
@@ -59,7 +63,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
   the ATT status itself.
 - Sources:
   - Maven metadata / POMs: Google Maven, Maven Central;
-  - CocoaPods trunk specs;
+  - CocoaPods trunk specs (1.0.x) and the vendors' Swift package repositories (1.1.0);
   - https://developers.google.com/admob/android/next-gen/mediation/meta,
     https://developers.google.com/admob/ios/mediation/meta;
   - AppLovin "preparing mediated networks";
@@ -73,7 +77,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 | Item | Android | iOS |
 |---|---|---|
 | Version | 25.5.0 (2026-09-17) | 13.11.0 (2026-09-29) |
-| Artifact | `com.google.android.gms:play-services-ads` | `pod 'Google-Mobile-Ads-SDK'` · SPM `https://github.com/googleads/swift-package-manager-google-mobile-ads.git` |
+| Artifact | `com.google.android.gms:play-services-ads` | SPM `https://github.com/googleads/swift-package-manager-google-mobile-ads.git` (product `GoogleMobileAds`; pod `Google-Mobile-Ads-SDK` in 1.0.x) |
 | Minimum | minSdk 24 (raised in 25.5.0; it was 23 from 24.0.0), compileSdk 35+, Kotlin 2.1.0+ | iOS 13.0 (since 13.0.0), Xcode 26.2 ⚠ |
 | Sources | https://developers.google.com/admob/android/rel-notes · https://developers.google.com/admob/android/quick-start | https://developers.google.com/admob/ios/rel-notes · https://developers.google.com/admob/ios/quick-start |
 
@@ -136,7 +140,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
   Sources: https://developers.google.com/admob/android/privacy · https://developers.google.com/admob/android/targeting ·
   https://developers.google.com/admob/android/privacy/us-states
 - **R8:** Play-services AARs bundle consumer rules ⚠ (not confirmed on an official page). The adapter ships no extra rules unless needed.
-- **iOS linkage:** distributed as a static xcframework ⚠, which works with `use_frameworks!` and `:linkage => :static`.
+- **iOS linkage:** distributed as a static xcframework ⚠, linked through SPM (since 1.1.0).
 - **Implementation check (Phase 7, 2026-10-08): Next-Gen Android, RI + App Open on both platforms.**
   - ✅ **Android: compiler-verified** against `ads-mobile-sdk` 1.5.0. The names were first read from the AAR with
     `javap`. Names used:
@@ -183,7 +187,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 | Item | Android | iOS |
 |---|---|---|
 | Version | 4.21.0 (2026-10-01) | 4.21.0 (2026-10-01) |
-| Artifact | `com.unity3d.ads:unity-ads` | `pod 'UnityAds'` · SPM ⚠ (the docs recommend SPM but give no URL) |
+| Artifact | `com.unity3d.ads:unity-ads` | SPM `https://github.com/Unity-Technologies/Unity-Ads-Swift-Package` (product `UnityAds`; official, verified 2026-10-12; pod `UnityAds` in 1.0.x) |
 | Minimum | Docs say API 19+ (stale text); compileSdk 33+, Kotlin 1.7+. Fine for minSdk 24 | iOS 13 (since 4.16.0); Xcode 26.0.1+ (since 4.18.0) |
 | Sources | https://repo1.maven.org/maven2/com/unity3d/ads/unity-ads/maven-metadata.xml · https://docs.unity.com/en-us/grow/ads/Changelog.md | https://trunk.cocoapods.org/api/v1/pods/UnityAds |
 
@@ -214,7 +218,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 | Item | Android | iOS |
 |---|---|---|
 | Version | 9.6.1 | 9.6.1.0 (2026-09-30) |
-| Artifact | `com.unity3d.ads-mediation:mediation-sdk` (Maven Central). The legacy `com.ironsource.sdk:mediationsdk` on IS.com has not been served since 2025-06-30 | `pod 'IronSourceSDK'` · SPM `https://github.com/ironsource-mobile/LevelPlay-Swift-Package` (9.3.0+) |
+| Artifact | `com.unity3d.ads-mediation:mediation-sdk` (Maven Central). The legacy `com.ironsource.sdk:mediationsdk` on IS.com has not been served since 2025-06-30 | SPM `https://github.com/ironsource-mobile/LevelPlay-Swift-Package` (9.3.0+; product `UnityMediationSDK`; pod `IronSourceSDK` in 1.0.x) |
 | Minimum | API 19+, Kotlin 1.7+ | iOS 13 for 9.5.0+ (the changelog; the integration page still says 12) |
 | Sources | https://repo1.maven.org/maven2/com/unity3d/ads-mediation/mediation-sdk/maven-metadata.xml · https://docs.unity.com/en-us/grow/levelplay/sdk/android/changelog.md | https://trunk.cocoapods.org/api/v1/pods/IronSourceSDK · https://docs.unity.com/en-us/grow/levelplay/sdk/ios/sdk-integration.md |
 
@@ -245,7 +249,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 | Item | Android | iOS |
 |---|---|---|
 | Version | 13.6.4 (2026-08-08) | 13.6.4 (2026-08-08) |
-| Artifact | `com.applovin:applovin-sdk` (+ `play-services-ads-identifier`) | `pod 'AppLovinSDK'` · SPM `https://github.com/AppLovin/AppLovin-MAX-Swift-Package` |
+| Artifact | `com.applovin:applovin-sdk` (+ `play-services-ads-identifier`) | SPM `https://github.com/AppLovin/AppLovin-MAX-Swift-Package` (product `AppLovinSDK`; pod `AppLovinSDK` in 1.0.x) |
 | Minimum | **minSdk 24** (13.6.3+), Java 8 | iOS 12.0, Xcode 15+ |
 | Sources | https://repo1.maven.org/maven2/com/applovin/applovin-sdk/maven-metadata.xml · https://support.applovin.com/en/max/android/overview/integration | https://trunk.cocoapods.org/api/v1/pods/AppLovinSDK · https://support.applovin.com/en/max/ios/overview/integration |
 
@@ -270,8 +274,8 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 
 | Item | Android | iOS |
 |---|---|---|
-| Version | 6.22.0 (Maven, 2026-07-21; Meta's changelog page stops at 6.21.0) | 6.22.0 (pod); official changelog page stops at 6.21.1 |
-| Artifact | `com.facebook.android:audience-network-sdk` | `pod 'FBAudienceNetwork'` · SPM `https://github.com/facebook/FBAudienceNetwork` (6.22.0+, iOS 15) |
+| Version | 6.22.0 (Maven, 2026-07-21; Meta's changelog page stops at 6.21.0) | 6.22.0 (pod and SPM); official changelog page stops at 6.21.1 |
+| Artifact | `com.facebook.android:audience-network-sdk` | SPM `https://github.com/facebook/FBAudienceNetwork` (6.22.0+, iOS 15; product `FBAudienceNetwork`; pod in 1.0.x) |
 | Sources | https://repo1.maven.org/maven2/com/facebook/android/audience-network-sdk/maven-metadata.xml · https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/android/changelog | https://cocoapods.org/pods/FBAudienceNetwork · https://github.com/facebook/FBAudienceNetwork |
 
 - **Bidding-only:** Meta Audience Network has been **bidding-only since 2021**. Waterfall placements were removed, so
@@ -294,7 +298,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 - **Device (CPH1931):** init ✅, banner ✅, interstitial load + show ✅ with `IMG_16_9_APP_INSTALL#` test placements. Rewarded
   load with a non-rewarded placement → native **1203** (display format mismatch, now mapped to `invalidConfig`).
 - ⚠ Distribution change: a search snippet of Meta's iOS changelog says 6.22.0 is the **last CocoaPods release** (SPM or
-  zip after that). The adapter therefore ships both a podspec and a `Package.swift` (SPM product name ⚠ until CI).
+  zip after that). Moot since 1.1.0: the adapter is SPM-only (`Package.swift`, product `FBAudienceNetwork`).
 - Other facts: SKAdNetwork IDs `v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork`. Android 9+ needs cleartext to `127.0.0.1`
   (media cache proxy; AdError 7003 otherwise), and the app must declare it (see doc/setup/facebook.md). Privacy:
   `AdSettings.setDataProcessingOptions(["LDU"],0,0)`, `setMixedAudience`. On iOS 17+ with SDK 6.15+, `setAdvertiserTrackingEnabled`
@@ -305,7 +309,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 | Item | Android | iOS |
 |---|---|---|
 | Version | 5.4.0 (2026-10-06) | 4.15.0 (2026-10-05) |
-| Artifact | `com.startapp:inapp-sdk` (Maven Central; docs suggest `5.+`, but we pin) | `pod 'StartAppSDK'` (vendored `StartApp.xcframework`) · SPM ✗⚠ |
+| Artifact | `com.startapp:inapp-sdk` (Maven Central; docs suggest `5.+`, but we pin) | SPM `https://github.com/StartApp-SDK/StartAppSDK-SwiftPackage` (product `StartApp`; official, verified 2026-10-12; pod `StartAppSDK` with vendored `StartApp.xcframework` in 1.0.x) |
 | Minimum | ⚠ (API 21 per a third-party source) | iOS 9.0 (podspec) |
 | Sources | https://repo1.maven.org/maven2/com/startapp/inapp-sdk/maven-metadata.xml · https://support.start.io/hc/en-us/articles/360014774799 | https://trunk.cocoapods.org/api/v1/pods/StartAppSDK · https://support.start.io/hc/en-us/articles/360006012653-IOS-Standard |
 
@@ -322,7 +326,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
   is single-use. There is no App Open format (only splash).
 - **Test mode:** `StartAppSDK.setTestAdsEnabled(true)`; on iOS `testAdsEnabled = YES` (a code flag ✅).
 - **Manifest / plist:** permissions `AD_ID` and `BLUETOOTH`. SKAdNetwork IDs: https://www.start.io/skadnetworkids.json.
-  The pod links AppTrackingTransparency, so `NSUserTrackingUsageDescription` is needed when ATT is requested.
+  The SDK links AppTrackingTransparency, so `NSUserTrackingUsageDescription` is needed when ATT is requested.
 - **Privacy:** GDPR `StartAppSDK.setUserConsent(ctx, "pas", ts, bool)` (iOS `setUserConsent:forConsentType:@"pas"…`).
   CCPA: `getExtras(ctx).edit().putString("IABUSPrivacy_String", …)`. COPPA (Android): meta-data `com.startapp.sdk.CHILD_DIRECTED` /
   `MIXED_AUDIENCE`. COPPA on iOS is ⚠.
@@ -334,7 +338,7 @@ forward privacy. All are built for FAN 6.22.0, and all need iOS 15.
 | Item | Android | iOS |
 |---|---|---|
 | Version | 11.5.0 (2026-09-30) | 11.5.0 (2026-09-28) |
-| Artifact | `com.inmobi.monetization:inmobi-ads-kotlin` (the old `inmobi-ads` has been dead since 10.1.4, 2023) | `pod 'InMobiSDK'` · SPM ✗⚠ |
+| Artifact | `com.inmobi.monetization:inmobi-ads-kotlin` (the old `inmobi-ads` has been dead since 10.1.4, 2023) | SPM `https://github.com/InMobi/InMobiSDK-Swift-Package` (product `InMobiSDK`; official, verified 2026-10-12; pod `InMobiSDK` in 1.0.x) |
 | Minimum | API 21, Kotlin 2.x (11.1.0+) | iOS 12 per the overview, but the 10.7.0 changelog dropped 11 and 10.8.6 requires Xcode 16 ⚠. Our iOS 13 target satisfies both |
 | Sources | https://repo1.maven.org/maven2/com/inmobi/monetization/inmobi-ads-kotlin/maven-metadata.xml · https://support.inmobi.com/monetize/sdk-documentation/android-guidelines/overview-android-guidelines | https://trunk.cocoapods.org/api/v1/pods/InMobiSDK · https://support.inmobi.com/monetize/sdk-documentation/ios-guidelines/changelogs |
 

@@ -11,7 +11,7 @@
 #                       adapter except ironsource, which can't run alongside
 #                       Unity Ads in one app and is covered by its own run;
 #                       <network> → that network)
-#   ARTIFACTS_DIR=<dir> screenshots, logs, Podfile.lock (default:
+#   ARTIFACTS_DIR=<dir> screenshots, logs, Package.resolved (default:
 #                       artifacts/<target> in the checkout)
 #   SMOKE_WORKDIR=<dir> where scratch apps are created (default: temp)
 #   SMOKE_DEVICE=<name> simulator to use (default: "iPhone 16"; falls back
@@ -23,7 +23,7 @@
 #                       at launch (default 1800; keep it under the CI job
 #                       timeout so artifacts are still collected)
 #
-# Steps: prepare the app (Info.plist keys, Podfile platform) → check it with
+# Steps: prepare the app (Info.plist keys, deployment target) → check it with
 # tool/verify_ios_plist.dart → flutter build ios --simulator --no-codesign →
 # boot a simulator → flutter drive integration_test/ad_smoke_test.dart, with
 # a screenshot every 10 s and on exit.
@@ -96,8 +96,8 @@ else
 
   ios_min=13.0
   [[ "$target" == "facebook" ]] && ios_min=15.0
-  echo "==> Podfile platform iOS $ios_min"
-  prepare_ios_podfile "$app" "$ios_min"
+  echo "==> Deployment target iOS $ios_min"
+  prepare_ios_project "$app" "$ios_min"
 fi
 
 echo "==> Checking Info.plist (networks: $plist_networks)"
@@ -109,8 +109,7 @@ set +e
 (cd "$app" && flutter build ios --simulator --no-codesign) 2>&1 | tee "$art/build.log"
 build_status=${PIPESTATUS[0]}
 set -e
-cp "$app/ios/Podfile.lock" "$art/" 2> /dev/null || true
-cp "$app/ios/Podfile" "$art/" 2> /dev/null || true
+cp "$app/ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved" "$art/" 2> /dev/null || true
 if ((build_status != 0)); then
   echo "==> Build FAILED (exit $build_status); see $art/build.log"
   exit "$build_status"

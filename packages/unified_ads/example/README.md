@@ -4,9 +4,9 @@ Add the core package plus **only** the adapters you want. Their native SDKs are 
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_admob: ^1.0.0
-  unified_ads_unity: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_admob: ^1.1.0
+  unified_ads_unity: ^1.1.0
 ```
 
 A minimal app: AdMob first, Unity Ads as the fallback, an anchored banner, an interstitial and a rewarded ad.

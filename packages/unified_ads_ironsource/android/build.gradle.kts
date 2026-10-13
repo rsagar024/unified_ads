@@ -69,8 +69,8 @@ dependencies {
     // The ONLY place the LevelPlay SDK is declared: apps that do not depend on
     // unified_ads_ironsource never resolve it (see ARCHITECTURE.md section 4.1).
     implementation("com.unity3d.ads-mediation:mediation-sdk:9.6.1")
-    implementation("com.google.android.gms:play-services-appset:16.0.0")
-    implementation("com.google.android.gms:play-services-ads-identifier:18.1.0")
+    implementation("com.google.android.gms:play-services-appset:16.1.0")
+    implementation("com.google.android.gms:play-services-ads-identifier:18.3.0")
     // Required by the Pigeon-generated suspend host API.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 

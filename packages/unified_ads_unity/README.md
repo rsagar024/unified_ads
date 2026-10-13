@@ -6,7 +6,7 @@ Unity Ads adapter for [`unified_ads`](https://pub.dev/packages/unified_ads): ban
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.unity3d.ads:unity-ads:4.21.0` | `UnityAds 4.21.0` |
-| Distribution | Gradle (Maven Central) | CocoaPods |
+| Distribution | Gradle (Maven Central) | Swift Package Manager |
 
 Setup, config, privacy and error mapping: [`doc/setup/unity.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/unity.md).
 

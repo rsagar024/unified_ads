@@ -6,7 +6,7 @@ ironSource / Unity LevelPlay adapter for [`unified_ads`](https://pub.dev/package
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` | `IronSourceSDK 9.6.1.0` |
-| Distribution | Gradle (Maven Central) | CocoaPods + SPM |
+| Distribution | Gradle (Maven Central) | Swift Package Manager |
 
 Setup, config, privacy and error mapping: [`doc/setup/ironsource.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/ironsource.md).
 

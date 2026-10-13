@@ -4,7 +4,7 @@ Facebook Audience Network (branded Meta Audience Network) adapter for
 [`unified_ads`](https://pub.dev/packages/unified_ads): **banner, interstitial and rewarded**.
 
 It links only the Audience Network SDK: `com.facebook.android:audience-network-sdk:6.22.0` on Android, and
-`FBAudienceNetwork` 6.22.0 on iOS (**iOS 15+**). Apps that don't depend on this package never pull that SDK.
+`FBAudienceNetwork` 6.22.0 on iOS (**iOS 15+**, Swift Package Manager only). Apps that don't depend on this package never pull that SDK.
 
 > **Read this first.** Audience Network has been **bidding-only since 2021**. A direct integration like this one serves
 > **test ads** (test placements `IMG_16_9_APP_INSTALL#<placement id>` or registered test devices), but it is **not

@@ -27,7 +27,7 @@ jobs:
     # ⚠ Google Mobile Ads 13.4+ needs Xcode 26.2+ (SDK_STATUS.md); macos-26
     # ships it.
     runs-on: macos-26
-    # Above DRIVE_HARD_TIMEOUT_S (30 min) + pod install + two Xcode builds, so
+    # Above DRIVE_HARD_TIMEOUT_S (30 min) + package resolution + two Xcode builds, so
     # a hung drive still uploads its screenshots and logs.
     timeout-minutes: 60
     strategy:
@@ -46,24 +46,21 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-      - name: Cache CocoaPods
+      - name: Cache Swift packages
         uses: actions/cache@v6
         with:
-          path: |
-            ~/Library/Caches/CocoaPods
-            ~/.cocoapods/repos
-          key: pods-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('packages/*/ios/*.podspec') }}
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('packages/*/ios/*/Package.swift') }}
           restore-keys: |
-            pods-${{ runner.os }}-${{ matrix.target }}-
-            pods-${{ runner.os }}-
+            spm-${{ runner.os }}-${{ matrix.target }}-
+            spm-${{ runner.os }}-
       - name: Tool versions
         run: |
           xcodebuild -version
           flutter --version
-          pod --version
           xcrun simctl list devices available | grep -i iphone | head -20
-      # CocoaPods mode; Swift Package Manager is covered by ci.yaml's iOS build matrix.
-      - run: flutter config --no-enable-swift-package-manager
+      # Swift Package Manager: the plugins ship no podspecs.
+      - run: flutter config --enable-swift-package-manager
       - run: flutter pub get
       - name: Build + smoke test
         run: bash tool/ios_sim_smoke.sh ${{ matrix.target }}

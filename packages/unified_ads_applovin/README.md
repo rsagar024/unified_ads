@@ -6,7 +6,7 @@ AppLovin MAX adapter for [`unified_ads`](https://pub.dev/packages/unified_ads): 
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.applovin:applovin-sdk:13.6.4` | `AppLovinSDK 13.6.4` |
-| Distribution | Gradle (Maven Central) | CocoaPods + SPM |
+| Distribution | Gradle (Maven Central) | Swift Package Manager |
 
 Setup, config, privacy and error mapping: [`doc/setup/applovin.md`](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/applovin.md).
 

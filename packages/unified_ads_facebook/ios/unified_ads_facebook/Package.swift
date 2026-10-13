@@ -2,7 +2,7 @@
 // Facebook Audience Network adapter for unified_ads. The FBAudienceNetwork
 // package is declared ONLY here, so apps that do not depend on
 // unified_ads_facebook never resolve it. FBAudienceNetwork 6.22 requires iOS 15
-// and recommends SPM (CocoaPods distribution is being wound down by Meta).
+// and recommends Swift Package Manager.
 
 import PackageDescription
 

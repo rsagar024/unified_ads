@@ -1,3 +1,10 @@
+## 1.1.0
+
+* **BREAKING (iOS, ecosystem):** released together with the other unified_ads packages, which are now
+  **Swift Package Manager only** on iOS (CocoaPods support removed). This package has no native code. See the
+  [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
+* No Dart API changes.
+
 ## 1.0.0
 
 Initial release.

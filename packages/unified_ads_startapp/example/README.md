@@ -4,8 +4,8 @@ Add the core package and this adapter. Only the Start.io SDK is linked into your
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_startapp: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_startapp: ^1.1.0
 ```
 
 The adapter registers itself through Flutter's plugin registrant, so you don't need to import it.

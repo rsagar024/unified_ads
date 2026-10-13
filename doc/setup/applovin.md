@@ -6,12 +6,12 @@
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
 | Android | `com.applovin:applovin-sdk:13.6.4` | **minSdk 24** (13.6.3+) |
-| iOS | `AppLovinSDK` 13.6.4 (CocoaPods; SPM `AppLovin/AppLovin-MAX-Swift-Package`, product `AppLovinSDK`) | iOS 13 (SDK: 12) |
+| iOS | `AppLovinSDK` 13.6.4 (Swift Package Manager: `AppLovin/AppLovin-MAX-Swift-Package`, product `AppLovinSDK`) | iOS 13 (SDK: 12) |
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_applovin: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_applovin: ^1.1.0
 ```
 
 ## Config
@@ -53,8 +53,9 @@ AdNetwork.applovin: NetworkConfig(
 - **Android:** use `google()` + `mavenCentral()`. ProGuard rules are bundled in the AAR. Permissions (INTERNET,
   ACCESS_NETWORK_STATE, AD_ID) are merged from the SDK manifest.
 - **iOS:** add the SKAdNetwork IDs from https://skadnetwork-ids.applovin.com/v1/skadnetworkids.json and
-  `NSUserTrackingUsageDescription`. The pod sets `-ObjC` itself and works with `use_frameworks!`. The framework ships its own privacy
-  manifest.
+  `NSUserTrackingUsageDescription`. Swift Package Manager only since 1.1.0. The adapter's `Package.swift` adds no
+  `-ObjC` flag (⚠ to be confirmed by CI); if MAX fails with undefined symbols or unrecognized selectors, add `-ObjC` to
+  the Runner target's Other Linker Flags. The framework ships its own privacy manifest.
 
 ## Error mapping (`MaxErrorCode`)
 
@@ -88,14 +89,14 @@ dependencies {
 
 Audience Network also needs cleartext to `127.0.0.1`. See [facebook.md](facebook.md#android).
 
-**iOS:** iOS **15.0+**.
+**iOS:** iOS **15.0+** (Runner target deployment target). In Xcode, **File > Add Package Dependencies…**, add it to
+the **Runner** target:
 
-```ruby
-# ios/Podfile, inside `target 'Runner'`, and `platform :ios, '15.0'`
-pod 'AppLovinMediationFacebookAdapter', '6.22.0.4'
-```
+| Package | Dependency rule | Product |
+|---|---|---|
+| `https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta` | Exact `6220004.0.0` | `AppLovinMediationFacebookAdapter` |
 
-AppLovin also publishes the adapter as a Swift package (see AppLovin's integration manager for the URL). The adapter does not call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
+The adapter does not call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
 ATT status itself. Also add Meta's SKAdNetwork IDs.
 
 **Dashboards:** Select Meta as a bidder on your MAX ad units. Meta says existing placement IDs can be reused, and Monetization Manager must
