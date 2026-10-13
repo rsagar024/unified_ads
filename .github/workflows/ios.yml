@@ -32,6 +32,9 @@ jobs:
     timeout-minutes: 60
     strategy:
       fail-fast: false
+      # macOS arm64 hosted runners are capacity-constrained; 8 concurrent jobs
+      # get dropped ("not acquired by Runner"). Run a few at a time instead.
+      max-parallel: 3
       matrix:
         # all = the root example app (every adapter); the rest are scratch
         # apps that depend on that one adapter only.
