@@ -30,8 +30,9 @@ if [[ "$platform" != "android" && "$platform" != "ios" ]]; then
 fi
 
 ALL_NETWORKS=(admob unity applovin ironsource facebook startapp inmobi)
-IFS=',' read -r -a selected <<< "${NETWORKS:-admob,unity,inmobi}"
+IFS=',' read -r -a requested <<< "${NETWORKS:-admob,unity,inmobi}"
 meta="${META_BIDDING:-}"
+leak="${OPT_IN_LEAK:-}"
 
 # Native SDK coordinates per network. Keep in sync with each adapter's
 # android/build.gradle.kts and ios/<pkg>/Package.swift (pinned in SDK_STATUS.md).
@@ -81,7 +82,7 @@ EOF
     applovin)
       cat << 'EOF'
 dependencies {
-    implementation("com.applovin.mediation:facebook-adapter:6.22.0.1")
+    implementation("com.applovin.mediation:facebook-adapter:6.22.0.1") // brings Audience Network 6.22.0
 }
 EOF
       ;;
@@ -134,18 +135,38 @@ add_spm_package() {
   '
 }
 
-for n in "${selected[@]}"; do
+# Validated, whitespace-trimmed and de-duplicated (a duplicate would write the
+# same key twice into the scratch app's pubspec.yaml).
+selected=()
+for n in "${requested[@]}"; do
+  n="${n//[[:space:]]/}"
+  [[ -z "$n" ]] && continue
   if [[ -z "$(android_sdk "$n")" ]]; then
     echo "unknown network in NETWORKS: $n" >&2
     exit 2
   fi
+  # ${selected[*]-}: bash 3.2 (macOS) treats an empty array as unbound under set -u.
+  [[ " ${selected[*]-} " == *" $n "* ]] || selected+=("$n")
 done
+if ((${#selected[@]} == 0)); then
+  echo "NETWORKS selects no network" >&2
+  exit 2
+fi
 if [[ -n "$meta" ]]; then
   meta_gradle "$meta" > /dev/null # validates the value
   # The mediation platform's own adapter is needed for its Meta adapter.
-  found=false
-  for n in "${selected[@]}"; do [[ "$n" == "$meta" ]] && found=true; done
-  $found || selected+=("$meta")
+  [[ " ${selected[*]} " == *" $meta "* ]] || selected+=("$meta")
+fi
+if [[ -n "$leak" ]]; then
+  if [[ -z "$(android_sdk "$leak")" ]]; then
+    echo "unknown network in OPT_IN_LEAK: $leak" >&2
+    exit 2
+  fi
+  # A leaked network whose SDK is expected anyway would pass the self-test.
+  if [[ " ${selected[*]} " == *" $leak "* || ( -n "$meta" && "$leak" == facebook ) ]]; then
+    echo "OPT_IN_LEAK=$leak is already selected; the self-test needs an unselected network" >&2
+    exit 2
+  fi
 fi
 
 # shellcheck source=lib/scratch_app.sh
@@ -155,7 +176,7 @@ workdir="${OPT_IN_WORKDIR:-$(mktemp -d)}"
 app="$workdir/opt_in_app"
 echo "==> Creating scratch app in $app (networks: ${selected[*]}${meta:+; Meta bidding via $meta})"
 packages=("${selected[@]}")
-[[ -n "${OPT_IN_LEAK:-}" ]] && packages+=("$OPT_IN_LEAK")
+[[ -n "$leak" ]] && packages+=("$leak")
 create_scratch_app "$app" "${packages[@]}"
 
 # A network's SDK is expected when it was selected; Audience Network is also
