@@ -1,10 +1,9 @@
 name: CI
 
 on:
-  # Merges into development and master (master merges also gate release.yml).
+  # Merges into master only (they also gate release.yml).
   push:
-    branches: [master, development]
-  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -13,7 +12,7 @@ concurrency:
 
 env:
   # Keep in sync with the local toolchain (packages require Flutter >= 3.44).
-  FLUTTER_VERSION: 3.47.2
+  FLUTTER_VERSION: 3.47.8
   JAVA_VERSION: 17
   # Linux jobs pin ubuntu-24.04 (not ubuntu-latest, which moves to Ubuntu 26 on
   # 2026-10-19) so the Android/JDK toolchain only changes when we bump it.

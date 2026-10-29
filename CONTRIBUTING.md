@@ -6,7 +6,7 @@ See `ARCHITECTURE.md` for the design and `IMPLEMENTATION.md` for the roadmap.
 
 ## Prerequisites
 
-- Flutter stable (3.44+) / Dart 3.12+
+- Flutter stable (3.44+) / Dart 3.12+. CI uses Flutter 3.47.8 (Dart 3.13.7)
 - Android Studio + JDK 17 (Android builds)
 - Xcode 26.2+ (iOS builds, macOS only). No CocoaPods: since 1.1.0 iOS builds use Swift Package Manager only
 - bash (Git Bash on Windows) for the scripts in `tool/`
@@ -82,8 +82,8 @@ feature branch ──PR──▶ development ──PR──▶ master ──(CI 
 
 | Event | What runs |
 |---|---|
-| PR to any branch | `ci.yaml` + `ios.yml` |
-| Merge (push) to `development` | `ci.yaml` + `ios.yml`. **Nothing is published.** |
+| PR to any branch | Nothing. Run the checks above locally, or start `ci.yaml` / `ios.yml` by hand (Actions → Run workflow) |
+| Merge (push) to `development` | Nothing. **Nothing is published.** |
 | Merge (push) to `master` | `ci.yaml` + `ios.yml`; when **both** pass, `release.yml` tags and `publish.yml` publishes |
 
 How the automatic release works:
@@ -107,7 +107,8 @@ trigger workflows. That's why the tags are pushed with a PAT.
    - add a `CHANGELOG.md` entry;
    - if a sibling now needs a newer version, update the inter-package constraints (for example
      `unified_ads_platform_interface: ^1.1.0`).
-2. Every package must pass `flutter pub publish --dry-run` with 0 warnings. CI runs this check.
+2. Every package must pass `flutter pub publish --dry-run` with 0 warnings. CI runs this check on `master`, so run it
+   locally (or start CI by hand on your branch) before merging.
 3. Merge `development` into `master`. Preview what will be tagged with `bash tool/release_tags.sh --dry-run`.
 
 A breaking change to the public API needs a note in `doc/migration/` (CLAUDE.md non-negotiable).
@@ -130,6 +131,8 @@ A breaking change to the public API needs a note in `doc/migration/` (CLAUDE.md 
 
 `release.yml` runs from the copy on the default branch, so the flow starts working once these workflows are on
 `master`.
+
+Step-by-step guide covering both paths: [doc/publishing.md](doc/publishing.md).
 
 **Manual fallback:** for a brand-new package, run `tool/publish.sh --publish` (or `tool\publish.ps1`). pub.dev only
 allows automated publishing for packages that already exist, so the first version has to be published by hand.

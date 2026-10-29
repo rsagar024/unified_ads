@@ -3,7 +3,7 @@ name: Release
 # Auto-release from master ONLY: after a push to master (a merge) passes BOTH
 # CI and the iOS simulator workflow, tag every package whose pubspec version is
 # not on pub.dev yet (tool/release_tags.sh). Each tag push runs publish.yml.
-# Pushes to development run CI + iOS but never reach this workflow.
+# CI + iOS run only on master pushes (and by hand); manual runs never release.
 # One-time setup: CONTRIBUTING.md → "Branches and releases".
 
 on:

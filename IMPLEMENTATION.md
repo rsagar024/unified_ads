@@ -682,7 +682,8 @@ Owner decisions:
 
 **Delivered**
 
-- **`.github/workflows/ci.yaml`**, pinned to Flutter 3.47.2 and JDK 17, with concurrency cancel. Jobs:
+- **`.github/workflows/ci.yaml`**, pinned to Flutter 3.47.8 and JDK 17, with concurrency cancel. Runs on pushes to `master`
+  and manual dispatch only (same for `ios.yml`). Jobs:
 
   | Job | Runner | Steps |
   |---|---|---|

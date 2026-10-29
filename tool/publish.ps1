@@ -5,7 +5,7 @@
 #        .\tool\publish.ps1 -Publish     publish them to pub.dev (asks per package)
 #
 # The repository root is the pub workspace (`publish_to: none`) and is never
-# published. The adapters depend on `^1.0.0` of the platform interface and the
+# published. The adapters depend on `^1.1.0` of the platform interface and the
 # core, so those two must reach pub.dev first.
 param([switch]$Publish)
 

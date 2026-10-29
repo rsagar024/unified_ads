@@ -7,10 +7,9 @@ name: iOS simulator
 # Results feed SDK_STATUS.md ("Verification status").
 
 on:
-  # Merges into development and master (master merges also gate release.yml).
+  # Merges into master only (they also gate release.yml).
   push:
-    branches: [master, development]
-  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -19,7 +18,7 @@ concurrency:
 
 env:
   # Keep in sync with ci.yaml.
-  FLUTTER_VERSION: 3.47.2
+  FLUTTER_VERSION: 3.47.8
 
 jobs:
   smoke:
