@@ -1,5 +1,22 @@
 ## 1.1.0
 
+* **New: interstitial pacing.** `AdConfig.pacing` takes an `AdPacing` per full-screen format: `minInterval`
+  (cooldown between shows), `showEveryActions` (show after every N `UnifiedAds.recordAction()` calls) and
+  `initialDelay` (no show right after the first init). It works alongside `FrequencyCap`, and `show()` fails with
+  `frequencyCapped`, naming the rule, without contacting the network. Also available as `pacing` in
+  `pubspec.yaml` / `ads_config.json` (`minIntervalSeconds`, `showEveryActions`, `initialDelaySeconds`).
+* **New: ad-free mode for Pro users.** `UnifiedAds.setAdFree(bool, {blockRewarded})`, `isAdFree`, `isBlocked(format)` and
+  `adFreeChanges`. Banners collapse (and reload when ads come back), interstitial / app open `load()` / `show()` /
+  `preload()` return the new `AdErrorCode.adsBlocked`, and cached ads of blocked formats are released. Rewarded formats
+  stay available unless `blockRewarded` is set.
+* New `UnifiedAds.recordAction()` / `actionCount`, and `FullScreenAd.canShow()` (ready + not blocked + cap and pacing
+  met, without side effects).
+* `FrequencyStore` gains `readActionCount` / `writeActionCount` / `readActionMark` / `writeActionMark` with default
+  bodies, so a persistent store can keep the action count across launches.
+* **Migration note:** an exhaustive `switch` over `AdErrorCode` needs a case for `adsBlocked`, and a store declared with
+  `implements FrequencyStore` must add the four new methods (`extends` keeps compiling). See the README's
+  "Migration notes".
+* README restyled (✨ Features, 📖 Quick start, …), with a new "Pacing, frequency caps and ad-free" section.
 * **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
   deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
   target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).

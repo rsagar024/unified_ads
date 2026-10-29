@@ -48,8 +48,13 @@ enum AdErrorCode {
   /// `show` was called while another full-screen ad is visible.
   alreadyShowing,
 
-  /// The frequency cap for the format was reached.
+  /// The frequency cap or a pacing rule (cooldown, action count, initial
+  /// delay) of the format is not met yet. The message names the rule.
   frequencyCapped,
+
+  /// Ads of this format are switched off with `UnifiedAds.setAdFree` (for
+  /// example for a Pro subscriber).
+  adsBlocked,
 
   /// The SDK reported that the ad could not be shown.
   showFailed,

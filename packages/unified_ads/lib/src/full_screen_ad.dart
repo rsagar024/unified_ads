@@ -93,6 +93,9 @@ abstract class FullScreenAd<T extends FullScreenAd<T>> {
     if (_disposed) {
       return _loadFailed(_error(AdErrorCode.notReady, 'ad was disposed'));
     }
+    if (AdsRuntime.instance.isBlocked(format)) {
+      return _loadFailed(_blockedError());
+    }
     final session = AdsRuntime.instance.session;
     if (session == null || !AdsRuntime.instance.isInitialized) {
       return _loadFailed(
@@ -124,15 +127,19 @@ abstract class FullScreenAd<T extends FullScreenAd<T>> {
 
   /// Shows the loaded ad.
   ///
-  /// Fails with [AdErrorCode.notInitialized], [AdErrorCode.notReady],
-  /// [AdErrorCode.alreadyShowing] or [AdErrorCode.frequencyCapped] without
-  /// contacting the network. Completes when the ad is presented, not when it
+  /// Fails with [AdErrorCode.notInitialized], [AdErrorCode.adsBlocked],
+  /// [AdErrorCode.notReady], [AdErrorCode.alreadyShowing] or
+  /// [AdErrorCode.frequencyCapped] (cap or `AdPacing` rule not met) without
+  /// contacting the network. A capped ad stays loaded. Completes when the ad is presented, not when it
   /// is closed; use the `onClosed` callback for that.
   Future<AdResult<void>> show() async {
     if (AdsRuntime.instance.session == null) {
       return _showFailed(
         _error(AdErrorCode.notInitialized, 'Call UnifiedAds.init first'),
       );
+    }
+    if (AdsRuntime.instance.isBlocked(format)) {
+      return _showFailed(_blockedError());
     }
     final session = _session;
     final handle = _handle;
@@ -146,13 +153,9 @@ abstract class FullScreenAd<T extends FullScreenAd<T>> {
         _error(AdErrorCode.alreadyShowing, 'another full-screen ad is showing'),
       );
     }
-    if (!await session.frequency.canShow(format)) {
-      return _showFailed(
-        _error(
-          AdErrorCode.frequencyCapped,
-          '${format.id} frequency cap reached',
-        ),
-      );
+    final blockReason = await session.frequency.blockReason(format);
+    if (blockReason != null) {
+      return _showFailed(_error(AdErrorCode.frequencyCapped, blockReason));
     }
 
     session.fullScreenShowing = true;
@@ -168,6 +171,28 @@ abstract class FullScreenAd<T extends FullScreenAd<T>> {
         _finishShow();
         return _showFailed(error);
     }
+  }
+
+  /// Whether [show] would present the ad right now: it is ready, not blocked
+  /// by `UnifiedAds.setAdFree`, no other full-screen ad is showing, and its
+  /// frequency cap and `AdPacing` rules are met.
+  ///
+  /// Has no side effects, so it can be used to skip an ad break silently:
+  ///
+  /// ```dart
+  /// UnifiedAds.recordAction();
+  /// if (await interstitial.canShow()) await interstitial.show();
+  /// ```
+  Future<bool> canShow() async {
+    final session = _session;
+    if (session == null ||
+        !isReady ||
+        _showing ||
+        session.fullScreenShowing ||
+        AdsRuntime.instance.isBlocked(format)) {
+      return false;
+    }
+    return session.frequency.canShow(format);
   }
 
   /// Releases the ad. The object cannot be used afterwards.
@@ -233,6 +258,11 @@ abstract class FullScreenAd<T extends FullScreenAd<T>> {
     session.fullScreenShowing = false;
     unawaited(session.refillIfEnabled(format));
   }
+
+  AdError _blockedError() => _error(
+    AdErrorCode.adsBlocked,
+    '${format.id} is blocked by UnifiedAds.setAdFree',
+  );
 
   AdError _error(AdErrorCode code, String message) =>
       AdError(code: code, message: message, network: forceNetwork);

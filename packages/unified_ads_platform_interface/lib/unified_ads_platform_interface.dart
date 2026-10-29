@@ -11,6 +11,7 @@ export 'src/ad_format.dart';
 export 'src/ad_handle.dart';
 export 'src/ad_network.dart';
 export 'src/ad_network_adapter.dart';
+export 'src/ad_pacing.dart';
 export 'src/ad_result.dart';
 export 'src/adapter_registry.dart';
 export 'src/ads_logger.dart';

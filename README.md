@@ -1,4 +1,4 @@
-# unified_ads
+# unified_ads 📱
 
 [![CI](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml)
 [![iOS simulator](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml)
@@ -23,20 +23,31 @@ final ad = InterstitialAd(onClosed: (ad) => print('served by ${ad.servedBy}'));
 if ((await ad.load()).isSuccess) await ad.show();   // tries AdMob → Unity → InMobi
 ```
 
-## Why
+<a id="why"></a>
 
-- **Opt-in networks:** each network is its own package. Depend on `unified_ads_admob` + `unified_ads_unity` and *only*
+## ✨ Features
+
+- 🧩 **Opt-in networks:** each network is its own package. Depend on `unified_ads_admob` + `unified_ads_unity` and *only*
   those SDKs end up in your APK / IPA. CI checks this on every push: [`tool/verify_opt_in.sh`](tool/verify_opt_in.sh)
   builds an app with AdMob + Unity + InMobi and fails if any other network's Gradle artifact or Swift package is resolved. See
   [Architecture → Opt-in linking](#opt-in-linking-how-excluded-sdks-never-reach-the-binary).
-- **Waterfall fallback** with per-network timeouts, **preloading**, **frequency capping**, one `AdError` model, and unified events.
-- **Never crashes the host app:** every native failure becomes an `AdError`.
-- **Consent and ATT:** a Google UMP provider, a pluggable `ConsentProvider`, and an App Tracking Transparency helper
+- 🌊 **Waterfall fallback** with per-network timeouts, **preloading**, one `AdError` model, and unified events.
+- ⏱️ **Smart ad pacing:** a cooldown between interstitials, "show one every N user actions", an initial delay after
+  launch, and sliding-window **frequency caps**, configured per format
+  ([Pacing and ad-free](#pacing-frequency-caps-and-ad-free-pro-users)).
+- 👑 **Pro users / ad-free mode:** one call (`UnifiedAds.setAdFree(true)`) collapses banners and blocks interstitials
+  and app open ads; rewarded ads stay available unless you block them too.
+- 🛡️ **Safe test mode:** a global `testMode` flag (overridable per network) that requests test ads wherever the
+  network supports it.
+- 🧯 **Never crashes the host app:** every native failure becomes an `AdError`.
+- 🔐 **Consent and ATT:** a Google UMP provider, a pluggable `ConsentProvider`, and an App Tracking Transparency helper
   ([Consent and ATT](#consent-gdpr--us-privacy--coppa-and-att)).
-- **Config in code or in `pubspec.yaml`:** `AdConfig`, or a declarative `unified_ads:` section turned into
+- 🎯 **No hardcoding, config in code or in `pubspec.yaml`:** `AdConfig`, or a declarative `unified_ads:` section turned into
   `ads_config.json` by `dart run unified_ads:generate_config`.
 
-## Contents
+<a id="contents"></a>
+
+## 📑 Contents
 
 - [Packages](#packages) · [Feature matrix](#feature-matrix) · [Requirements](#requirements)
 - [Quick start](#quick-start) · [Configuration](#configuration) · [API overview](#api-overview)
@@ -45,7 +56,9 @@ if ((await ad.load()).isSuccess) await ad.show();   // tries AdMob → Unity →
 - [SDK status](#sdk-status) · [Single-package mode](#single-package-mode-alternative-android-only)
 - [Example app](#example-app) · [Migration notes](#migration-notes) · [Development](#development) · [Further reading](#further-reading)
 
-## Packages
+<a id="packages"></a>
+
+## 📦 Packages
 
 | Package | Purpose |
 |---|---|
@@ -59,7 +72,9 @@ if ((await ad.load()).isSuccess) await ad.show();   // tries AdMob → Unity →
 | [`unified_ads_startapp`](https://pub.dev/packages/unified_ads_startapp) | Start.io |
 | [`unified_ads_facebook`](https://pub.dev/packages/unified_ads_facebook) | Facebook Audience Network, branded Meta (bidding-only: test ads direct, revenue via mediation) |
 
-## Feature matrix
+<a id="feature-matrix"></a>
+
+## 🗂️ Feature matrix
 
 | Network | Banner | Interstitial | Rewarded | Rewarded interstitial | App open | Meta bidding ³ | Android | iOS | Package min (Android API / iOS) | Test mode | Device-verified (Android) |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -87,7 +102,9 @@ Column legend:
 
 `RewardedInterstitialAd` and `AppOpenAd` use the same waterfall, cache, frequency caps and callbacks as the other formats.
 
-## Requirements
+<a id="requirements"></a>
+
+## ✅ Requirements
 
 | | Minimum |
 |---|---|
@@ -104,7 +121,9 @@ Two rules to know up front:
   example the official `google_mobile_ads` plugin, or a Google mediation adapter that pulls it). Exclude the legacy SDK
   if something brings it in (see [Migration notes](#migration-notes)).
 
-## Quick start
+<a id="quick-start"></a>
+
+## 📖 Quick start
 
 1. Add the core and the networks you want:
    ```yaml
@@ -130,8 +149,19 @@ Two rules to know up front:
    final banner = BannerAd(size: const BannerSize.adaptiveAnchored());
    // in build(): UnifiedBannerWidget(ad: banner, anchored: true)
    ```
+5. Optional: pace interstitials and switch ads off for Pro users:
+   ```dart
+   // In AdConfig: pacing: {AdFormat.interstitial: AdPacing(minInterval: Duration(seconds: 15), showEveryActions: 3)}
+   await UnifiedAds.recordAction();                         // after each user action
+   if (await interstitial.canShow()) await interstitial.show();
 
-## Configuration
+   await UnifiedAds.setAdFree(isProUser);                   // before init, and after a purchase
+   ```
+   See [Pacing and ad-free](#pacing-frequency-caps-and-ad-free-pro-users).
+
+<a id="configuration"></a>
+
+## ⚙️ Configuration
 
 ### In code: `AdConfig`
 
@@ -158,6 +188,9 @@ AdConfig(
   showTimeout: Duration(seconds: 15),               // show() gives up if the SDK never answers
   preload: PreloadPolicy(formats: {AdFormat.interstitial, AdFormat.rewarded}, onInit: false),
   frequencyCaps: {AdFormat.interstitial: FrequencyCap(maxShows: 3, per: Duration(hours: 1))},
+  pacing: {AdFormat.interstitial: AdPacing(               // cooldown, every N actions, launch delay
+    minInterval: Duration(seconds: 15), showEveryActions: 3, initialDelay: Duration(seconds: 30),
+  )},
   cacheTtl: Duration(hours: 1),                     // cached ads expire and reload transparently
 )
 ```
@@ -175,6 +208,10 @@ AdConfig(
 unified_ads:
   testMode: true
   waterfall: [admob, unity]
+  frequencyCaps:
+    interstitial: {maxShows: 3, perSeconds: 3600}
+  pacing:
+    interstitial: {minIntervalSeconds: 15, showEveryActions: 3, initialDelaySeconds: 30}
   networks:
     admob:
       appId: {android: 'ca-app-pub-…~…', ios: 'ca-app-pub-…~…'}
@@ -203,7 +240,9 @@ section and report errors with a JSON path (`invalidConfig: $.networks.foo: unkn
 works with hot restart. You can also write `assets/ads_config.json` by hand; `AdConfigLoader.fromJson` /
 `fromJsonString` / `toJson` are available too.
 
-## API overview
+<a id="api-overview"></a>
+
+## 🧭 API overview
 
 ```dart
 // Init: never throws.
@@ -222,6 +261,7 @@ final ad = InterstitialAd(
 );
 final loaded = await ad.load();        // AdResult: isSuccess / error
 ad.isReady;                            // loaded and not expired
+await ad.canShow();                    // ready, not ad-free, cap + pacing met (no side effects)
 await ad.show();
 ad.servedBy;                           // AdNetwork that actually served it
 
@@ -231,6 +271,13 @@ final rewarded = RewardedAd(onEarnedReward: (ad, RewardItem reward) => print('${
 final banner = BannerAd(size: const BannerSize.adaptiveAnchored(), onLoaded: (ad) {});
 UnifiedBannerWidget(ad: banner, anchored: true, placeholder: const SizedBox(), collapseWhenFailed: true);
 banner.dispose();
+
+// Pacing and ad-free (Pro users)
+await UnifiedAds.recordAction();       // counts toward AdPacing.showEveryActions
+UnifiedAds.actionCount;
+await UnifiedAds.setAdFree(true, blockRewarded: false);
+UnifiedAds.isAdFree;
+UnifiedAds.adFreeChanges.listen((adFree) {});
 
 // Cache / preload, events, logging, lifecycle
 await UnifiedAds.preload(AdFormat.rewarded);
@@ -248,10 +295,72 @@ await UnifiedAds.dispose();
 | Waterfall | networks = `waterfall` ∩ ready ∩ supports(format) ∩ enabled formats, each tried with `loadTimeout`. If all fail you get `AdError(noFill)` with an `attempts` list (one `AdError` per network). |
 | Cache + preload | one slot per full-screen format; formats in `PreloadPolicy.formats` reload automatically after `closed` / `failedToShow`; `onInit: true` preloads right after init; the next `load()` takes the cached ad; expired ads (`cacheTtl`) are destroyed and reloaded. |
 | Frequency caps | `FrequencyCap(maxShows, per)` per format (sliding window). `show()` returns `AdError(frequencyCapped)` without touching native code. |
+| Pacing | `AdPacing(minInterval, showEveryActions, initialDelay)` per full-screen format, on top of caps. `show()` returns `frequencyCapped` with a message naming the rule; the ad stays loaded. |
+| Ad-free | `UnifiedAds.setAdFree(true)`: banners collapse, interstitial / app open `load()`, `show()` and `preload()` return `adsBlocked`, cached ads are released. Rewarded formats are blocked only with `blockRewarded: true`. |
 | Errors | `AdError { code, message, network, nativeCode, attempts }`. `nativeCode` always keeps the SDK's original code. |
 | Logging | `AdsLogger` levels `verbose < debug < info < warning < error < none`; silent by default; plug in a custom sink (e.g. Crashlytics). Ad unit IDs are partially masked. |
 | Lifecycle | `UnifiedAds.init` first disposes the previous session (hot restart safe); `dispose()` is idempotent; banners destroy their native view on dispose. |
 | Testing | `package:unified_ads/testing.dart` → `FakeAdNetworkAdapter` (scriptable: succeed, fail, timeout, delayed events); pass it with `UnifiedAds.init(config, adapters: [...])`. |
+
+### Pacing, frequency caps and ad-free (Pro users)
+
+Three layers decide whether a full-screen ad may show. `show()` checks all of them **before** contacting the network,
+and a blocked ad stays loaded for the next opportunity.
+
+**1. Pacing (`AdPacing`)**: per format, in `AdConfig.pacing` (or `pacing:` in `pubspec.yaml` / `ads_config.json`):
+
+```dart
+AdConfig(
+  pacing: {
+    AdFormat.interstitial: AdPacing(
+      initialDelay: Duration(seconds: 30),   // no interstitial in the first 30 s after the first init
+      minInterval: Duration(seconds: 15),    // cooldown between two interstitials
+      showEveryActions: 3,                   // at least 3 UnifiedAds.recordAction() calls between shows
+    ),
+    AdFormat.appOpen: AdPacing(minInterval: Duration(minutes: 5)),
+  },
+)
+```
+
+```dart
+// Record what counts as an "action" in your app: a finished level, a saved item, a screen change…
+await UnifiedAds.recordAction();
+
+// Then, at a natural break, show only if every rule allows it, and skip silently otherwise.
+if (await interstitial.canShow()) {
+  await interstitial.show();          // onClosed continues your flow
+} else {
+  continueFlow();
+}
+```
+
+- The initial delay is measured from the **first** `UnifiedAds.init` of the process; re-initializing doesn't restart it.
+- The action count and the last show times are kept in the `FrequencyStore` passed to `UnifiedAds.init`. The default
+  store is in memory; extend `FrequencyStore` (for example on top of `shared_preferences`) and override
+  `readActionCount` / `writeActionCount` / `readActionMark` / `writeActionMark` to keep them across launches.
+- When a rule blocks `show()`, it fails with `AdErrorCode.frequencyCapped` and a message such as
+  `interstitial cooldown: 9 s left` or `interstitial needs 3 actions between shows (1 so far)`.
+
+**2. Frequency caps (`FrequencyCap`)**: at most `maxShows` shows within any sliding window `per`, for example
+`FrequencyCap(maxShows: 3, per: Duration(hours: 1))`. Caps and pacing apply together.
+
+**3. Ad-free (`UnifiedAds.setAdFree`)**: for Pro subscribers, or any user who shouldn't see ads.
+
+```dart
+await UnifiedAds.setAdFree(true);                       // banners, interstitials, app open off
+await UnifiedAds.setAdFree(true, blockRewarded: true);  // rewarded + rewarded interstitial off too
+await UnifiedAds.setAdFree(false);                      // back on: banners reload by themselves
+UnifiedAds.isAdFree;                                    // current state
+UnifiedAds.isBlocked(AdFormat.interstitial);            // per-format check
+```
+
+- Banners shown by `UnifiedBannerWidget` remove their native view and collapse to zero size; they reload when ads are
+  switched back on.
+- `load()`, `show()` and `UnifiedAds.preload()` of a blocked format return `AdErrorCode.adsBlocked` without a network
+  request, and preloaded ads of blocked formats are released.
+- Rewarded ads stay available by default because the user chooses to watch them.
+- The switch can be set before `init` and survives re-initialization, but not an app restart. Call it at startup with
+  the user's purchase state, so nothing is preloaded for a Pro user.
 
 ### `AdErrorCode`
 
@@ -270,7 +379,8 @@ await UnifiedAds.dispose();
 | `networkError` | connectivity or server errors reported by the SDK |
 | `notReady` | show was called with no loaded or valid ad |
 | `alreadyShowing` | show was called while another full-screen ad is visible |
-| `frequencyCapped` | the frequency cap was hit |
+| `frequencyCapped` | a `FrequencyCap` or an `AdPacing` rule (cooldown, actions, initial delay) isn't met yet |
+| `adsBlocked` | ads of the format are switched off with `UnifiedAds.setAdFree` (Pro users) |
 | `showFailed` | the SDK reported a show failure |
 | `noActivity` | no foreground Activity or ViewController is available |
 | `internal` | anything unexpected (the original exception is kept in `message`) |
@@ -279,7 +389,9 @@ await UnifiedAds.dispose();
 `PlatformException`, which the adapter maps to `AdError`; core wraps every adapter call in a guard that reports
 `internal`; a throwing user callback is logged and doesn't break the ad pipeline.
 
-## Getting your ad IDs
+<a id="getting-your-ad-ids"></a>
+
+## 🔑 Getting your ad IDs
 
 Every network needs an **app-level credential**, and most also need **one ID per ad format**:
 
@@ -488,7 +600,9 @@ AdNetwork.facebook: NetworkConfig(
 
 Use these **only for development**, in the example or a test build.
 
-## Platform setup
+<a id="platform-setup"></a>
+
+## 📲 Platform setup
 
 ### Android (all networks)
 
@@ -587,7 +701,9 @@ Then select Meta as a bidder in the mediation dashboard and list that platform a
 Manager. Don't also run `unified_ads_facebook` for the same placements. Verify with
 `META_BIDDING=admob|applovin|ironsource bash tool/verify_opt_in.sh android`.
 
-## Consent (GDPR / US privacy / COPPA) and ATT
+<a id="consent-gdpr--us-privacy--coppa-and-att"></a>
+
+## 🔐 Consent (GDPR / US privacy / COPPA) and ATT
 
 unified_ads separates **collecting** consent from **applying** it. A `ConsentProvider` (Google UMP or your own CMP)
 returns a network-neutral `ConsentState`; `UnifiedAds` hands it to every enabled adapter, which translates it to its SDK's
@@ -702,7 +818,9 @@ final current = await UnifiedAds.trackingAuthorizationStatus(); // no prompt
   set `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status, as Meta requires below iOS 17; on iOS 17+
   Audience Network 6.15+ reads the status itself.
 
-## Architecture
+<a id="architecture"></a>
+
+## 🏗️ Architecture
 
 ### Package structure
 
@@ -882,7 +1000,9 @@ sequenceDiagram
 | Engine detach / hot restart | every handle and view is destroyed; SDK-global init is kept (SDKs can't de-init) |
 | Threading | `Handler(Looper.getMainLooper())` / `DispatchQueue.main` |
 
-## SDK status
+<a id="sdk-status"></a>
+
+## 📊 SDK status
 
 Verified against official vendor sources (docs, release notes, Maven Central, vendor GitHub). Ad SDKs change monthly;
 re-verified before every adapter release.
@@ -941,7 +1061,9 @@ On iOS the Meta Swift packages pin Audience Network exactly: Google's (`6.22.000
   Start.io and Facebook served test ads on a physical device. iOS is built and smoke-tested in CI on simulators; it
   hasn't run on a physical device yet.
 
-## Single-package mode (alternative, Android-only)
+<a id="single-package-mode-alternative-android-only"></a>
+
+## 🧱 Single-package mode (alternative, Android-only)
 
 For teams that want one dependency, the design (`unified_ads_all`, **not shipped**) selects networks with flags that must
 agree:
@@ -962,12 +1084,15 @@ agree:
 
 The public Dart API is the same in both modes, so switching only changes dependencies and flags (plus `flutter clean`).
 
-## Example app
+<a id="example-app"></a>
+
+## 📱 Example app
 
 The [`example/`](example) app is a full test bench: it initializes every enabled network and has **one card per
 network** (plus a "Waterfall (auto)" card) with **Banner**, **Load/Show interstitial** and **Load/Show rewarded**
 buttons, a banner-size selector, a **Settings** tab (enable networks, reorder the waterfall, paste your own IDs; saved
-with `shared_preferences` and re-initialized) and a **Log** tab with every callback and its timestamp.
+with `shared_preferences` and re-initialized, plus an **Ad-free (Pro user)** switch and interstitial pacing fields),
+a **Record action** button, and a **Log** tab with every callback and its timestamp.
 
 ```sh
 cd example
@@ -977,8 +1102,15 @@ flutter run
 It starts with public test credentials: AdMob, Facebook (banner + interstitial), Unity Ads and Start.io serve test ads
 immediately; InMobi initializes but returns no-fill; AppLovin MAX and LevelPlay need your own keys.
 
-## Migration notes
+<a id="migration-notes"></a>
 
+## 🔄 Migration notes
+
+- **1.1.0: pacing and ad-free (additive).** New `AdConfig.pacing` / `AdPacing`, `UnifiedAds.setAdFree`,
+  `UnifiedAds.recordAction` and `FullScreenAd.canShow()`. Two things can affect existing code: `AdErrorCode` has a new
+  value, `adsBlocked`, so an exhaustive `switch` over it needs a new case; and `FrequencyStore` has four new methods with
+  default bodies, so a store declared with `implements FrequencyStore` must add them (one that `extends` it compiles
+  unchanged).
 - **1.1.0: iOS is Swift Package Manager only.** Podspecs were removed. Enable SPM (Flutter 3.44+, Xcode 26.2+), set the
   deployment target on the Runner target, and remove unified_ads pods from your `Podfile`. Android and the Dart API are
   unchanged. Can't move yet? Pin `'>=1.0.0 <1.1.0'`.
@@ -992,7 +1124,9 @@ immediately; InMobi initializes but returns no-fill; AppLovin MAX and LevelPlay 
 - **1.0.0: `meta` → `facebook`.** `AdNetwork.meta` → `AdNetwork.facebook`, `unified_ads_meta` → `unified_ads_facebook`,
   `MetaAdapter` → `FacebookAdapter`, JSON key `"meta"` → `"facebook"` (`"meta"` is rejected).
 
-## Development
+<a id="development"></a>
+
+## 🛠️ Development
 
 ```sh
 flutter pub get
@@ -1014,7 +1148,9 @@ the example and a scratch app per adapter for the simulator on free GitHub macOS
 **Releases:** merges to `development` and `master` both run CI and iOS; a green merge to `master` publishes every
 package whose version changed to pub.dev. Contributions: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Further reading
+<a id="further-reading"></a>
+
+## 📚 Further reading
 
 Everything above is complete on its own; these files go deeper:
 
@@ -1024,6 +1160,8 @@ Everything above is complete on its own; these files go deeper:
 - [doc/consent_and_att.md](doc/consent_and_att.md) · [doc/ios_setup.md](doc/ios_setup.md) · [doc/setup/](doc/setup) (per network)
 - [doc/single_package_mode.md](doc/single_package_mode.md) · [doc/migration/](doc/migration) · [IMPLEMENTATION.md](IMPLEMENTATION.md) · [CHANGELOG.md](CHANGELOG.md)
 
-## License
+<a id="license"></a>
+
+## 📄 License
 
 MIT, see [LICENSE](LICENSE).

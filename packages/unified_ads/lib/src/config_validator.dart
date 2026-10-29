@@ -74,6 +74,19 @@ ValidationReport validateConfig(AdConfig config) {
       );
     }
   });
+  config.pacing.forEach((format, rules) {
+    final path = 'pacing.${format.id}';
+    if (!format.isFullScreen) {
+      global.add(invalid('$path: only full-screen formats'));
+    }
+    if (rules.minInterval < Duration.zero ||
+        rules.initialDelay < Duration.zero) {
+      global.add(invalid('$path: durations must not be negative'));
+    }
+    if (rules.showEveryActions < 1) {
+      global.add(invalid('$path: showEveryActions must be at least 1'));
+    }
+  });
 
   config.networks.forEach((network, nc) {
     if (!nc.enabled) return;

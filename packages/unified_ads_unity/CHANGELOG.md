@@ -1,5 +1,8 @@
 ## 1.1.0
 
+* README restyled (✨ Features, 🚀 Getting Started, 📖 Usage, …), with usage for interstitial pacing and ad-free mode
+  (`AdPacing`, `UnifiedAds.recordAction`, `UnifiedAds.setAdFree`, all from `unified_ads` 1.1.0). No adapter code
+  changes.
 * **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
   deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
   target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).

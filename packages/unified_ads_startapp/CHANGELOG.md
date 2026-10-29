@@ -1,5 +1,8 @@
 ## 1.1.0
 
+* README restyled (✨ Features, 🚀 Getting Started, 📖 Usage, …), with usage for interstitial pacing and ad-free mode
+  (`AdPacing`, `UnifiedAds.recordAction`, `UnifiedAds.setAdFree`, all from `unified_ads` 1.1.0). No adapter code
+  changes.
 * Docs (Android, verified against Start.io's current integration guide and the 5.4.0 AAR): the **required** app-manifest
   removal of the SDK's auto-init provider `StartAppInitProvider` ("Code Initialization" path — the adapter inits in code),
   the COPPA step that removes the merged `ACCESS_WIFI_STATE` permission via `tools:node`, and the optional

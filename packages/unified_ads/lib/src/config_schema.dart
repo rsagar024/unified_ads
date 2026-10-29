@@ -32,6 +32,7 @@ const configRootKeys = {
   'cacheTtlSeconds',
   'preload',
   'frequencyCaps',
+  'pacing',
 };
 
 /// Keys allowed inside `networks.<id>`.
@@ -54,6 +55,13 @@ const configPreloadKeys = {'formats', 'onInit'};
 
 /// Keys allowed inside `frequencyCaps.<format>`.
 const configCapKeys = {'maxShows', 'perSeconds'};
+
+/// Keys allowed inside `pacing.<format>`.
+const configPacingKeys = {
+  'minIntervalSeconds',
+  'showEveryActions',
+  'initialDelaySeconds',
+};
 
 /// Keys allowed inside a per-platform ID object.
 const configPlatformKeys = {'android', 'ios'};
@@ -130,6 +138,20 @@ void _validateRoot(Map<String, Object?> json) {
       final per = _opt<int>(value, 'perSeconds', path);
       if (maxShows == null || per == null) {
         throw _SchemaError(path, 'maxShows and perSeconds are required');
+      }
+      _format(id, path);
+    }
+  }
+  final pacing = _opt<Map<String, Object?>>(json, 'pacing', p);
+  if (pacing != null) {
+    for (final MapEntry(key: id, value: value) in pacing.entries) {
+      final path = '$p.pacing.$id';
+      if (value is! Map<String, Object?>) {
+        throw _SchemaError(path, 'expected an object');
+      }
+      _checkKeys(value, configPacingKeys, path);
+      for (final key in configPacingKeys) {
+        _opt<int>(value, key, path);
       }
       _format(id, path);
     }

@@ -155,6 +155,10 @@ void main() {
       '{"frequencyCaps": {"banner": {"maxShows": 1}}}',
       '{"networks": {"unity": {"enabledFormats": [1]}}}',
       '{"networks": {"inmobi": []}}',
+      '{"pacing": {"interstitial": {"cooldown": 5}}}',
+      '{"pacing": {"interstitial": {"showEveryActions": "3"}}}',
+      '{"pacing": {"video": {"minIntervalSeconds": 5}}}',
+      '{"pacing": {"rewarded": 5}}',
     ];
     for (final source in bad) {
       final json = jsonDecode(source) as Map<String, Object?>;
@@ -165,5 +169,17 @@ void main() {
       );
       expect(validateConfigJson(json), isNotNull, reason: source);
     }
+    expect(
+      validateConfigJson({
+        'pacing': {
+          'interstitial': {
+            'minIntervalSeconds': 15,
+            'showEveryActions': 3,
+            'initialDelaySeconds': 30,
+          },
+        },
+      }),
+      isNull,
+    );
   });
 }

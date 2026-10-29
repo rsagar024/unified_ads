@@ -44,6 +44,25 @@ void main() {
       expect(report.global, hasLength(3));
     });
 
+    test('rejects invalid pacing', () {
+      final report = validateConfig(
+        const AdConfig(
+          pacing: {
+            AdFormat.banner: AdPacing(minInterval: Duration(seconds: 5)),
+            AdFormat.interstitial: AdPacing(
+              showEveryActions: 0,
+              initialDelay: Duration(seconds: -1),
+            ),
+          },
+        ),
+      );
+      expect(report.global.map((e) => e.message), [
+        contains('pacing.banner: only full-screen formats'),
+        contains('pacing.interstitial: durations must not be negative'),
+        contains('pacing.interstitial: showEveryActions must be at least 1'),
+      ]);
+    });
+
     test('per-network rules disable only that network', () {
       final report = validateConfig(
         AdConfig(
@@ -73,6 +92,14 @@ void main() {
   "cacheTtlSeconds": 1800,
   "preload": {"formats": ["rewarded"], "onInit": true},
   "frequencyCaps": {"interstitial": {"maxShows": 3, "perSeconds": 3600}},
+  "pacing": {
+    "interstitial": {
+      "minIntervalSeconds": 15,
+      "showEveryActions": 3,
+      "initialDelaySeconds": 30
+    },
+    "appOpen": {"minIntervalSeconds": 60}
+  },
   "networks": {
     "admob": {
       "appId": {"android": "android-app", "ios": "ios-app"},
@@ -102,6 +129,18 @@ void main() {
         const PreloadPolicy(formats: {AdFormat.rewarded}, onInit: true),
       );
       expect(config.frequencyCaps[AdFormat.interstitial]?.maxShows, 3);
+      expect(
+        config.pacing[AdFormat.interstitial],
+        const AdPacing(
+          minInterval: Duration(seconds: 15),
+          showEveryActions: 3,
+          initialDelay: Duration(seconds: 30),
+        ),
+      );
+      expect(
+        config.pacing[AdFormat.appOpen],
+        const AdPacing(minInterval: Duration(minutes: 1)),
+      );
       final admob = config.networks[AdNetwork.admob]!;
       expect(admob.appId, 'android-app');
       expect(admob.interstitialAdUnitId, 'a-int');

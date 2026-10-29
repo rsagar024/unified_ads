@@ -20,6 +20,13 @@ import 'config_schema.dart';
 ///   "cacheTtlSeconds": 3600,
 ///   "preload": { "formats": ["interstitial", "rewarded"], "onInit": false },
 ///   "frequencyCaps": { "interstitial": { "maxShows": 3, "perSeconds": 3600 } },
+///   "pacing": {
+///     "interstitial": {
+///       "minIntervalSeconds": 15,
+///       "showEveryActions": 3,
+///       "initialDelaySeconds": 30
+///     }
+///   },
 ///   "networks": {
 ///     "admob": {
 ///       "enabled": true,
@@ -152,6 +159,16 @@ abstract final class AdConfigLoader {
               'perSeconds': cap.per.inSeconds,
             },
         },
+      if (config.pacing.isNotEmpty)
+        'pacing': {
+          for (final MapEntry(key: format, value: rules)
+              in config.pacing.entries)
+            format.id: {
+              'minIntervalSeconds': rules.minInterval.inSeconds,
+              'showEveryActions': rules.showEveryActions,
+              'initialDelaySeconds': rules.initialDelay.inSeconds,
+            },
+        },
       'networks': {
         for (final MapEntry(key: n, value: nc) in config.networks.entries)
           n.id: network(nc),
@@ -193,6 +210,7 @@ class _Parser {
           _duration(json, 'cacheTtlSeconds', p, ms: false) ?? defaults.cacheTtl,
       preload: _preload(json, p) ?? defaults.preload,
       frequencyCaps: _caps(json, p),
+      pacing: _pacing(json, p),
     );
   }
 
@@ -279,6 +297,34 @@ class _Parser {
       );
     }
     return caps;
+  }
+
+  Map<AdFormat, AdPacing> _pacing(Map<String, Object?> json, String p) {
+    final raw = _opt<Map<String, Object?>>(json, 'pacing', p);
+    if (raw == null) return const {};
+    const defaults = AdPacing();
+    final pacing = <AdFormat, AdPacing>{};
+    for (final MapEntry(key: id, value: value) in raw.entries) {
+      final path = '$p.pacing.$id';
+      if (value is! Map<String, Object?>) {
+        throw _ConfigException(path, 'expected an object');
+      }
+      _checkKeys(value, configPacingKeys, path);
+      final interval = _opt<int>(value, 'minIntervalSeconds', path);
+      final delay = _opt<int>(value, 'initialDelaySeconds', path);
+      pacing[_format(id, path)] = AdPacing(
+        minInterval: interval == null
+            ? defaults.minInterval
+            : Duration(seconds: interval),
+        showEveryActions:
+            _opt<int>(value, 'showEveryActions', path) ??
+            defaults.showEveryActions,
+        initialDelay: delay == null
+            ? defaults.initialDelay
+            : Duration(seconds: delay),
+      );
+    }
+    return pacing;
   }
 
   String? _id(Map<String, Object?> json, String key, String p) {

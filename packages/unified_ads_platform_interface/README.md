@@ -1,21 +1,33 @@
-# unified_ads_platform_interface
+# unified_ads_platform_interface 📱
 
 [![CI](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml)
 [![iOS simulator](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml)
 [![pub package](https://img.shields.io/pub/v/unified_ads_platform_interface.svg)](https://pub.dev/packages/unified_ads_platform_interface)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rsagar024/unified_ads/blob/master/LICENSE)
 
-The common platform interface for [`unified_ads`](https://pub.dev/packages/unified_ads). It contains:
-
-- the `AdNetworkAdapter` contract that every network adapter implements;
-- the shared models (`AdConfig`, `NetworkConfig`, `AdError`, `AdEvent`, `BannerSize`, `RewardItem`, …);
-- the `AdapterRegistry` that adapters register with from their `dartPluginClass`;
-- the `ConsentProvider` / `TrackingAuthorization` abstractions;
-- the pluggable `AdsLogger`, which is silent by default.
+The common platform interface for [`unified_ads`](https://pub.dev/packages/unified_ads).
 
 **App developers don't depend on this package directly.** `unified_ads` re-exports all of it.
 
-## For adapter authors
+## ✨ Features
+
+- 🧩 **One adapter contract:** every network adapter implements `AdNetworkAdapter`.
+- 📦 **Shared models:** `AdConfig`, `NetworkConfig`, `AdPacing`, `FrequencyCap`, `AdError`, `AdEvent`, `BannerSize`,
+  `RewardItem` and more.
+- 🔌 **Self-registration:** adapters register with `AdapterRegistry` from their `dartPluginClass`, so the core never
+  depends on an adapter.
+- 🔐 **Pluggable privacy:** the `ConsentProvider` and `TrackingAuthorization` abstractions.
+- 🪵 **Pluggable logging:** `AdsLogger`, silent by default.
+- 🛡️ **Never throws:** `BridgedAdNetworkAdapter` maps every `PlatformException` to an `AdError`.
+
+## 🚀 Getting Started
+
+```yaml
+dependencies:
+  unified_ads_platform_interface: ^1.1.0   # only in an adapter package
+```
+
+## 📖 For adapter authors
 
 Most adapters extend `BridgedAdNetworkAdapter`, which implements the contract once: it never throws, maps
 `PlatformException` → `AdError`, tracks loaded ads, and translates native events. A new adapter then only provides its
@@ -46,7 +58,7 @@ Checklist for a new adapter (`unified_ads_<network>`):
 The core never depends on an adapter. Adapters depend only on this package, which is why an app links exactly the
 networks it adds.
 
-## The `AdNetworkAdapter` contract
+## ⚙️ The `AdNetworkAdapter` contract
 
 ```dart
 abstract class AdNetworkAdapter {
@@ -87,10 +99,19 @@ error mapping, loaded-ad tracking, event translation), so each adapter only brid
 `suspend` methods; Swift gets `async throws` methods delegating to `@MainActor` code; native → Dart events go through an
 ordered main-thread queue.
 
+## 🛠️ Verification & Tests
+
+```sh
+flutter test   # model, registry and BridgedAdNetworkAdapter tests
+```
+
+Adapters test themselves against a mocked Pigeon host API; `package:unified_ads/testing.dart` provides
+`FakeAdNetworkAdapter` for app-level tests.
+
 ---
 
 Part of [`unified_ads`](https://pub.dev/packages/unified_ads): one Dart API for banner, interstitial and rewarded ads across seven networks, linking only the SDKs you add. Its [README](https://github.com/rsagar024/unified_ads/blob/master/packages/unified_ads/README.md) is the full guide: configuration, waterfall, consent and ATT, every network's setup, architecture and SDK status.
 
-## License
+## 📄 License
 
 MIT, see [LICENSE](https://github.com/rsagar024/unified_ads/blob/master/LICENSE).

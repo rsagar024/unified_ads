@@ -29,6 +29,7 @@ AdConfig configFor(
   PreloadPolicy preload = PreloadPolicy.none,
   Duration loadTimeout = const Duration(milliseconds: 200),
   Map<AdFormat, FrequencyCap> frequencyCaps = const {},
+  Map<AdFormat, AdPacing> pacing = const {},
   Duration cacheTtl = const Duration(hours: 1),
 }) => AdConfig(
   testMode: testMode,
@@ -37,6 +38,7 @@ AdConfig configFor(
   loadTimeout: loadTimeout,
   preload: preload,
   frequencyCaps: frequencyCaps,
+  pacing: pacing,
   cacheTtl: cacheTtl,
 );
 

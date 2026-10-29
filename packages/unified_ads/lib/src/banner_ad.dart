@@ -65,7 +65,11 @@ class BannerAd extends ChangeNotifier {
     this.onFailedToLoad,
     this.onImpression,
     this.onClicked,
-  });
+  }) {
+    _adFreeSubscription = AdsRuntime.instance.adFreeChanges.listen(
+      _onAdFreeChanged,
+    );
+  }
 
   /// Requested size.
   final BannerSize size;
@@ -92,6 +96,7 @@ class BannerAd extends ChangeNotifier {
   Size? _adSize;
   AdsSession? _session;
   StreamSubscription<AdEvent>? _subscription;
+  StreamSubscription<bool>? _adFreeSubscription;
   Timer? _timeout;
   List<WaterfallCandidate> _queue = const [];
   final List<AdError> _attempts = [];
@@ -125,6 +130,9 @@ class BannerAd extends ChangeNotifier {
           AdError(code: AdErrorCode.notReady, message: 'banner was disposed'),
         ),
       );
+    }
+    if (AdsRuntime.instance.isBlocked(AdFormat.banner)) {
+      return Future.value(_finish(const AdFailure(_blocked)));
     }
     final pending = _completer;
     if (_state == BannerAdState.loading && pending != null) {
@@ -176,6 +184,28 @@ class BannerAd extends ChangeNotifier {
     final completer = _completer = Completer<AdResult<void>>();
     _next();
     return completer.future;
+  }
+
+  static const _blocked = AdError(
+    code: AdErrorCode.adsBlocked,
+    message: 'banners are blocked by UnifiedAds.setAdFree',
+  );
+
+  /// Removes the native view when ads are switched off, and returns to idle
+  /// (so `UnifiedBannerWidget` loads again) when they are switched back on.
+  void _onAdFreeChanged(bool adFree) {
+    if (_state == BannerAdState.disposed) return;
+    if (adFree) {
+      if (_state == BannerAdState.idle) return;
+      _queue = const [];
+      _adSize = null;
+      _finish(const AdFailure(_blocked));
+    } else if (_state == BannerAdState.failed &&
+        _error?.code == AdErrorCode.adsBlocked) {
+      _state = BannerAdState.idle;
+      _error = null;
+      notifyListeners();
+    }
   }
 
   void _next() {
@@ -316,6 +346,7 @@ class BannerAd extends ChangeNotifier {
     _state = BannerAdState.disposed;
     _timeout?.cancel();
     unawaited(_subscription?.cancel());
+    unawaited(_adFreeSubscription?.cancel());
     _current = null;
     final completer = _completer;
     _completer = null;

@@ -31,8 +31,21 @@ class AdsRuntime {
   // Lives as long as the process; never closed by design.
   // ignore: close_sinks
   final StreamController<AdEvent> _events = StreamController.broadcast();
-  final FrequencyStore _defaultFrequencyStore = InMemoryFrequencyStore();
+  // ignore: close_sinks
+  final StreamController<bool> _adFreeChanges = StreamController.broadcast();
+  FrequencyStore _defaultFrequencyStore = InMemoryFrequencyStore();
+  FrequencyStore? _frequencyStore;
   AdsSession? _session;
+  bool _adFree = false;
+  bool _blockRewarded = false;
+
+  /// Time of the first init of this process; start of
+  /// `AdPacing.initialDelay`. Not reset by re-initialization.
+  DateTime? startedAt;
+
+  /// Action counter for `AdPacing.showEveryActions`; survives
+  /// re-initialization.
+  final ActionCounter actions = ActionCounter();
   Completer<void>? _lock;
 
   /// Events of every session; survives re-initialization.
@@ -42,6 +55,41 @@ class AdsRuntime {
   AdsSession? get session {
     final s = _session;
     return s == null || s.isDisposed ? null : s;
+  }
+
+  /// Whether ads are switched off (see `UnifiedAds.setAdFree`).
+  bool get adFree => _adFree;
+
+  /// Whether the ad-free switch also blocks rewarded formats.
+  bool get blockRewarded => _blockRewarded;
+
+  /// Emits the new value whenever [adFree] changes.
+  Stream<bool> get adFreeChanges => _adFreeChanges.stream;
+
+  /// Whether ads of [format] are currently blocked by the ad-free switch.
+  bool isBlocked(AdFormat format) {
+    if (!_adFree) return false;
+    return !format.isRewarded || _blockRewarded;
+  }
+
+  /// Switches ads on or off for the whole app.
+  Future<void> setAdFree(bool adFree, {bool blockRewarded = false}) async {
+    final changed = adFree != _adFree;
+    _adFree = adFree;
+    _blockRewarded = blockRewarded;
+    if (adFree) await session?.dropBlocked(isBlocked);
+    if (changed) _adFreeChanges.add(adFree);
+  }
+
+  /// Counts one user action and persists the count.
+  Future<int> recordAction() async {
+    final count = ++actions.count;
+    try {
+      await (_frequencyStore ?? _defaultFrequencyStore).writeActionCount(count);
+    } catch (e) {
+      AdsLogger.current.warning('saving the action count failed', error: e);
+    }
+    return count;
   }
 
   /// Whether at least one network is ready.
@@ -76,11 +124,21 @@ class AdsRuntime {
     return _serialized(() async {
       await _disposeSession();
       if (consent != null) this.consent = consent;
+      startedAt ??= clock();
+      final store = _frequencyStore = frequencyStore ?? _defaultFrequencyStore;
+      try {
+        await actions.restore(store);
+      } catch (e) {
+        AdsLogger.current.warning('reading the action count failed', error: e);
+      }
       final session = AdsSession(
         config: config,
         clock: () => clock(),
-        frequencyStore: frequencyStore ?? _defaultFrequencyStore,
+        frequencyStore: store,
         eventSink: _events.add,
+        startedAt: startedAt,
+        actions: actions,
+        isBlocked: isBlocked,
       );
       InitResult result;
       try {
@@ -134,5 +192,13 @@ class AdsRuntime {
     tracking = const MethodChannelTracking();
     consent = ConsentState.unknown;
     lastInitResult = null;
+    _frequencyStore = null;
+    _defaultFrequencyStore = InMemoryFrequencyStore();
+    _adFree = false;
+    _blockRewarded = false;
+    startedAt = null;
+    actions
+      ..count = 0
+      ..marks.clear();
   }
 }

@@ -1,4 +1,4 @@
-# unified_ads_startapp
+# unified_ads_startapp 📱
 
 [![CI](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ci.yaml)
 [![iOS simulator](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml/badge.svg)](https://github.com/rsagar024/unified_ads/actions/workflows/ios.yml)
@@ -8,13 +8,29 @@
 Start.io adapter for [`unified_ads`](https://pub.dev/packages/unified_ads): **banner, interstitial and rewarded** ads.
 Adding this package links **only** the Start.io SDK into your app.
 
+## ✨ Features
+
+- 🎯 **App ID only:** Start.io has no per-format ad units, so every format serves with only the App ID. Optional ad
+  tags go to reporting.
+- 🧩 **Three formats, one API:** `BannerAd` + `UnifiedBannerWidget` (320×50 or MREC), `InterstitialAd` and
+  `RewardedAd`. Every ad reports the network that served it (`servedBy`).
+- 🌊 **Waterfall fallback:** combine Start.io with other networks; if one has no fill, the next is tried.
+- 🛡️ **Safe test mode:** `testMode: true` maps to Start.io's test ads.
+- ⏱️ **Pacing and frequency caps:** set a cooldown between interstitials, show one every N user actions, skip the
+  first seconds after launch, and cap shows per time window.
+- 👑 **Pro users and ad-free mode:** `UnifiedAds.setAdFree(true)` collapses banners and blocks interstitials.
+- 🚫 **No surprise ads:** Start.io's splash and return ads are switched off at init.
+- 🪶 **Opt-in linking:** only the Start.io SDK is added to your APK / IPA.
+
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK` 4.15.0 |
 | Minimum | API 23 per AAR (package: 24) | iOS 11 (package: 13) |
 | Distribution | Gradle (Maven Central) | Swift Package Manager (`StartApp-SDK/StartAppSDK-SwiftPackage`, product `StartApp`) |
 
-## Install and use
+## 🚀 Getting Started
+
+### 1. Add the dependency
 
 ```yaml
 dependencies:
@@ -22,22 +38,118 @@ dependencies:
   unified_ads_startapp: ^1.1.0
 ```
 
-```dart
-await UnifiedAds.init(AdConfig(
-  testMode: true,
-  networks: {
-    AdNetwork.startapp: NetworkConfig(
-      appId: PlatformValue.select(android: '<Android App ID>', ios: '<iOS App ID>'),
-      // Optional: Start.io has no per-format ad units. A value here is sent as the
-      // "ad tag" for reporting (Android: every format; iOS: interstitial + rewarded).
-      interstitialAdUnitId: 'level_end',
-      extras: {'rewardAmount': 1, 'rewardType': 'reward'},  // Start.io rewards carry no amount
-    ),
-  },
-));
+### 2. Platform setup
+
+#### Android (`android/app/src/main/AndroidManifest.xml`)
+
+The AAR ships its ProGuard rules and its permissions (including `com.google.android.gms.permission.AD_ID`), and
+`com.startapp.sdk.APPLICATION_ID` meta-data is not needed (the App ID is passed in code). **One entry is required in your
+app manifest:** the adapter initializes the SDK in code (Start.io's "Code Initialization" path), so the SDK's auto-init
+provider must be removed — otherwise it initializes at process start, before `UnifiedAds.init` passes your App ID. Add
+this inside `<application>` (with `xmlns:tools="http://schemas.android.com/tools"` on `<manifest>`):
+
+```xml
+<provider
+    android:name="com.startapp.sdk.adsbase.StartAppInitProvider"
+    android:authorities="${applicationId}.startappinitprovider"
+    tools:node="remove" />
 ```
 
-## Getting the IDs
+Full steps: [doc/setup/startapp.md](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/startapp.md).
+
+#### iOS (`ios/Runner/Info.plist`)
+
+```xml
+<key>NSUserTrackingUsageDescription</key>
+<string>This identifier will be used to deliver personalized ads to you.</string>
+<key>SKAdNetworkItems</key>
+<array>
+  <dict><key>SKAdNetworkIdentifier</key><string>5l3tpt7t6e.skadnetwork</string></dict>
+  <!-- + every ID from https://www.start.io/skadnetworkids.json -->
+</array>
+```
+
+The SDK links AppTrackingTransparency, so `NSUserTrackingUsageDescription` is required.
+
+## 📖 Usage
+
+### 1. Initialize at app launch
+
+```dart
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:unified_ads/unified_ads.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await UnifiedAds.setAdFree(await isProUser());    // optional, see step 5
+  await UnifiedAds.requestTrackingAuthorization();  // iOS prompt; Android: notApplicable
+  await UnifiedAds.init(AdConfig(
+    testMode: kDebugMode,                            // turn off in production, or the app won't monetize
+    networks: {
+      AdNetwork.startapp: NetworkConfig(
+        appId: PlatformValue.select(android: '<Android App ID>', ios: '<iOS App ID>'),
+        // Optional: Start.io has no per-format ad units. A value here is sent as the
+        // "ad tag" for reporting (Android: every format; iOS: interstitial + rewarded).
+        interstitialAdUnitId: 'level_end',
+        extras: {'rewardAmount': 1, 'rewardType': 'reward'},  // Start.io rewards carry no amount
+      ),
+    },
+    pacing: {
+      AdFormat.interstitial: AdPacing(
+        initialDelay: Duration(seconds: 30),
+        minInterval: Duration(seconds: 15),
+        showEveryActions: 3,
+      ),
+    },
+  ));
+
+  runApp(const MyApp());
+}
+```
+
+### 2. Display a banner ad
+
+```dart
+final banner = BannerAd(size: BannerSize.standard);   // 320×50, or BannerSize.mediumRectangle
+// build():   UnifiedBannerWidget(ad: banner, anchored: true)
+// dispose(): banner.dispose();
+```
+
+### 3. Show paced interstitial ads
+
+```dart
+final interstitial = InterstitialAd(onClosed: (ad) => goToNextScreen());
+await interstitial.load();
+
+await UnifiedAds.recordAction();                 // after each user action
+if (await interstitial.canShow()) {
+  await interstitial.show();
+} else {
+  goToNextScreen();                              // paced, capped or ad-free: skip
+}
+```
+
+### 4. Show rewarded video ads
+
+```dart
+final rewarded = RewardedAd(
+  onEarnedReward: (ad, reward) => grant(reward.amount),   // from extras['rewardAmount']
+);
+if ((await rewarded.load()).isSuccess) await rewarded.show();
+```
+
+### 5. Pro users / ad-free mode
+
+```dart
+await UnifiedAds.setAdFree(true);                      // banners + interstitials off
+await UnifiedAds.setAdFree(true, blockRewarded: true); // rewarded off too
+```
+
+Blocked calls return `AdErrorCode.adsBlocked` without contacting Start.io.
+
+## 🔑 Getting the IDs
 
 You need: App ID only.
 
@@ -49,7 +161,9 @@ You need: App ID only.
    format; iOS: interstitial and rewarded).
 4. **Testing:** `testMode: true` enables test ads. **Disable it in production**, or the app won't monetize. Minimum payout $50.
 
-## Notes
+## ⚙️ Details
+
+### Notes
 
 - **App ID only:** the adapter declares `requiresAdUnitId = false`, so every format serves without unit IDs.
 - **Splash and return ads:** the Android SDK shows these by default; the adapter disables both at init
@@ -63,26 +177,7 @@ You need: App ID only.
 - **Impressions:** on Android the full-screen `adDisplayed` callback is reported as both `shown` and `impression`; iOS has
   a dedicated impression callback.
 
-## Platform setup
-
-- **Android:** the AAR ships its ProGuard rules and its permissions (including `com.google.android.gms.permission.AD_ID`),
-  and `com.startapp.sdk.APPLICATION_ID` meta-data is not needed (the App ID is passed in code). **One entry is required in
-  your app manifest:** the adapter initializes the SDK in code (Start.io's "Code Initialization" path), so the SDK's
-  auto-init provider must be removed — otherwise it initializes at process start, before `UnifiedAds.init` passes your
-  App ID. Add this inside `<application>` (with `xmlns:tools="http://schemas.android.com/tools"` on `<manifest>`):
-
-  ```xml
-  <provider
-      android:name="com.startapp.sdk.adsbase.StartAppInitProvider"
-      android:authorities="${applicationId}.startappinitprovider"
-      tools:node="remove" />
-  ```
-
-  Full steps: [doc/setup/startapp.md](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/startapp.md).
-- **iOS:** `SKAdNetworkItems` (Start.io's own ID is `5l3tpt7t6e.skadnetwork`; full list at
-  https://www.start.io/skadnetworkids.json) and `NSUserTrackingUsageDescription` (the SDK links AppTrackingTransparency).
-
-## Privacy
+### Privacy
 
 - `consentGiven` → `setUserConsent(…, "pas", timestamp, granted)` (milliseconds on Android, seconds on iOS).
 - `ccpaOptOut` → `IABUSPrivacy_String` (`1YYN` for opt-out, `1YNN` otherwise) in the Start.io extras.
@@ -91,7 +186,7 @@ You need: App ID only.
   AAR merges: `<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove"/>`. There's no
   documented iOS COPPA API.
 
-## Errors
+### Errors
 
 - **Android** exposes no numeric error codes: load failures map to `noFill` with the SDK's message; "not displayed"
   maps to `showFailed`.
@@ -99,7 +194,12 @@ You need: App ID only.
   `unsupportedFormat`; 0, 2 → `internal`; other load codes (e.g. 12 NoContent) → `noFill`; on show 8 → `alreadyShowing`,
   9 / 10 → `notReady`, others → `showFailed`.
 
-## Status
+## 🛠️ Verification & Tests
+
+```sh
+flutter test                        # adapter unit tests (mocked host API)
+cd example && flutter run           # the shared example app: enable Start.io in Settings
+```
 
 Android verified on a physical device with Start.io's demo App ID: banner, rewarded load, interstitial load + show. iOS
 builds in CI and hasn't run on a physical device yet.
@@ -108,6 +208,6 @@ builds in CI and hasn't run on a physical device yet.
 
 Part of [`unified_ads`](https://pub.dev/packages/unified_ads): one Dart API for banner, interstitial and rewarded ads across seven networks, linking only the SDKs you add. Its [README](https://github.com/rsagar024/unified_ads/blob/master/packages/unified_ads/README.md) is the full guide: configuration, waterfall, consent and ATT, every network's setup, architecture and SDK status.
 
-## License
+## 📄 License
 
 MIT, see [LICENSE](https://github.com/rsagar024/unified_ads/blob/master/LICENSE).
