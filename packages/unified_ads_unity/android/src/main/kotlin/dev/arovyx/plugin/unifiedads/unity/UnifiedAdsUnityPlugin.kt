@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Handler
 import android.os.Looper
+import com.unity3d.ads.AdExpiredListener
 import com.unity3d.ads.InitializationConfiguration
 import com.unity3d.ads.InitializationListener
 import com.unity3d.ads.InterstitialAd
@@ -90,6 +91,14 @@ class UnifiedAdsUnityPlugin : FlutterPlugin, ActivityAware, UnityHostApi {
             ads.remove(id)
             interstitial = null
             rewarded = null
+        }
+
+        /**
+         * Unity expired the loaded ad: drop it, so show() reports notReady and
+         * the core cache loads a fresh one. An ad already on screen is kept.
+         */
+        fun expired() {
+            mainHandler.post { if (showCont == null) release() }
         }
     }
 
@@ -209,6 +218,9 @@ class UnifiedAdsUnityPlugin : FlutterPlugin, ActivityAware, UnityHostApi {
                     object : LoadListener<RewardedAd> {
                         override fun onAdLoaded(ad: RewardedAd?, error: UnityAdsError?) {
                             holder.rewarded = ad
+                            ad?.onAdExpired = object : AdExpiredListener<RewardedAd> {
+                                override fun onAdExpired(ad: RewardedAd) = holder.expired()
+                            }
                             finishLoad(cont, ad != null, error)
                         }
                     },
@@ -219,6 +231,9 @@ class UnifiedAdsUnityPlugin : FlutterPlugin, ActivityAware, UnityHostApi {
                     object : LoadListener<InterstitialAd> {
                         override fun onAdLoaded(ad: InterstitialAd?, error: UnityAdsError?) {
                             holder.interstitial = ad
+                            ad?.onAdExpired = object : AdExpiredListener<InterstitialAd> {
+                                override fun onAdExpired(ad: InterstitialAd) = holder.expired()
+                            }
                             finishLoad(cont, ad != null, error)
                         }
                     },

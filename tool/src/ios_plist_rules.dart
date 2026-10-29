@@ -86,25 +86,18 @@ const iosPlistRules = <String, IosPlistRule>{
     network: 'facebook',
     skAdNetworkIds: ['v9wttpbfk9.skadnetwork', 'n38lu8286q.skadnetwork'],
     source:
-        'https://developers.facebook.com/docs/audience-network/setting-up/'
-        'platform-setup/ios/SKAdNetwork',
+        'https://developers.facebook.com/documentation/audience-network/'
+        'setting-up/platform-setup/ios/SKAdNetwork',
   ),
-  // Start.io's own SKAdNetwork ID could not be confirmed from a public
-  // source (its list sits behind a support login); nothing is enforced.
+  // The entry with entity_name "Start.io" in Start.io's published list.
   'startapp': IosPlistRule(
     network: 'startapp',
-    skAdNetworkIds: [],
-    source:
-        'https://support.start.io/hc/en-us/articles/'
-        '360017903540-iOS-14-Readiness',
+    skAdNetworkIds: ['5l3tpt7t6e.skadnetwork'],
+    source: 'https://www.start.io/skadnetworkids.json',
   ),
-  // Listed in Unity's LevelPlay network table; InMobi's own page hosts the
-  // full buyer list.
   'inmobi': IosPlistRule(
     network: 'inmobi',
     skAdNetworkIds: ['wzmmz9fp6w.skadnetwork'],
-    source:
-        'https://docs.unity.com/grow/levelplay/sdk/ios/'
-        'skadnetwork-id-manager',
+    source: 'https://www.inmobi.com/skadnetworkids.json',
   ),
 };

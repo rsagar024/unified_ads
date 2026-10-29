@@ -57,6 +57,13 @@ void main() {
       ]);
     });
 
+    test("enforces Start.io's own SKAdNetwork ID", () {
+      final errors = _errors(
+        verifyInfoPlist(_fixture('complete_info.plist'), ['startapp']),
+      );
+      expect(errors, [contains('5l3tpt7t6e.skadnetwork')]);
+    });
+
     test('reports missing common keys and SKAdNetwork IDs', () {
       final info = _fixture('complete_info.plist')
         ..remove('NSUserTrackingUsageDescription');

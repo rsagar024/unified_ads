@@ -145,7 +145,7 @@ depend on that adapter, the build never sees the file.
 2. The Flutter Gradle plugin (`dev.flutter.flutter-plugin-loader` in `settings.gradle.kts`) `include`s one Gradle
    subproject per listed plugin and adds `implementation(project(":<plugin>"))` to the app.
 3. `packages/unified_ads_admob/android/build.gradle.kts` is the **only** place with
-   `implementation("com.google.android.gms:play-services-ads:25.5.0")`.
+   `implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0")` (GMA Next-Gen).
 4. Core's `android/build.gradle.kts` has **no** ad-SDK dependency.
 
 Result: without `unified_ads_unity`, there is no `:unified_ads_unity` project, no `com.unity3d.ads` Maven resolution,

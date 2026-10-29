@@ -3,12 +3,19 @@
 * **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
   deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
   target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
-* iOS SDK comes from `github.com/facebook/FBAudienceNetwork` 6.22.0 (`FBAudienceNetwork`, **iOS 15+**); version
-  unchanged.
+* iOS SDK comes from `github.com/facebook/FBAudienceNetwork` (`FBAudienceNetwork`, **iOS 15+**); see the 6.22.1 bump
+  below.
 * Opt-in linking on iOS now works through SPM: the vendor SDK is declared only in this package's `Package.swift`,
   so `FlutterGeneratedPluginSwiftPackage` resolves it only when the app depends on this package (checked against
   `Package.resolved` in CI).
 * Pigeon bindings regenerated with pigeon ^29.0.8.
+* iOS: FBAudienceNetwork 6.22.0 → **6.22.1** (rewarded / interstitial fixes). It now matches AppLovin's (`6220100.0.0`)
+  and LevelPlay's (`5.6.0`) Meta Swift packages; Google's Meta package still pins 6.22.0, so it can't share an iOS app
+  with this version. Android stays on 6.22.0, the latest on Maven.
+* iOS: `FBAdSettings.setAdvertiserTrackingEnabled` is now set from the ATT status on iOS 15–16, as Meta requires below
+  iOS 17 (at consent time and before init). iOS 17+ is unchanged.
+* Docs: `loadAd` deprecated since 6.11; Swift names `load()` / `show(fromRootViewController:)` / `isMixedAudience`.
+* README: package-specific.
 * No Dart API changes.
 
 ## 1.0.0

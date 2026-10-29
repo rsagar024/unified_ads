@@ -1,3 +1,4 @@
+import AppTrackingTransparency
 import FBAudienceNetwork
 import Flutter
 import UIKit
@@ -6,10 +7,10 @@ let facebookBannerViewType = "dev.arovyx.plugin.unifiedads/facebook/banner"
 
 /// Facebook Audience Network (Meta) adapter plugin.
 ///
-/// Audience Network is bidding-only: `loadAd` is deprecated in 6.22 in favour
-/// of `loadAdWithBidPayload:`. This direct integration serves test ads but is
-/// not expected to fill in production. Names are taken from the
-/// FBAudienceNetwork 6.22.0 headers.
+/// Audience Network is bidding-only: `loadAd` has been deprecated since 6.11 in
+/// favour of `loadAdWithBidPayload:`. This direct integration serves test ads
+/// but is not expected to fill in production. Names are taken from the
+/// FBAudienceNetwork 6.22.1 headers.
 public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHostApi {
   private let events: FacebookEventsApi
   private var ads: [String: FacebookAdHolder] = [:]
@@ -72,8 +73,15 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
     case .none: break
     }
     FBAdSettings.isMixedAudience = consent.coppa
-    // ATT: on iOS 17+ with SDK 6.15+ the SDK reads ATTrackingManager itself;
-    // the deprecated setAdvertiserTrackingEnabled: is not used.
+    Self.applyAdvertiserTracking()
+  }
+
+  /// Meta requires the advertiser-tracking flag on iOS 14.5–16.x, set from the
+  /// ATT status before init. On iOS 17+ (SDK 6.15+) the SDK reads
+  /// `ATTrackingManager` itself and the setter is deprecated, so it is skipped.
+  static func applyAdvertiserTracking() {
+    if #available(iOS 17, *) { return }
+    FBAdSettings.setAdvertiserTrackingEnabled(ATTrackingManager.trackingAuthorizationStatus == .authorized)
   }
 
   func dispose() throws { ads.removeAll() }
@@ -92,6 +100,8 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
         FBAdSettings.addTestDevices(request.testDeviceIds)
       }
     }
+    // The ATT prompt may have been answered since consent was applied.
+    Self.applyAdvertiserTracking()
     if initialized { return }
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       FBAudienceNetworkAds.initialize(with: nil) { results in
@@ -120,7 +130,7 @@ public final class UnifiedAdsFacebookPlugin: NSObject, FlutterPlugin, FacebookHo
         let ad = FBRewardedVideoAd(placementID: adUnitId)
         holder.rewarded = ad
         ad.delegate = holder
-        ad.load()  // deprecated in 6.22 (bidding-only); still the direct path
+        ad.load()  // deprecated since 6.11 (bidding-only); still the direct path
       } else {
         let ad = FBInterstitialAd(placementID: adUnitId)
         holder.interstitial = ad

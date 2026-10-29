@@ -10,8 +10,8 @@ Adding this package links **only** the InMobi SDK into your app.
 
 | | Android | iOS |
 |---|---|---|
-| SDK | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` (the Java artifact `inmobi-ads` is abandoned) | `InMobiSDK` 11.5.0 |
-| Minimum | API 21 (package: 24); **Kotlin 2.x, AGP ≥ 8.9.3** | iOS 12 (package: 13) |
+| SDK | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.1` (the Java artifact `inmobi-ads` is abandoned) | `InMobiSDK` 11.5.0 |
+| Minimum | API 21 (package: 24); **Kotlin 2.x, AGP ≥ 8.9.3** | iOS 12, Xcode 15+ (package: 13) |
 | Distribution | Gradle (Maven Central) | Swift Package Manager (`InMobi/InMobiSDK-Swift-Package`, product `InMobiSDK`) |
 
 ## Install and use
@@ -64,9 +64,9 @@ You need: Account ID + numeric placement ID per format.
 - **Android:** every dependency (OkHttp, Picasso, media3, coroutines, …) comes through the POM; the AAR ships its ProGuard
   rules and merges its activities and permissions. Keep `android:hardwareAccelerated="true"`.
 - **iOS:** `SKAdNetworkItems` (own ID `wzmmz9fp6w.skadnetwork`; full list from InMobi's iOS guidelines) and
-  `NSUserTrackingUsageDescription`. InMobi recommends `NSAllowsArbitraryLoads = YES`; flag it for App Store review. It's a
-  dynamic xcframework that needs `-ObjC`: the adapter's `Package.swift` passes it; if you see undefined symbols, add
-  `-ObjC` to the Runner target's Other Linker Flags.
+  `NSUserTrackingUsageDescription`. InMobi recommends `NSAllowsArbitraryLoads = YES`; flag it for App Store review.
+  InMobi **requires** `-ObjC`, `libz`, `libsqlite3.0` and `WebKit`: the adapter's `Package.swift` links all four, and
+  you should also add `-ObjC` to Runner → Build Settings → Other Linker Flags (the setting InMobi documents).
 
 ## Privacy
 

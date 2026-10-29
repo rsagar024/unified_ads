@@ -5,8 +5,8 @@
 
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
-| Android | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` (+ `play-services-appset` 16.1.0, `play-services-ads-identifier` 18.3.0) | API 19 (project: 24) |
-| iOS | LevelPlay 9.6.1 (Swift Package Manager: `ironsource-mobile/LevelPlay-Swift-Package`, product `UnityMediationSDK`) | iOS 13 |
+| Android | `com.unity3d.ads-mediation:mediation-sdk:9.7.0` (+ `play-services-appset` 16.1.0, `play-services-ads-identifier` 18.3.0: newer than the documented 16.0.0 / 18.1.0; `play-services-basement` comes transitively) | API 19 (project: 24) |
+| iOS | LevelPlay 9.7.0 (Swift Package Manager: `ironsource-mobile/LevelPlay-Swift-Package`, product `UnityMediationSDK`) | iOS 12 per the vendor (project: 13); Xcode 16+ (swift-tools 6.0); 9.6.1+ is needed for Xcode 27 |
 
 Only the **LevelPlay 9.x ad-unit APIs** are used. 9.0 removed every legacy `IronSource.*` API.
 
@@ -51,9 +51,10 @@ AdNetwork.ironsource: NetworkConfig(
   - `NSAppTransportSecurity` → `NSAllowsArbitraryLoads = YES`, per the LevelPlay docs. **Flag this for App Store review.**
   - `SKAdNetworkItems` (`su67r6k2v3.skadnetwork` plus each mediated network's IDs).
   - Optionally `NSAdvertisingAttributionReportEndpoint = https://postbacks-is.com/`.
-  - **LevelPlay needs `-ObjC`.** The adapter's `Package.swift` passes it to the linker (⚠ to be confirmed by CI). If
-    LevelPlay fails with undefined symbols or unrecognized selectors, add `-ObjC` to the Runner target's Other Linker
-    Flags.
+  - **LevelPlay needs `-ObjC`: add it to Runner → Build Settings → Other Linker Flags.** LevelPlay's own Swift package
+    can't set it (its manifest says to add it to the app project, and the official SPM demo does). The adapter's
+    `Package.swift` also passes it (⚠ whether that reaches the app link is to be confirmed by CI), so the Runner
+    setting is the reliable one.
 
 ## Error mapping (LevelPlay error codes)
 
@@ -82,9 +83,7 @@ case-insensitively; the docs spell it two ways).
 
 ```kotlin
 dependencies {
-    implementation("com.unity3d.ads-mediation:facebook-adapter:5.5.0")
-    // LevelPlay's Meta adapter declares no dependencies: add Audience Network yourself.
-    implementation("com.facebook.android:audience-network-sdk:6.22.0")
+    implementation("com.unity3d.ads-mediation:facebook-adapter:5.6.0") // brings Audience Network 6.22.0
 }
 ```
 
@@ -95,12 +94,13 @@ the **Runner** target:
 
 | Package | Dependency rule | Product |
 |---|---|---|
-| `https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package` | Exact `5.5.0` | `FacebookAdapter` (brings `FBAudienceNetwork` 6.22.0) |
+| `https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package` | Exact `5.6.0` | `FacebookAdapter` (brings `FBAudienceNetwork` exact 6.22.1, the same as `unified_ads_facebook` 1.1.0) |
 
-The adapter does not call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
-ATT status itself. Also add Meta's SKAdNetwork IDs.
+On iOS 15–16 the adapter sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status before the mediation SDK
+starts Audience Network (Meta requires it there, with or without mediation); on iOS 17+ Audience Network 6.15+ reads
+the ATT status itself. Also add Meta's SKAdNetwork IDs.
 
-**Dashboards:** In Monetization Manager, create the placement. In LevelPlay, go to Monetize → Setup → SDK Networks → Meta, then
+**Dashboards:** In Monetization Manager, create the placement. In LevelPlay, go to Mediation → Setup → SDK Networks → Meta, then
 *Login with Facebook*. Set the App ID (the part of the placement ID before `_`) and the Placement ID per instance, and
 tell your LevelPlay account manager once bidding is live.
 
@@ -114,17 +114,19 @@ Verification: `META_BIDDING=ironsource bash tool/verify_opt_in.sh android` check
 
 ## API names used
 
-- ✅ **Android: compiler-verified** against 9.6.1:
+- ✅ **Android: compiler-verified** against 9.7.0:
   - `LevelPlay.init` + `LevelPlayInitRequest`
   - `LevelPlayPrivacySettings`
   - `LevelPlayInterstitialAd` / `LevelPlayRewardedAd` + listeners
   - `LevelPlayBannerAdView` + `Config.Builder` + `LevelPlayAdSize`
 - Meta bidding detection (Phase 7): the adapter classes were checked in the vendor binaries:
-  - Android `com.ironsource.adapters.facebook.FacebookAdapter`, from the 5.5.0 AAR;
+  - Android `com.ironsource.adapters.facebook.FacebookAdapter`, from the 5.5.0 AAR (5.6.0 keeps the class);
   - iOS `ISFacebookAdapter`, from the 5.5.0 header.
 
   The metadata APIs were also checked: Android `LevelPlay.setMetaData` (9.6.1 AAR) and iOS
-  `LevelPlay.setMetaData(withKey:value:)` (9.6.1 `LevelPlay.h`).
+  `LevelPlay.setMetaData(withKey:value:)`: the 9.7.0 `LevelPlay.h` declares `+setMetaDataWithKey:value:` with no
+  `NS_SWIFT_NAME`, and the SDK's own error message spells the Swift call this way (some Unity doc pages show
+  `setMetaDataWithKey`, which doesn't compile).
 - ⚠ **iOS: not yet compiled.**
   - `LPMAdSize.banner()` and `createAdaptive()` are confirmed by the official demo.
   - `large()`, `mediumRectangle()` and `leaderBoard()` are importer-derived.

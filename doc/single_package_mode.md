@@ -55,7 +55,7 @@ android {
     sourceSets["main"].java.srcDirs(networks.map { "src/$it/kotlin" } + "src/main/kotlin")
 }
 dependencies {
-    if ("admob" in networks) implementation("com.google.android.gms:play-services-ads:25.5.0")
+    if ("admob" in networks) implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0")
     if ("unity" in networks) implementation("com.unity3d.ads:unity-ads:4.21.0")
     // …
 }

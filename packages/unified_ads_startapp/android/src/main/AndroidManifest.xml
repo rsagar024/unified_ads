@@ -1,3 +1,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The Start.io SDK merges its own permissions and activities. -->
+    <!--
+      Everything else this adapter needs is merged in by the Start.io SDK AAR
+      (com.startapp:inapp-sdk): permissions (INTERNET, ACCESS_NETWORK_STATE,
+      ACCESS_WIFI_STATE, RECEIVE_BOOT_COMPLETED, com.google.android.gms.permission.AD_ID,
+      ACCESS_ADSERVICES_TOPICS, install-referrer), the activities/services and its
+      ProGuard rules. AD_ID is therefore already declared for API 31+ targets.
+
+      This adapter initializes the SDK in code (StartAppSDK.initParams, see
+      UnifiedAdsStartappPlugin) - Start.io's "Code Initialization" path - which per
+      the official integration docs (support.start.io, "Integration via Maven",
+      mandatory step 2) requires REMOVING the SDK's manifest auto-init provider
+      StartAppInitProvider, so the SDK is not auto-initialized at process start
+      before the configured App ID is available. A library-level
+      tools:node="remove" is not honored by the manifest merger (verified with
+      AGP 9.0.1), so the removal is declared in the CONSUMING APP's manifest -
+      a required step documented in doc/setup/startapp.md.
+
+      COPPA flags (com.startapp.sdk.CHILD_DIRECTED / MIXED_AUDIENCE) and the
+      COPPA permission removal are also app-manifest decisions; see
+      doc/setup/startapp.md.
+    -->
 </manifest>

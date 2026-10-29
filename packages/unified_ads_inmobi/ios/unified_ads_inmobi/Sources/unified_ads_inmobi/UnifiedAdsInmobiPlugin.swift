@@ -11,6 +11,7 @@ public final class UnifiedAdsInmobiPlugin: NSObject, FlutterPlugin, InmobiHostAp
   private var ads: [String: InmobiAdHolder] = [:]
   private var counter = 0
   private var initialized = false
+  private var consent: ConsentMessage?
   private var pendingEvents: [AdEventMessage] = []
   private var draining = false
 
@@ -63,10 +64,21 @@ public final class UnifiedAdsInmobiPlugin: NSObject, FlutterPlugin, InmobiHostAp
   func applyConsent(consent: ConsentMessage) throws {
     IMSdk.setIsAgeRestricted(consent.coppa)
     if let optOut = consent.ccpaOptOut { IMPrivacyCompliance.setDoNotSell(optOut) }
-    // With a CMP (e.g. UMP) InMobi reads the IAB TCF string itself (10.7.5+).
+    self.consent = consent
+    // Before init the signals go into initWithAccountID's consent dictionary.
+    if initialized, let gdpr = gdprConsent() { IMSdk.updateGDPRConsent(gdpr) }
+  }
+
+  /// Explicit GDPR signals, if the app knows them. With a CMP (e.g. UMP) the
+  /// SDK reads the IAB TCF string itself (10.7.5+), so `nil` is fine.
+  private func gdprConsent() -> [String: Any]? {
+    guard let consent, consent.gdprApplies != nil || consent.consentGiven != nil else { return nil }
+    var gdpr: [String: Any] = [:]
     if let given = consent.consentGiven {
-      IMSdk.updateGDPRConsent([IMCommonConstants.IM_GDPR_CONSENT_AVAILABLE: given ? "true" : "false"])
+      gdpr[IMCommonConstants.IM_GDPR_CONSENT_AVAILABLE] = given ? "true" : "false"
     }
+    if let applies = consent.gdprApplies { gdpr[IMCommonConstants.IM_SUBJECT_TO_GDPR] = applies ? "1" : "0" }
+    return gdpr
   }
 
   func dispose() throws { ads.removeAll() }
@@ -83,7 +95,7 @@ public final class UnifiedAdsInmobiPlugin: NSObject, FlutterPlugin, InmobiHostAp
     if request.testMode { IMSdk.setLogLevel(.debug) }
     if initialized { return }
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-      IMSdk.initWithAccountID(request.appId, andCompletionHandler: { error in
+      IMSdk.initWithAccountID(request.appId, consentDictionary: gdprConsent(), andCompletionHandler: { error in
         if let error {
           continuation.resume(
             throwing: PigeonError(code: "initializationFailed", message: error.localizedDescription, details: nil))

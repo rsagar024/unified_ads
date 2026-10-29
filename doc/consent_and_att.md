@@ -136,5 +136,8 @@ final current = await UnifiedAds.trackingAuthorizationStatus(); // no prompt
   ```
 - iOS only shows the prompt while the app is **active**. Call the helper after the first frame, not in `main()` before
   `runApp`.
+- Audience Network (`unified_ads_facebook`, or Meta bidding through AdMob / MAX / LevelPlay): below iOS 17 the adapters
+  set `FBAdSettings.setAdvertiserTrackingEnabled` from this status, as Meta requires. Request ATT before
+  `init` so the flag reflects the user's answer.
 - Each network also needs its **SKAdNetwork IDs** in `Info.plist`, for attribution without the IDFA. The lists are in
   each `doc/setup/<network>.md`.

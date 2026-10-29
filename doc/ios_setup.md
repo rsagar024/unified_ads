@@ -36,9 +36,10 @@ and set **Build Settings → iOS Deployment Target** (`IPHONEOS_DEPLOYMENT_TARGE
 - **Other CocoaPods plugins:** if another plugin in your app is still CocoaPods-only, keep its `Podfile`; Flutter's
   mixed mode builds that plugin through CocoaPods while the `unified_ads` packages come through SPM. Don't add pods for
   unified_ads networks there.
-- **`-ObjC`:** the inmobi and ironsource manifests pass it to the linker (⚠ to be confirmed by CI). If InMobi or
-  LevelPlay fail with undefined symbols or unrecognized selectors, add `-ObjC` to **Runner → Build Settings → Other
-  Linker Flags**.
+- **`-ObjC`:** InMobi and LevelPlay **require** it, and their own Swift packages can't set it, so add `-ObjC` to
+  **Runner → Build Settings → Other Linker Flags** when you use either. The inmobi and ironsource manifests also pass
+  it (⚠ whether that reaches the app link is to be confirmed by CI). InMobi additionally needs `libz`, `libsqlite3.0`
+  and `WebKit`, which its adapter's manifest links.
 
 ## 2. Info.plist keys
 
@@ -57,9 +58,9 @@ and set **Build Settings → iOS Deployment Target** (`IPHONEOS_DEPLOYMENT_TARGE
 | Unity Ads | none (Game ID is passed in code) | `4dzt52r2t5.skadnetwork` | [configure ad network IDs](https://docs.unity.com/en-us/ads-ios/4.18.0/privacy/ios14/configure-ad-network-ids), JSON: `https://skan.mz.unity3d.com/v3/partner/skadnetworks.plist.json` |
 | AppLovin MAX | none (SDK key is passed in code; older guides mention an `AppLovinSdkKey` row, which this plugin does not use) | `ludvb6z3bs.skadnetwork` | [SKAdNetwork](https://support.applovin.com/en/max/ios/overview/skadnetwork), [JSON](https://skadnetwork-ids.applovin.com/v1/skadnetworkids.json) / [XML](https://skadnetwork-ids.applovin.com/v1/skadnetworkids.xml) |
 | ironSource / LevelPlay | none (app key in code) | `su67r6k2v3.skadnetwork` | [LevelPlay SKAdNetwork ID manager](https://docs.unity.com/grow/levelplay/sdk/ios/skadnetwork-id-manager) |
-| Facebook Audience Network | none | `v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork` | [Meta SKAdNetwork](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/SKAdNetwork) (these two are the whole list) |
-| Start.io | none (the adapter passes the App ID in code; `com.startapp.sdk.APPLICATION_ID` is an Info.plist alternative used by Start.io's own Flutter plugin) | ⚠ **not enforced**: Start.io's own ID could not be confirmed from a public source (its list sits behind a support login) | [iOS 14 readiness](https://support.start.io/hc/en-us/articles/360017903540-iOS-14-Readiness) |
-| InMobi | none (account ID in code) | `wzmmz9fp6w.skadnetwork` (from Unity's LevelPlay network table) | [InMobi iOS guidelines](https://support.inmobi.com/monetize/sdk-documentation/ios-guidelines/overview-ios-guidelines) (hosts the full buyer list) |
+| Facebook Audience Network | none | `v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork` | [Meta SKAdNetwork](https://developers.facebook.com/documentation/audience-network/setting-up/platform-setup/ios/SKAdNetwork) (these two are the whole list) |
+| Start.io | none (the adapter passes the App ID in code; `com.startapp.sdk.APPLICATION_ID` is an Info.plist alternative used by Start.io's own Flutter plugin) | `5l3tpt7t6e.skadnetwork` (the `Start.io` entry of its published list) | [JSON](https://www.start.io/skadnetworkids.json), [iOS 14 readiness](https://support.start.io/hc/en-us/articles/360017903540-iOS-14-Readiness) |
+| InMobi | none (account ID in code) | `wzmmz9fp6w.skadnetwork` | [JSON](https://www.inmobi.com/skadnetworkids.json), [InMobi iOS guidelines](https://support.inmobi.com/monetize/sdk-documentation/ios-guidelines/overview-ios-guidelines) |
 
 Example (`ios/Runner/Info.plist`):
 
@@ -76,15 +77,18 @@ Example (`ios/Runner/Info.plist`):
 </array>
 ```
 
-No network needs an App Transport Security exception for this plugin's SDK versions. The LevelPlay demo app sets
-`NSAllowsArbitraryLoads`, but that is not required.
+**App Transport Security:** InMobi's and LevelPlay's iOS guides recommend `NSAppTransportSecurity` →
+`NSAllowsArbitraryLoads = YES` (for HTTP creatives); the other networks need no exception. It's a recommendation, not
+something the plugin depends on, and App Review may ask you to justify it, so add it only if you use those networks
+and accept that trade-off.
 
 ## 3. ATT (App Tracking Transparency)
 
-Call `UnifiedAds.requestTrackingAuthorization()` after the consent flow and before initializing (see
-[consent_and_att.md](consent_and_att.md)). It needs `NSUserTrackingUsageDescription` and returns `TrackingStatus.notApplicable` below
-iOS 14. Audience Network 6.15+ reads the ATT status itself on iOS 17+, so the deprecated
-`setAdvertiserTrackingEnabled` is not called.
+Call `UnifiedAds.requestTrackingAuthorization()` first, before the consent flow and initialization (**ATT → consent →
+init**, see [consent_and_att.md](consent_and_att.md)). It needs `NSUserTrackingUsageDescription` and returns
+`TrackingStatus.notApplicable` below iOS 14. For Audience Network (`unified_ads_facebook`, or Meta bidding through
+AdMob / MAX / LevelPlay), the adapters set `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status on iOS 15–16,
+as Meta requires; on iOS 17+ Audience Network 6.15+ reads the status itself.
 
 ## 4. Privacy manifests
 
@@ -118,4 +122,4 @@ example and for a scratch app per adapter, it:
 4. uploads screenshots and logs as the `ios-sim-<target>` artifacts.
 
 Fork the repo and the workflow runs on your fork too. On a Mac: `bash tool/ios_sim_smoke.sh all|<network>`.
-Results: [SDK_STATUS.md](../SDK_STATUS.md#0-verification-status).
+Results: [SDK_STATUS.md](../SDK_STATUS.md).

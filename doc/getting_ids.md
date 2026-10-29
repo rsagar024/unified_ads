@@ -61,7 +61,9 @@ Format: `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY` (note the **`~`**).
    `RewardItem` you receive. ([help](https://support.google.com/admob/answer/7311346), [rewarded](https://support.google.com/admob/answer/7311747))
 3. The **ad unit ID** appears on the confirmation screen and later in **Ad units** → **Ad unit** column.
    Format: `ca-app-pub-XXXXXXXXXXXXXXXX/NNNNNNNNNN` (note the **`/`**).
-4. New ad units usually take **a few hours** to serve. ⚠ Google gives no exact figure.
+4. For the stretch formats, create a **Rewarded interstitial** unit (`rewardedInterstitialAdUnitId`, used by
+   `RewardedInterstitialAd`) and an **App open** unit (`appOpenAdUnitId`, used by `AppOpenAd`) the same way.
+5. New ad units usually take **a few hours** to serve. ⚠ Google gives no exact figure.
 
 ### 5. Testing, consent, app-ads.txt
 - **Test devices:** **Settings** → **Test devices** → **Add test device** (advertising ID/IDFA; takes up to 24 h). Or put the
@@ -93,6 +95,8 @@ AdNetwork.admob: NetworkConfig(
   bannerAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/1111', ios: 'ca-app-pub-…/2222'),
   interstitialAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/3333', ios: 'ca-app-pub-…/4444'),
   rewardedAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/5555', ios: 'ca-app-pub-…/6666'),
+  rewardedInterstitialAdUnitId: PlatformValue.select(android: '…', ios: '…'),   // optional
+  appOpenAdUnitId: PlatformValue.select(android: '…', ios: '…'),                // optional
 ),
 ```
 More: [`doc/setup/admob.md`](setup/admob.md).
@@ -124,6 +128,9 @@ More: [`doc/setup/admob.md`](setup/admob.md).
 3. Find your app by name, package name, or bundle ID. Not live yet? Click **Manually Add Your Package Name**. **The package
    name / bundle ID is case-sensitive and must match your app exactly**: the ad unit only serves to that app.
 4. Save. Create one ad unit per format per platform. Copy each **Ad Unit ID** from the Ad Units list (⚠ exact column label).
+5. `AppOpenAd` needs an **App Open** ad unit (`appOpenAdUnitId`). ⚠ AppLovin's create-ad-unit help page lists only
+   Banner, Interstitial, MRec, Native and Rewarded; if App Open isn't offered in your dashboard, ask your AppLovin
+   account manager to enable it.
    ([help](https://support.applovin.com/en/max/max-dashboard/ad-units/create-an-ad-unit))
 
 ### 4. Testing
@@ -142,6 +149,7 @@ AdNetwork.applovin: NetworkConfig(
   bannerAdUnitId: PlatformValue.select(android: '<android banner unit>', ios: '<ios banner unit>'),
   interstitialAdUnitId: PlatformValue.select(android: '…', ios: '…'),
   rewardedAdUnitId: PlatformValue.select(android: '…', ios: '…'),
+  appOpenAdUnitId: PlatformValue.select(android: '…', ios: '…'),   // optional
   testDeviceIds: ['<your GAID / IDFA>'],
 ),
 ```
@@ -181,7 +189,7 @@ Open **project Settings → Game IDs**. There are two read-only IDs, **one for A
 ### 4. Testing
 - `testMode: true` makes the adapter initialize Unity with test mode.
 - Or use the dashboard: **Monetization → Settings → Test devices** → select the app → edit **Test mode** → **Override client test
-  mode** → **Force test mode ON**. You can also register devices there.
+  mode** → **Force test mode ON for all devices**. Register individual devices there with **Create test device**.
   ([help](https://docs.unity.com/en-us/ads-unity/latest/sdk-integration/test-integration))
 
 ```dart
@@ -225,7 +233,8 @@ approval** until you answer the verification emails. ([help](https://docs.unity.
 1. **Mediation → Setup → SDK Networks** → choose a network, e.g. **Unity Ads** → enter its **API Key** and **Organization core
    ID** (from the Unity dashboard; auto-setup also needs a service-account Key ID / Secret).
 2. For each app, open the network's row → **Add bidder** (auto-creates the Unity placements), or enter the Game ID and
-   **bidding** placement ID by hand. ([help](https://docs.unity.com/en-us/grow/levelplay/sdk/android/networks/guides/unity-ads))
+   **bidding** placement ID by hand. In the app, add LevelPlay's Unity adapter
+   (`com.unity3d.ads-mediation:unityads-adapter`; from 5.15.0 it bundles the Unity Ads SDK). ([help](https://docs.unity.com/en-us/grow/levelplay/sdk/android/networks/guides/unity-ads))
 3. Other networks: **Instances** → app → network → **Add instance** → set it **Active**.
    ([help](https://docs.unity.com/en-us/grow/levelplay/platform/get-started/instances))
 
@@ -317,7 +326,7 @@ Register at the Start.io publisher portal (email, or Google / GitHub). ([help](h
 
 ### 3. Ad tags (optional)
 There are no ad unit IDs. A value you put in `interstitialAdUnitId` / `rewardedAdUnitId` / `bannerAdUnitId` is sent as a
-free-form **ad tag** (English letters, ≤ 200 characters), which appears in the portal reports.
+free-form **ad tag** (Android: every format; iOS: interstitial and rewarded) (English letters, ≤ 200 characters), which appears in the portal reports.
 ([help](https://support.start.io/hc/en-us/articles/360006662474-Advanced-Usage))
 
 ### 4. Testing and payment
@@ -381,7 +390,7 @@ Use these **only for development**, and only in the example or a test build. The
 
 The iOS simulator pipeline (`.github/workflows/ios.yml`) runs `example/integration_test/ad_smoke_test.dart` with these
 **interstitial** credentials. They are defined in `example/integration_test/smoke_ids.dart`; keep the two in sync.
-Results: [SDK_STATUS.md](../SDK_STATUS.md#0-verification-status).
+Results: [SDK_STATUS.md](../SDK_STATUS.md).
 
 | Network | Platform | App / account ID | Interstitial unit | Source | Tier in the smoke test |
 |---|---|---|---|---|---|

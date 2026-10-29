@@ -45,7 +45,9 @@ You need: SDK key + one MAX ad unit ID per format and platform.
 2. **SDK key:** **Account → General → Keys** → copy the **SDK Key** (`appId`).
 3. **Ad units:** **MAX → Mediation → Manage → Ad Units → Create Your Ad Unit** → name, platform, format (**Banner**,
    **Interstitial**, **Rewarded**, or **MRec** for `BannerSize.mediumRectangle`) → find your app or **Manually Add Your
-   Package Name**. The package name / bundle ID is **case-sensitive** and must match exactly.
+   Package Name**. The package name / bundle ID is **case-sensitive** and must match exactly. `AppOpenAd` needs an
+   App Open unit (`appOpenAdUnitId`; ⚠ AppLovin's help page doesn't list App Open; ask your account manager if your
+   dashboard doesn't offer it).
 4. **Testing:** put your GAID / IDFA in `testDeviceIds` with `testMode: true`; the **Mediation Debugger** can force test
    ads. If every MAX load **times out**, the SDK key or package name is wrong (MAX reports no error for an invalid key).
 
@@ -53,9 +55,10 @@ You need: SDK key + one MAX ad unit ID per format and platform.
 
 - **Test mode** (`TestModeSupport.testDevices`): `testDeviceIds` are registered as MAX test devices when `testMode` is on.
   MAX has no public demo ad units, so you need a dashboard app with real ad units. The Mediation Debugger helps validate.
-- **Banner sizes:** standard = `MaxAdFormat.BANNER` (adaptive by default), MREC = `MaxAdFormat.MREC`, leaderboard =
-  `MaxAdFormat.LEADER`; adaptive anchored / inline use `MaxAdViewConfiguration` (`ANCHORED` / `INLINE`). The resolved
-  size comes from `MaxAd.size`.
+- **Banner sizes:** standard = a fixed 320×50 `MaxAdFormat.BANNER`, MREC = `MaxAdFormat.MREC`, leaderboard =
+  `MaxAdFormat.LEADER`; adaptive anchored / inline opt in through `MaxAdViewConfiguration` / `MAAdViewConfiguration`
+  (`ANCHORED` / `INLINE`, MAX 13.2.0+). The resolved size comes from `MaxAd.size`.
+- **Context-free APIs:** MAX 13.3.0 deprecated every API that takes a `Context`; the adapter uses only the new forms.
 - **App open:** `AppOpenAd` loads a `MaxAppOpenAd`, which MAX presents from its own window. MAX has no rewarded
   interstitial; the waterfall skips MAX for `RewardedInterstitialAd`.
 - **Impressions** come from MAX's revenue callback (`onAdRevenuePaid`, once per impression).
@@ -103,9 +106,9 @@ dependencies {
 ```
 
 iOS (15.0+): **File → Add Package Dependencies…** → `https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta`, exact
-`6220004.0.0`, product `AppLovinMediationFacebookAdapter`, on the **Runner** target. Add Meta's SKAdNetwork IDs and the
+`6220100.0.0` (pins `FBAudienceNetwork` 6.22.1), product `AppLovinMediationFacebookAdapter`, on the **Runner** target. Add Meta's SKAdNetwork IDs and the
 Android `127.0.0.1` cleartext config. Select Meta as a bidder on your MAX ad units and list AppLovin as the mediation
-partner in Monetization Manager.
+partner in Monetization Manager. On iOS 15–16 the adapter also sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status (Meta requires it below iOS 17).
 
 ## Status
 

@@ -62,7 +62,8 @@ final class StartappBannerView: NSObject, FlutterPlatformView, STABannerDelegate
   func failedLoadBannerAd(_ banner: STABannerViewBase, withError error: Error) {
     plugin?.emit(
       AdEventMessage(
-        kind: .failedToLoad, adId: adId, format: .banner, errorCode: "noFill",
+        kind: .failedToLoad, adId: adId, format: .banner,
+        errorCode: StartappErrors.loadCode((error as NSError).code),
         errorMessage: error.localizedDescription, nativeCode: String((error as NSError).code)))
   }
 

@@ -7,10 +7,10 @@ SDKs (pinned, see [`SDK_STATUS.md`](../../SDK_STATUS.md) §2.1):
 
 | Platform | SDK | Consent (UMP) |
 |---|---|---|
-| Android | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0` | `com.google.android.ump:user-messaging-platform:4.0.0` |
+| Android | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0` | `com.google.android.ump:user-messaging-platform:4.0.0` |
 | iOS | `GoogleMobileAds` 13.11.0 (Swift Package Manager) | `GoogleUserMessagingPlatform` 3.1.0 |
 
-**Minimums:** Android minSdk **24**, compileSdk 35+, Kotlin 1.9+; iOS **13.0**, Xcode 26.2+ (⚠ per Google's release
+**Minimums:** Android minSdk **24**, compileSdk 35+, Kotlin 1.9+ (per Google's Next-Gen quick start); iOS **13.0**, Xcode 26.2+ (⚠ per Google's release
 notes; the quick-start page still says 16).
 
 > **Android uses the GMA Next-Gen SDK**, which can't be in the same app as the legacy `play-services-ads`. If another
@@ -114,7 +114,8 @@ AdConfig(
   emulators and simulators. Google's **demo ad-unit IDs** always serve test ads (they are used in `example/`; never ship them).
 - Formats:
   - banner: standard, large, MREC and leaderboard; adaptive anchored uses `getLargeAnchoredAdaptiveBannerAdSize` /
-    `largeAnchoredAdaptiveBanner`; adaptive inline;
+    `largeAnchoredAdaptiveBanner`; adaptive inline. On Android the adapter also sets `bannerAdRefreshCallback`, so an
+    inline-adaptive banner that changes height on refresh is re-sized in Flutter;
   - interstitial, rewarded;
   - **rewarded interstitial** (`RewardedInterstitialAd`, unit ID in `rewardedInterstitialAdUnitId`);
   - **app open** (`AppOpenAd`, unit ID in `appOpenAdUnitId`).
@@ -174,10 +175,13 @@ Dependencies…**, add it to the **Runner** target:
 |---|---|---|
 | `https://github.com/googleads/googleads-mobile-ios-mediation-meta` | **Commit** `0a3d0597402162334fb5e11816ca612478180095` (= tag `6.22.000`; that tag is not valid semver, so pin the revision) | `MetaAdapterTarget` |
 
-Also add Meta's SKAdNetwork IDs.
+Also add Meta's SKAdNetwork IDs. Google's Meta package pins `FBAudienceNetwork` **exact 6.22.0**, while
+`unified_ads_facebook` 1.1.0 pins 6.22.1, so on iOS these two can't be in the same app (Meta discourages running both
+paths for the same inventory anyway).
 
-The adapter does **not** call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
-ATT status itself.
+On iOS 15–16 the adapter sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status before the mediation SDK
+starts Audience Network (Meta requires it there, with or without mediation); on iOS 17+ Audience Network 6.15+ reads
+the ATT status itself.
 
 **Dashboards:**
 - In Meta Monetization Manager, create a property and placement, and choose **Google AdMob** as the mediation partner.

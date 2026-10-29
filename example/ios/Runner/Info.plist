@@ -69,6 +69,11 @@
 			<key>SKAdNetworkIdentifier</key>
 			<string>wzmmz9fp6w.skadnetwork</string>
 		</dict>
+		<!-- Start.io -->
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>5l3tpt7t6e.skadnetwork</string>
+		</dict>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>

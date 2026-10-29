@@ -5,8 +5,8 @@
 
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
-| Android | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` (the old Java artifact `inmobi-ads` is abandoned) | API 21 (project: 24); **Kotlin 2.x, AGP ≥ 8.9.3** |
-| iOS | `InMobiSDK` 11.5.0 (Swift Package Manager: official `InMobi/InMobiSDK-Swift-Package`, product `InMobiSDK`) | iOS 12 (project: 13) |
+| Android | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.1` (the old Java artifact `inmobi-ads` is abandoned) | API 21 (project: 24); **Kotlin 2.x, AGP ≥ 8.9.3** |
+| iOS | `InMobiSDK` 11.5.0 (Swift Package Manager: official `InMobi/InMobiSDK-Swift-Package`, product `InMobiSDK`) | iOS 12, Xcode 15+ (project: 13) |
 
 ## Config
 
@@ -41,9 +41,10 @@ AdNetwork.inmobi: NetworkConfig(
 - **iOS:**
   - InMobi recommends `NSAllowsArbitraryLoads = YES` under `NSAppTransportSecurity`. **Flag this for App Store review.**
   - Add `SKAdNetworkItems` from InMobi's list (linked from InMobi's iOS overview page) and `NSUserTrackingUsageDescription`.
-  - It's a dynamic xcframework and needs `-ObjC`. The adapter's `Package.swift` passes it to the linker (⚠ to be
-    confirmed by CI). If InMobi fails with undefined symbols or unrecognized selectors, add `-ObjC` to the Runner
-    target's Other Linker Flags.
+  - InMobi's iOS guide **requires** `-ObjC`, `libsqlite3.0`, `libz` and `WebKit`. The adapter's `Package.swift` links
+    all of them (`-ObjC` as an unsafe flag, ⚠ to be confirmed by CI); also add `-ObjC` to Runner → Build Settings →
+    Other Linker Flags, which is the setting InMobi documents.
+  - InMobi's own SKAdNetwork ID is `wzmmz9fp6w.skadnetwork` (full list: https://www.inmobi.com/skadnetworkids.json).
 
 ## Error mapping (`InMobiAdRequestStatus.StatusCode` / `IMStatusCode`)
 
@@ -58,11 +59,15 @@ AdNetwork.inmobi: NetworkConfig(
 
 ## API names used
 
-- ✅ **Android: compiler-verified** against 11.5.0:
+- ✅ **Android: compiler-verified** against 11.5.1:
   - `InMobiSdk.init(ctx, account, json, SdkInitializationListener)` with `java.lang.Error?`
   - `InMobiInterstitial(activity, Long, InterstitialAdEventListener)`
   - `InMobiBanner` + `BannerAdEventListener`
   - `InMobiPrivacyCompliance`
 - ⚠ **iOS: not yet compiled.**
   - Names come from the 11.5.0 `.swiftinterface`: `IMSdk`, `IMInterstitial(placementId:delegate:)`, `IMBanner(frame:placementId:)`.
-  - The `IMStatusCode` raw values are inferred from enum order.
+  - `IMStatusCode` is a `@frozen` Int enum, so its raw values follow its declaration order in the 11.5.0
+    `.swiftinterface` (noFill 1, requestTimedOut 4, adActive 8, …).
+  - Banner teardown uses `shouldAutoRefresh(false)`: `IMBanner.cancel()` is deprecated with no replacement in 11.5.0.
+  - Consent goes into `initWithAccountID(_:consentDictionary:andCompletionHandler:)` (`IM_GDPR_CONSENT_AVAILABLE`,
+    `IM_SUBJECT_TO_GDPR`) and `updateGDPRConsent` after init, as on Android.

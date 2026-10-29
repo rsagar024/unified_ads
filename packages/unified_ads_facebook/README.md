@@ -10,7 +10,7 @@ Facebook Audience Network (branded Meta Audience Network) adapter for
 
 | | Android | iOS |
 |---|---|---|
-| SDK | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 |
+| SDK | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.1 |
 | Minimum | minSdk 24 (package) | **iOS 15.0** (higher than the other adapters) |
 | Distribution | Gradle | Swift Package Manager (`github.com/facebook/FBAudienceNetwork`, dynamic xcframework) |
 
@@ -103,10 +103,14 @@ an app can have only one). No manifest meta-data or App ID is needed; R8 rules s
 
 - **Deployment target 15.0** on the Runner target (`IPHONEOS_DEPLOYMENT_TARGET`). With 13.0 the build fails.
 - **SKAdNetwork:** `v9wttpbfk9.skadnetwork` and `n38lu8286q.skadnetwork` (the whole list) in `SKAdNetworkItems`.
-- **ATT:** call `UnifiedAds.requestTrackingAuthorization()` before init. Since SDK 6.15 / iOS 17 the SDK reads the ATT
-  status itself; the deprecated `setAdvertiserTrackingEnabled:` is not used.
-- `loadAd` is marked deprecated in 6.22 ("use loadAdWithBidPayload") because of bidding. It's still the direct-load path
-  and produces a compiler warning. Meta has said 6.22 is the last CocoaPods release.
+- **ATT:** call `UnifiedAds.requestTrackingAuthorization()` before init. On iOS 15–16 the adapter sets
+  `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status, as Meta requires below iOS 17; on iOS 17+ SDK 6.15+
+  reads the status itself and the setter is deprecated, so it isn't called.
+- `loadAd` has been deprecated since 6.11 ("use loadAdWithBidPayload") because of bidding. It's still the direct-load
+  path and produces a compiler warning. Meta has said 6.22.x is the last CocoaPods series.
+- **Pin compatibility:** this package pins `FBAudienceNetwork` exact 6.22.1, like AppLovin's (`6220100.0.0`) and
+  LevelPlay's (`5.6.0`) Meta adapters. Google's Meta adapter (`6.22.000`) pins 6.22.0, so it can't share an iOS app with
+  this version.
 
 ## Privacy
 
@@ -114,7 +118,8 @@ an app can have only one). No manifest meta-data or App ID is needed; R8 rules s
 |---|---|
 | `ccpaOptOut: true` | `setDataProcessingOptions(["LDU"], 0, 0)` (Limited Data Use, geolocated) |
 | `ccpaOptOut: false` | `setDataProcessingOptions([])` |
-| `coppa` | `AdSettings.setMixedAudience` / `FBAdSettings.mixedAudience` |
+| `coppa` | `AdSettings.setMixedAudience` / `FBAdSettings.isMixedAudience` |
+| ATT status (iOS 15–16) | `FBAdSettings.setAdvertiserTrackingEnabled` |
 | GDPR | no GDPR API; Meta relies on your CMP / TCF string |
 
 ## Errors

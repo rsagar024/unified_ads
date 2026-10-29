@@ -12,6 +12,8 @@
   It now fails with `AdErrorCode.timeout` after the new `AdConfig.showTimeout` (default 15 s;
   `showTimeoutMs` in `ads_config.json`). Additive, non-breaking.
 * `FakeAdNetworkAdapter.showDelay` (testing).
+* README: the complete guide (configuration, API, getting IDs for every network, platform setup, consent and ATT,
+  architecture, SDK status), re-verified against every vendor's current Android and iOS guide.
 
 ## 1.0.0
 

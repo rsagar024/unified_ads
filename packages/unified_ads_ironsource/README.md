@@ -10,8 +10,8 @@ and rewarded** ads. Adding this package links **only** the LevelPlay SDK into yo
 
 | | Android | iOS |
 |---|---|---|
-| SDK | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` (+ `play-services-appset` 16.1.0, `play-services-ads-identifier` 18.3.0) | `IronSourceSDK` 9.6.1.0 |
-| Minimum | API 19 (package: 24) | iOS 13 |
+| SDK | `com.unity3d.ads-mediation:mediation-sdk:9.7.0` (+ `play-services-appset` 16.1.0, `play-services-ads-identifier` 18.3.0) | `IronSourceSDK` 9.7.0 |
+| Minimum | API 19 (package: 24) | iOS 12 per the vendor (package: 13); Xcode 16+ |
 | Distribution | Gradle (Maven Central) | Swift Package Manager (`ironsource-mobile/LevelPlay-Swift-Package`, product `UnityMediationSDK`) |
 
 Only the **LevelPlay 9.x ad-unit APIs** are used; 9.0 removed every legacy `IronSource.*` API.
@@ -52,7 +52,8 @@ You need: App Key + ad unit ID per format + at least one demand network.
 3. **Ad units:** **Ad units → Create ad unit** → name → format → **Save**. The ad unit ID is in the table.
 4. **Demand:** **Mediation → Setup → SDK Networks** → e.g. **Unity Ads** (API Key + Organization core ID) → per app
    **Add bidder**. Other networks: **Instances → Add instance → Active**. Each enabled network's LevelPlay adapter must
-   also be added to your app (Gradle / Swift package on the Runner target).
+   also be added to your app (Gradle / Swift package on the Runner target); LevelPlay's Unity adapter bundles the
+   Unity Ads SDK from 5.15.0.
 5. **Testing:** **LevelPlay → Settings → Test devices**, or the integration test suite (`is_test_suite` meta-data).
 
 ## Notes
@@ -74,8 +75,9 @@ You need: App Key + ad unit ID per format + at least one demand network.
   range; pin it in the app for reproducible builds.
 - **iOS:** `SKAdNetworkItems` (`su67r6k2v3.skadnetwork` plus each mediated network's IDs), `NSUserTrackingUsageDescription`,
   optionally `NSAdvertisingAttributionReportEndpoint = https://postbacks-is.com/`. The LevelPlay docs set
-  `NSAllowsArbitraryLoads = YES`; flag it for App Store review (not required by this plugin). **LevelPlay needs `-ObjC`**:
-  the adapter's `Package.swift` passes it; if you see undefined symbols, add `-ObjC` to the Runner target's Other Linker Flags.
+  `NSAllowsArbitraryLoads = YES`; flag it for App Store review (not required by this plugin). **Add `-ObjC` to Runner →
+  Build Settings → Other Linker Flags**: LevelPlay requires it, and its own Swift package can't set it (the adapter's
+  `Package.swift` passes it too).
 
 ## Privacy
 
@@ -102,17 +104,15 @@ the LevelPlay metadata `Meta_Mixed_Audience`) before LevelPlay initializes it.
 ```kotlin
 // android/app/build.gradle.kts
 dependencies {
-    implementation("com.unity3d.ads-mediation:facebook-adapter:5.5.0")
-    // LevelPlay's Meta adapter declares no dependencies: add Audience Network yourself.
-    implementation("com.facebook.android:audience-network-sdk:6.22.0")
+    implementation("com.unity3d.ads-mediation:facebook-adapter:5.6.0") // brings Audience Network 6.22.0
 }
 ```
 
 iOS (15.0+): **File → Add Package Dependencies…** →
-`https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package`, exact `5.5.0`, product `FacebookAdapter`
-(brings `FBAudienceNetwork` 6.22.0), on the **Runner** target. Add Meta's SKAdNetwork IDs and the Android `127.0.0.1`
-cleartext config. In LevelPlay: Monetize → Setup → SDK Networks → Meta → *Login with Facebook*, then set the App ID and
-Placement ID per instance. Meta warns that about 20% of test requests intentionally return no fill.
+`https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package`, exact `5.6.0`, product `FacebookAdapter`
+(brings `FBAudienceNetwork` 6.22.1), on the **Runner** target. Add Meta's SKAdNetwork IDs and the Android `127.0.0.1`
+cleartext config. In LevelPlay: Mediation → Setup → SDK Networks → Meta → *Login with Facebook*, then set the App ID and
+Placement ID per instance. Meta warns that about 20% of test requests intentionally return no fill. On iOS 15–16 the adapter also sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status (Meta requires it below iOS 17).
 
 ## Status
 

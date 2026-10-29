@@ -16,14 +16,13 @@ let package = Package(
   ],
   dependencies: [
     .package(name: "FlutterFramework", path: "../FlutterFramework"),
-    .package(url: "https://github.com/facebook/FBAudienceNetwork.git", exact: "6.22.0"),
+    .package(url: "https://github.com/facebook/FBAudienceNetwork.git", exact: "6.22.1"),
   ],
   targets: [
     .target(
       name: "unified_ads_facebook",
       dependencies: [
         .product(name: "FlutterFramework", package: "FlutterFramework"),
-        // ⚠ Product name to be confirmed by the CI build.
         .product(name: "FBAudienceNetwork", package: "FBAudienceNetwork"),
       ],
       resources: [

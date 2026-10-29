@@ -45,7 +45,7 @@ android {
     }
 
     defaultConfig {
-        // play-services-ads 25.5.0 requires minSdk 24 (see SDK_STATUS.md).
+        // GMA Next-Gen and UMP require minSdk 24 (see SDK_STATUS.md).
         minSdk = 24
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -68,7 +68,7 @@ kotlin {
 dependencies {
     // The ONLY place the AdMob SDK is declared: apps that do not depend on
     // unified_ads_admob never resolve it (see ARCHITECTURE.md §4.1).
-    implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0")
+    implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0")
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
     // Required by the Pigeon-generated suspend host API.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")

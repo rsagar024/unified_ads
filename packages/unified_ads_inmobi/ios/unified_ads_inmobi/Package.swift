@@ -26,13 +26,14 @@ let package = Package(
       resources: [
         .process("PrivacyInfo.xcprivacy")
       ],
-      // What the InMobiSDK pod set: WebKit, libsqlite3 and -ObjC (the SDK
-      // uses Objective-C categories). Its Swift package (a bare binary
+      // InMobi's iOS guide requires WebKit, libsqlite3, libz and -ObjC (the
+      // SDK uses Objective-C categories). Its Swift package (a bare binary
       // target) declares none of them. Unsafe flags are accepted here because
       // Flutter adds plugins as local path packages.
       linkerSettings: [
         .linkedFramework("WebKit"),
         .linkedLibrary("sqlite3.0"),
+        .linkedLibrary("z"),
         .unsafeFlags(["-ObjC"]),
       ]
     )

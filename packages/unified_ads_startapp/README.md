@@ -11,7 +11,7 @@ Adding this package links **only** the Start.io SDK into your app.
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK` 4.15.0 |
-| Minimum | API 23 per AAR (package: 24) | iOS 9 (package: 13) |
+| Minimum | API 23 per AAR (package: 24) | iOS 11 (package: 13) |
 | Distribution | Gradle (Maven Central) | Swift Package Manager (`StartApp-SDK/StartAppSDK-SwiftPackage`, product `StartApp`) |
 
 ## Install and use
@@ -29,7 +29,7 @@ await UnifiedAds.init(AdConfig(
     AdNetwork.startapp: NetworkConfig(
       appId: PlatformValue.select(android: '<Android App ID>', ios: '<iOS App ID>'),
       // Optional: Start.io has no per-format ad units. A value here is sent as the
-      // "ad tag" for reporting (Android).
+      // "ad tag" for reporting (Android: every format; iOS: interstitial + rewarded).
       interstitialAdUnitId: 'level_end',
       extras: {'rewardAmount': 1, 'rewardType': 'reward'},  // Start.io rewards carry no amount
     ),
@@ -45,7 +45,8 @@ You need: App ID only.
 2. **App ID:** **Add New App** → paste the store link, or **Haven't published your app yet?** → name + platform. The App
    ID is shown right away and under **My Apps**.
 3. **Ad tags (optional):** there are no ad unit IDs. A value in `bannerAdUnitId` / `interstitialAdUnitId` /
-   `rewardedAdUnitId` is sent as a free-form **ad tag** (letters, ≤ 200 chars) that appears in reports.
+   `rewardedAdUnitId` is sent as a free-form **ad tag** (letters, ≤ 200 chars) that appears in reports (Android: every
+   format; iOS: interstitial and rewarded).
 4. **Testing:** `testMode: true` enables test ads. **Disable it in production**, or the app won't monetize. Minimum payout $50.
 
 ## Notes
@@ -64,23 +65,39 @@ You need: App ID only.
 
 ## Platform setup
 
-- **Android:** the AAR ships its ProGuard rules and permissions. `com.startapp.sdk.APPLICATION_ID` meta-data is not
-  needed (the App ID is passed in code).
-- **iOS:** `SKAdNetworkItems` from https://www.start.io/skadnetworkids.json and `NSUserTrackingUsageDescription` (the SDK
-  links AppTrackingTransparency).
+- **Android:** the AAR ships its ProGuard rules and its permissions (including `com.google.android.gms.permission.AD_ID`),
+  and `com.startapp.sdk.APPLICATION_ID` meta-data is not needed (the App ID is passed in code). **One entry is required in
+  your app manifest:** the adapter initializes the SDK in code (Start.io's "Code Initialization" path), so the SDK's
+  auto-init provider must be removed — otherwise it initializes at process start, before `UnifiedAds.init` passes your
+  App ID. Add this inside `<application>` (with `xmlns:tools="http://schemas.android.com/tools"` on `<manifest>`):
+
+  ```xml
+  <provider
+      android:name="com.startapp.sdk.adsbase.StartAppInitProvider"
+      android:authorities="${applicationId}.startappinitprovider"
+      tools:node="remove" />
+  ```
+
+  Full steps: [doc/setup/startapp.md](https://github.com/rsagar024/unified_ads/blob/master/doc/setup/startapp.md).
+- **iOS:** `SKAdNetworkItems` (Start.io's own ID is `5l3tpt7t6e.skadnetwork`; full list at
+  https://www.start.io/skadnetworkids.json) and `NSUserTrackingUsageDescription` (the SDK links AppTrackingTransparency).
 
 ## Privacy
 
 - `consentGiven` → `setUserConsent(…, "pas", timestamp, granted)` (milliseconds on Android, seconds on iOS).
 - `ccpaOptOut` → `IABUSPrivacy_String` (`1YYN` for opt-out, `1YNN` otherwise) in the Start.io extras.
-- **COPPA is manifest-only on Android:**
-  `<meta-data android:name="com.startapp.sdk.CHILD_DIRECTED" android:value="true"/>` (or `MIXED_AUDIENCE`). There's no
+- **COPPA is manifest-only on Android:** `<meta-data android:name="com.startapp.sdk.CHILD_DIRECTED" android:value="true"/>`
+  (or `MIXED_AUDIENCE`) plus, per Start.io's "App Permissions (COPPA Compliant)" step, the removal of the permission the
+  AAR merges: `<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove"/>`. There's no
   documented iOS COPPA API.
 
 ## Errors
 
-Start.io exposes no numeric error codes. Load failures map to `noFill` with the SDK's message; "not displayed" maps to
-`showFailed`.
+- **Android** exposes no numeric error codes: load failures map to `noFill` with the SDK's message; "not displayed"
+  maps to `showFailed`.
+- **iOS** reports `STAError` codes (`AdError.nativeCode`): 1 → `networkError`; 3, 4, 6 → `invalidConfig`; 7 →
+  `unsupportedFormat`; 0, 2 → `internal`; other load codes (e.g. 12 NoContent) → `noFill`; on show 8 → `alreadyShowing`,
+  9 / 10 → `notReady`, others → `showFailed`.
 
 ## Status
 

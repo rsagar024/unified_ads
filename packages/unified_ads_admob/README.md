@@ -11,7 +11,7 @@ Google Mobile Ads SDK and UMP into your app.
 
 | | Android | iOS |
 |---|---|---|
-| SDK | GMA Next-Gen `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0`, UMP `user-messaging-platform:4.0.0` | `GoogleMobileAds` 13.11.0, `GoogleUserMessagingPlatform` 3.1.0 |
+| SDK | GMA Next-Gen `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0`, UMP `user-messaging-platform:4.0.0` | `GoogleMobileAds` 13.11.0, `GoogleUserMessagingPlatform` 3.1.0 |
 | Minimum | API 24, compileSdk 35+ | iOS 13, Xcode 26.2+ |
 | Distribution | Gradle | Swift Package Manager (`googleads/swift-package-manager-google-mobile-ads`, `…-google-user-messaging-platform`) |
 
@@ -55,6 +55,8 @@ You need: App ID per platform + one ad unit ID per format.
 3. **App ID:** **Apps → View all apps** → copy the **App ID** column. Format `ca-app-pub-…~…` (note the **`~`**).
 4. **Ad units:** **Apps → your app → Ad units → Add ad unit** → **Banner**, **Interstitial** or **Rewarded** (set the
    reward amount and item; they become your `RewardItem`) → **Create ad unit**. Format `ca-app-pub-…/…` (note the **`/`**).
+   For the stretch formats, also create **Rewarded interstitial** (`rewardedInterstitialAdUnitId`) and **App open**
+   (`appOpenAdUnitId`) units.
 5. **Testing:** **Settings → Test devices**, or put the hashed ID the SDK prints to logcat / Xcode console into
    `testDeviceIds`. Google's demo ad units always serve test ads.
 6. **Consent:** **Privacy & messaging** → create a **GDPR** message (and a **US state regulations** message if needed).
@@ -113,7 +115,8 @@ You need: App ID per platform + one ad unit ID per format.
 - `TestModeSupport.testDevices`: test ads go to registered `testDeviceIds` and to all emulators / simulators. Google's
   demo ad unit IDs always serve test ads (never ship them).
 - Banner: standard, large, MREC, leaderboard, adaptive anchored (`getLargeAnchoredAdaptiveBannerAdSize` /
-  `largeAnchoredAdaptiveBanner`) and adaptive inline. Plus interstitial, rewarded, **rewarded interstitial** and **app open**.
+  `largeAnchoredAdaptiveBanner`) and adaptive inline (on Android `bannerAdRefreshCallback` re-reports the height when
+  an inline-adaptive banner refreshes). Plus interstitial, rewarded, **rewarded interstitial** and **app open**.
 - Google demo IDs: rewarded interstitial Android `ca-app-pub-3940256099942544/5354046379`, iOS `…/6978759866`; app open
   Android `…/9257395921`, iOS `…/5575463023`.
 
@@ -152,7 +155,8 @@ iOS (15.0+): in Xcode, **File → Add Package Dependencies…** → `https://git
 rule **Commit** `0a3d0597402162334fb5e11816ca612478180095` (= tag `6.22.000`, not valid semver), product `MetaAdapterTarget`,
 on the **Runner** target. Add Meta's SKAdNetwork IDs and the Android `127.0.0.1` cleartext config. In Monetization Manager
 pick **Google AdMob** as the mediation partner; in AdMob add **Meta Audience Network** under *Bidding* in a mediation
-group. Test with Ad Inspector single-source testing.
+group. Test with Ad Inspector single-source testing. On iOS 15–16 the adapter also sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status (Meta requires it below iOS 17). Google's Meta Swift package pins
+`FBAudienceNetwork` exact 6.22.0 while `unified_ads_facebook` 1.1.0 pins 6.22.1, so the two can't share an iOS app.
 
 ## Status
 

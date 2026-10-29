@@ -61,7 +61,9 @@ final class InmobiBannerView: NSObject, FlutterPlatformView, IMBannerDelegate {
 
   deinit {
     banner?.delegate = nil
-    banner?.cancel()
+    // `cancel()` is deprecated with no replacement (11.5.0); stopping the
+    // refresh timer is enough before the view goes away.
+    banner?.shouldAutoRefresh(false)
     banner?.removeFromSuperview()
   }
 

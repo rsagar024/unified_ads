@@ -18,8 +18,9 @@ final class UnityBannerFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
-/// A Unity `UADSBannerAd` in a Flutter platform view. Adaptive sizes are not
-/// documented for the 4.19+ API, so they fall back to 320×50.
+/// A Unity `UADSBannerAd` in a Flutter platform view. The 4.21.0 banner API
+/// takes a fixed `CGSize` (no adaptive sizes), so adaptive requests fall back
+/// to 320×50.
 final class UnityBannerView: NSObject, FlutterPlatformView, UADSBannerAdDelegate {
   private let container: UIView
   private let adId: String

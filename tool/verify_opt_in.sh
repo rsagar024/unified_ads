@@ -88,9 +88,7 @@ EOF
     ironsource)
       cat << 'EOF'
 dependencies {
-    implementation("com.unity3d.ads-mediation:facebook-adapter:5.5.0")
-    // LevelPlay's Meta adapter doesn't bring the Audience Network SDK itself.
-    implementation("com.facebook.android:audience-network-sdk:6.22.0")
+    implementation("com.unity3d.ads-mediation:facebook-adapter:5.6.0") // brings Audience Network 6.22.0
 }
 EOF
       ;;
@@ -104,8 +102,8 @@ EOF
 meta_spm() {
   case "$1" in
     admob) echo "https://github.com/googleads/googleads-mobile-ios-mediation-meta.git revision:0a3d0597402162334fb5e11816ca612478180095 MetaAdapterTarget" ;;
-    applovin) echo "https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta.git exact:6220004.0.0 AppLovinMediationFacebookAdapter" ;;
-    ironsource) echo "https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package.git exact:5.5.0 FacebookAdapter" ;;
+    applovin) echo "https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta.git exact:6220100.0.0 AppLovinMediationFacebookAdapter" ;;
+    ironsource) echo "https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package.git exact:5.6.0 FacebookAdapter" ;;
   esac
 }
 

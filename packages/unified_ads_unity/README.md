@@ -11,11 +11,11 @@ Adding this package links **only** the Unity Ads SDK into your app.
 | | Android | iOS |
 |---|---|---|
 | SDK | `com.unity3d.ads:unity-ads:4.21.0` | `UnityAds` 4.21.0 |
-| Minimum | API 19 (package: 24), compileSdk 33+ | iOS 13 |
+| Minimum | API 19 (package: 24), compileSdk 33+ | iOS 13, Xcode 26.0.1+ |
 | Distribution | Gradle (Maven Central) | Swift Package Manager (`Unity-Technologies/Unity-Ads-Swift-Package`, product `UnityAds`) |
 
 Only the **4.19+ instance APIs** (`InterstitialAd`, `RewardedAd`, `BannerAd`) are used; the static API is deprecated and
-removed in 5.0.
+scheduled for removal in 5.0.0 (not released yet). The iOS names were checked against the 4.21.0 `.swiftinterface`.
 
 > **Don't use this together with `unified_ads_ironsource`.** The Unity SDK initializes once per process, so unified_ads
 > skips Unity (`configConflict`) when LevelPlay is also enabled. With LevelPlay, get Unity demand through LevelPlay bidding.
@@ -54,7 +54,8 @@ You need: Game ID per platform + placement ID per format.
 2. **Game IDs:** **project Settings → Game IDs**: one for Android, one for iOS.
 3. **Placements:** every project has six default bidding placements (usually `Banner_Android`, `Interstitial_Android`,
    `Rewarded_Android` and the `_iOS` versions). Since 11 Aug 2026 new placements are **bidding only**.
-4. **Testing:** `testMode: true`, or **Monetization → Settings → Test devices → Override client test mode → Force test mode ON**.
+4. **Testing:** `testMode: true`, or **Monetization → Settings → Test devices → Override client test mode → Force test
+   mode ON for all devices** (register single devices with **Create test device**).
 
 ## Notes
 
@@ -62,7 +63,10 @@ You need: Game ID per platform + placement ID per format.
 - **Test mode** (`TestModeSupport.flag`): `withTestMode(true)` at init. A real Game ID is still required.
 - **Rewards:** Unity's reward callback has no amount or type; the adapter reports `extras['rewardAmount']` /
   `extras['rewardType']` (default `1` / `'reward'`).
-- **Banner sizes:** 320×50, 300×250 (MREC) and 728×90. Adaptive requests fall back to 320×50.
+- **Banner sizes:** 320×50, 300×250 (MREC) and 728×90. 4.21.0 has no adaptive banner size, so adaptive requests fall
+  back to 320×50.
+- **Expiry:** Unity can expire a loaded ad (`onAdExpired`). The adapter drops it, so `show()` reports `notReady` and the
+  core cache loads a fresh one.
 - **Impressions:** the full-screen "started" callback is reported as both `shown` and `impression`.
 
 ## Platform setup

@@ -92,7 +92,7 @@ Column legend:
 | | Minimum |
 |---|---|
 | Flutter / Dart | Flutter **3.44+** / Dart **3.12+** |
-| Android | **minSdk 24** (AdMob and AppLovin MAX need it), compileSdk 35+, Kotlin 2.1+ (InMobi needs Kotlin 2.x and AGP ≥ 8.9.3) |
+| Android | **minSdk 24** (AdMob and AppLovin MAX need it), compileSdk 35+, Kotlin 2.x (InMobi needs Kotlin 2.x and AGP ≥ 8.9.3; Unity Ads 4.19+ uses Kotlin 2.1) |
 | iOS | **13.0**, or **15.0** with `unified_ads_facebook` or any Meta bidding adapter; Xcode **26.2+** |
 | iOS build system | **Swift Package Manager only** (since 1.1.0). CocoaPods is not supported. SPM is on by default on stable (`flutter config --enable-swift-package-manager`) |
 
@@ -283,15 +283,18 @@ await UnifiedAds.dispose();
 
 Every network needs an **app-level credential**, and most also need **one ID per ad format**:
 
-| Network | Console | App-level credential → `appId` | Per-format IDs | Also put the app ID in |
+| Network | Console | App-level credential → `NetworkConfig.appId` | Per-format IDs → `bannerAdUnitId` / `interstitialAdUnitId` / `rewardedAdUnitId` | Also put the app ID in |
 |---|---|---|---|---|
-| AdMob | [admob.google.com](https://admob.google.com) | **App ID** `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY` (one per platform) | **Ad unit IDs** `ca-app-pub-XXXXXXXXXXXXXXXX/NNNNNNNNNN` | `AndroidManifest.xml` + `Info.plist` (**required**) |
-| AppLovin MAX | [dash.applovin.com](https://dash.applovin.com) | **SDK key** (account level) | **MAX ad unit IDs** (bound to your package name / bundle ID) | — |
-| Unity Ads | [cloud.unity.com](https://cloud.unity.com) | **Game ID**: one for Android, one for iOS | **Placement IDs** | — |
-| LevelPlay | [platform.ironsrc.com](https://platform.ironsrc.com) | **App Key** (one per app/platform) | **Ad unit IDs** (+ enable demand networks) | — |
-| InMobi | [publisher.inmobi.com](https://publisher.inmobi.com) | **Account ID** | **Placement IDs** (numeric) | — |
-| Start.io | [portal.start.io](https://portal.start.io) | **App ID** | *none*: optional free-form ad tags | — |
-| Facebook Audience Network | [Monetization Manager](https://business.facebook.com/pub/start) | *none* | **Placement IDs** (one per format) | Test device hash |
+| [AdMob](#admob) | [admob.google.com](https://admob.google.com) | **App ID** `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY` (one per platform) | **Ad unit IDs** `ca-app-pub-XXXXXXXXXXXXXXXX/NNNNNNNNNN` | `AndroidManifest.xml` + `Info.plist` (**required**) |
+| [AppLovin MAX](#applovin-max) | [dash.applovin.com](https://dash.applovin.com) | **SDK key** (account level) | **MAX ad unit IDs** (bound to your package name / bundle ID) | — |
+| [Unity Ads](#unity-ads) | [cloud.unity.com](https://cloud.unity.com) | **Game ID**: one for Android, one for iOS | **Placement IDs** | — |
+| [LevelPlay](#levelplay-ironsource) | [platform.ironsrc.com](https://platform.ironsrc.com) | **App Key** (one per app/platform) | **Ad unit IDs** | — |
+| [InMobi](#inmobi) | [publisher.inmobi.com](https://publisher.inmobi.com) | **Account ID** | **Placement IDs** (numeric) | — |
+| [Start.io](#startio) | [portal.start.io](https://portal.start.io) | **App ID** | *none*: optional free-form ad tags | — |
+| [Facebook Audience Network](#facebook-audience-network) | [Monetization Manager](https://business.facebook.com/pub/start) (Meta) | *none* | **Placement IDs** (one per format) | Test device hash |
+
+AdMob and AppLovin MAX also take `rewardedInterstitialAdUnitId` (AdMob) and `appOpenAdUnitId` (AdMob, MAX) for the
+stretch formats.
 
 **Tips for every network**
 
@@ -301,8 +304,9 @@ Every network needs an **app-level credential**, and most also need **one ID per
 - Publish an **`app-ads.txt`** file on your developer website. AdMob requires it for new apps, and many advertisers won't bid without it.
 - **Never ship test mode or test IDs** in a production build.
 
-<details>
-<summary><b>AdMob</b>: App ID per platform + one ad unit ID per format</summary>
+### AdMob
+
+**You need:** App ID per platform + one ad unit ID per format.
 
 1. **Account:** sign in at [admob.google.com](https://admob.google.com), choose your country (can't be changed later),
    accept the terms, verify a phone number and submit payment details. Verification takes up to 24 hours.
@@ -311,6 +315,8 @@ Every network needs an **app-level credential**, and most also need **one ID per
 3. **App ID:** **Apps → View all apps** → copy the **App ID** column. Format `ca-app-pub-…~…` (note the **`~`**).
 4. **Ad units:** **Apps → your app → Ad units → Add ad unit** → **Banner**, **Interstitial** or **Rewarded** (set the
    reward amount and item; they become your `RewardItem`) → **Create ad unit**. Format `ca-app-pub-…/…` (note the **`/`**).
+   For the stretch formats, also create **Rewarded interstitial** (`rewardedInterstitialAdUnitId`) and **App open**
+   (`appOpenAdUnitId`) units.
 5. **Testing:** **Settings → Test devices**, or put the hashed ID the SDK prints to logcat / Xcode console into
    `testDeviceIds`. Google's demo ad units always serve test ads.
 6. **Consent:** **Privacy & messaging** → create a **GDPR** message (and a **US state regulations** message if needed).
@@ -326,17 +332,19 @@ AdNetwork.admob: NetworkConfig(
   rewardedAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/5555', ios: 'ca-app-pub-…/6666'),
 ),
 ```
-</details>
 
-<details>
-<summary><b>AppLovin MAX</b>: SDK key + one MAX ad unit ID per format and platform</summary>
+### AppLovin MAX
+
+**You need:** SDK key + one MAX ad unit ID per format and platform.
 
 1. **Account:** sign up at [dash.applovin.com/signup](https://dash.applovin.com/signup). Account approval may be
    required (use the same email as your store listing). Set payments and your website domain.
 2. **SDK key:** **Account → General → Keys** → copy the **SDK Key** (`appId`).
 3. **Ad units:** **MAX → Mediation → Manage → Ad Units → Create Your Ad Unit** → name, platform, format (**Banner**,
    **Interstitial**, **Rewarded**, or **MRec** for `BannerSize.mediumRectangle`) → find your app or **Manually Add Your
-   Package Name**. The package name / bundle ID is **case-sensitive** and must match exactly.
+   Package Name**. The package name / bundle ID is **case-sensitive** and must match exactly. `AppOpenAd` needs an
+   App Open unit (`appOpenAdUnitId`; ⚠ AppLovin's help page doesn't list App Open; ask your account manager if your
+   dashboard doesn't offer it).
 4. **Testing:** put your GAID / IDFA in `testDeviceIds` with `testMode: true`; the **Mediation Debugger** can force test
    ads. If every MAX load **times out**, the SDK key or package name is wrong (MAX reports no error for an invalid key).
 
@@ -349,10 +357,10 @@ AdNetwork.applovin: NetworkConfig(
   testDeviceIds: ['<your GAID / IDFA>'],
 ),
 ```
-</details>
 
-<details>
-<summary><b>Unity Ads</b>: Game ID per platform + placement ID per format</summary>
+### Unity Ads
+
+**You need:** Game ID per platform + placement ID per format.
 
 > Use Unity Ads **directly** only if you don't use LevelPlay. With LevelPlay, enable Unity Ads as a bidder inside LevelPlay.
 
@@ -361,7 +369,8 @@ AdNetwork.applovin: NetworkConfig(
 2. **Game IDs:** **project Settings → Game IDs**: one for Android, one for iOS.
 3. **Placements:** every project has six default bidding placements (usually `Banner_Android`, `Interstitial_Android`,
    `Rewarded_Android` and the `_iOS` versions). Since 11 Aug 2026 new placements are **bidding only**.
-4. **Testing:** `testMode: true`, or **Monetization → Settings → Test devices → Override client test mode → Force test mode ON**.
+4. **Testing:** `testMode: true`, or **Monetization → Settings → Test devices → Override client test mode → Force test
+   mode ON for all devices** (register single devices with **Create test device**).
 
 ```dart
 AdNetwork.unity: NetworkConfig(
@@ -372,10 +381,10 @@ AdNetwork.unity: NetworkConfig(
   extras: {'rewardAmount': 10, 'rewardType': 'coins'},   // Unity rewards carry no amount
 ),
 ```
-</details>
 
-<details>
-<summary><b>LevelPlay (ironSource)</b>: App Key + ad unit ID per format + at least one demand network</summary>
+### LevelPlay (ironSource)
+
+**You need:** App Key + ad unit ID per format + at least one demand network.
 
 > **ironSource Ads direct demand was sunset on 30 April 2026.** LevelPlay mediation continues, but fill comes only from
 > the **networks you enable in LevelPlay** (Unity recommends Unity Ads bidding). An app with no networks enabled gets **no fill**.
@@ -385,7 +394,8 @@ AdNetwork.unity: NetworkConfig(
 3. **Ad units:** **Ad units → Create ad unit** → name → format → **Save**. The ad unit ID is in the table.
 4. **Demand:** **Mediation → Setup → SDK Networks** → e.g. **Unity Ads** (API Key + Organization core ID) → per app
    **Add bidder**. Other networks: **Instances → Add instance → Active**. Each enabled network's LevelPlay adapter must
-   also be added to your app (Gradle / Swift package on the Runner target).
+   also be added to your app (Gradle / Swift package on the Runner target); LevelPlay's Unity adapter bundles the
+   Unity Ads SDK from 5.15.0.
 5. **Testing:** **LevelPlay → Settings → Test devices**, or the integration test suite (`is_test_suite` meta-data).
 
 ```dart
@@ -396,10 +406,10 @@ AdNetwork.ironsource: NetworkConfig(
   rewardedAdUnitId: PlatformValue.select(android: '…', ios: '…'),
 ),
 ```
-</details>
 
-<details>
-<summary><b>InMobi</b>: Account ID + numeric placement ID per format</summary>
+### InMobi
+
+**You need:** Account ID + numeric placement ID per format.
 
 1. **Account:** InMobi publisher dashboard → **Create Account** → verify email. Add an app and a payment method to reach
    **Pending Approval** (about 24 working hours).
@@ -419,16 +429,17 @@ AdNetwork.inmobi: NetworkConfig(
   rewardedAdUnitId: PlatformValue.select(android: '…', ios: '…'),   // a Rewarded Video placement
 ),
 ```
-</details>
 
-<details>
-<summary><b>Start.io</b>: App ID only</summary>
+### Start.io
+
+**You need:** App ID only.
 
 1. **Account:** register at the Start.io publisher portal.
 2. **App ID:** **Add New App** → paste the store link, or **Haven't published your app yet?** → name + platform. The App
    ID is shown right away and under **My Apps**.
 3. **Ad tags (optional):** there are no ad unit IDs. A value in `bannerAdUnitId` / `interstitialAdUnitId` /
-   `rewardedAdUnitId` is sent as a free-form **ad tag** (letters, ≤ 200 chars) that appears in reports.
+   `rewardedAdUnitId` is sent as a free-form **ad tag** (letters, ≤ 200 chars) that appears in reports (Android: every
+   format; iOS: interstitial and rewarded).
 4. **Testing:** `testMode: true` enables test ads. **Disable it in production**, or the app won't monetize. Minimum payout $50.
 
 ```dart
@@ -438,10 +449,10 @@ AdNetwork.startapp: NetworkConfig(
   extras: {'rewardAmount': 1, 'rewardType': 'reward'},   // Start.io rewards carry no amount
 ),
 ```
-</details>
 
-<details>
-<summary><b>Facebook Audience Network</b>: placement IDs only</summary>
+### Facebook Audience Network
+
+**You need:** placement IDs only.
 
 1. Sign in to [Monetization Manager](https://business.facebook.com/pub/start) → **Create Property** (Business Manager
    required) → add the Android and/or iOS platform.
@@ -462,7 +473,6 @@ AdNetwork.facebook: NetworkConfig(
   extras: {'rewardAmount': 1, 'rewardType': 'coins'},
 ),
 ```
-</details>
 
 ### Testing without your own IDs
 
@@ -513,8 +523,12 @@ Use these **only for development**, in the example or a test build.
   `ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved`).
 - **Deployment target** on the Runner target (Xcode → Runner → Build Settings → iOS Deployment Target): **13.0**, or
   **15.0** with `unified_ads_facebook` / a Meta bidding adapter.
-- **`-ObjC`:** the InMobi and LevelPlay manifests pass it. If InMobi, LevelPlay or MAX fail with undefined symbols or
-  unrecognized selectors, add `-ObjC` to **Runner → Build Settings → Other Linker Flags**.
+- **`-ObjC`:** InMobi and LevelPlay **require** it and their own Swift packages can't set it, so add `-ObjC` to
+  **Runner → Build Settings → Other Linker Flags** when you use either (the adapters' manifests pass it too). Add it
+  as well if MAX fails with undefined symbols or unrecognized selectors. InMobi's manifest also links `libz`,
+  `libsqlite3.0` and `WebKit`, as InMobi requires.
+- **App Transport Security:** InMobi and LevelPlay recommend `NSAllowsArbitraryLoads = YES` (HTTP creatives). It's
+  optional for this plugin, and App Review may ask about it.
 - Another plugin that's still CocoaPods-only can keep its `Podfile` (Flutter's mixed mode); never add pods for unified_ads networks.
 
 | Network | Required Info.plist keys | Own SKAdNetwork ID(s) | Full list |
@@ -523,10 +537,10 @@ Use these **only for development**, in the example or a test build.
 | AdMob | `GADApplicationIdentifier` = your iOS App ID (missing → `invalidConfig` for AdMob, no crash) | `cstr6suwn9.skadnetwork` | [3p SKAdNetworks](https://developers.google.com/admob/ios/3p-skadnetworks) |
 | Unity Ads | none | `4dzt52r2t5.skadnetwork` | [JSON](https://skan.mz.unity3d.com/v3/partner/skadnetworks.plist.json) |
 | AppLovin MAX | none | `ludvb6z3bs.skadnetwork` | [JSON](https://skadnetwork-ids.applovin.com/v1/skadnetworkids.json) |
-| LevelPlay | none (LevelPlay docs suggest `NSAllowsArbitraryLoads`; flag it for review, not required); optional `NSAdvertisingAttributionReportEndpoint = https://postbacks-is.com/` | `su67r6k2v3.skadnetwork` | [LevelPlay SKAdNetwork ID manager](https://docs.unity.com/grow/levelplay/sdk/ios/skadnetwork-id-manager) |
-| InMobi | none (InMobi recommends `NSAllowsArbitraryLoads`; flag it for review) | `wzmmz9fp6w.skadnetwork` | InMobi iOS guidelines |
-| Start.io | none | ⚠ not publicly confirmed | [JSON](https://www.start.io/skadnetworkids.json) |
-| Facebook | none | `v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork` (the whole list) | [Meta SKAdNetwork](https://developers.facebook.com/docs/audience-network/setting-up/platform-setup/ios/SKAdNetwork) |
+| LevelPlay | none (optional: `NSAllowsArbitraryLoads`, `NSAdvertisingAttributionReportEndpoint = https://postbacks-is.com/`) | `su67r6k2v3.skadnetwork` | [LevelPlay SKAdNetwork ID manager](https://docs.unity.com/grow/levelplay/sdk/ios/skadnetwork-id-manager) |
+| InMobi | none (optional: `NSAllowsArbitraryLoads`) | `wzmmz9fp6w.skadnetwork` | [JSON](https://www.inmobi.com/skadnetworkids.json) |
+| Start.io | none | `5l3tpt7t6e.skadnetwork` | [JSON](https://www.start.io/skadnetworkids.json) |
+| Facebook | none | `v9wttpbfk9.skadnetwork`, `n38lu8286q.skadnetwork` (the whole list) | [Meta SKAdNetwork](https://developers.facebook.com/documentation/audience-network/setting-up/platform-setup/ios/SKAdNetwork) |
 
 ```xml
 <!-- ios/Runner/Info.plist -->
@@ -566,8 +580,8 @@ Use, `coppa` → mixed audience) before the platform initializes it. Every Meta 
 | Mediation | Android (`android/app/build.gradle.kts`) | iOS Swift package (Xcode → File → Add Package Dependencies → Runner target) |
 |---|---|---|
 | AdMob | `implementation("com.google.ads.mediation:facebook:6.22.0.1")` **and** exclude `com.google.android.gms:play-services-ads` + `play-services-ads-lite` in `configurations.configureEach` | `https://github.com/googleads/googleads-mobile-ios-mediation-meta`, **commit** `0a3d0597402162334fb5e11816ca612478180095` (tag `6.22.000`), product `MetaAdapterTarget` |
-| AppLovin MAX | `implementation("com.applovin.mediation:facebook-adapter:6.22.0.1")` | `https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta`, exact `6220004.0.0`, product `AppLovinMediationFacebookAdapter` |
-| LevelPlay | `implementation("com.unity3d.ads-mediation:facebook-adapter:5.5.0")` + `implementation("com.facebook.android:audience-network-sdk:6.22.0")` | `https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package`, exact `5.5.0`, product `FacebookAdapter` |
+| AppLovin MAX | `implementation("com.applovin.mediation:facebook-adapter:6.22.0.1")` | `https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta`, exact `6220100.0.0`, product `AppLovinMediationFacebookAdapter` |
+| LevelPlay | `implementation("com.unity3d.ads-mediation:facebook-adapter:5.6.0")` (brings Audience Network 6.22.0) | `https://github.com/ironsource-mobile/LevelPlay-Facebook-Adapter-Swift-Package`, exact `5.6.0`, product `FacebookAdapter` |
 
 Then select Meta as a bidder in the mediation dashboard and list that platform as the mediation partner in Monetization
 Manager. Don't also run `unified_ads_facebook` for the same placements. Verify with
@@ -684,7 +698,9 @@ final current = await UnifiedAds.trackingAuthorizationStatus(); // no prompt
   builds still work.
 - `Info.plist` must contain `NSUserTrackingUsageDescription`, or iOS terminates the app when the prompt is requested.
 - iOS shows the prompt only while the app is **active**: call it after the first frame, not in `main()` before `runApp`.
-- Audience Network 6.15+ reads the ATT status itself on iOS 17+; the deprecated `setAdvertiserTrackingEnabled` is not called.
+- Audience Network (`unified_ads_facebook`, or Meta bidding through AdMob / MAX / LevelPlay): on iOS 15–16 the adapters
+  set `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status, as Meta requires below iOS 17; on iOS 17+
+  Audience Network 6.15+ reads the status itself.
 
 ## Architecture
 
@@ -873,24 +889,28 @@ re-verified before every adapter release.
 
 | Network | Android artifact | iOS SDK | Swift package | Min Android API | Min iOS | B | I | R | RI | App open | Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| AdMob | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0` | `GoogleMobileAds` 13.11.0 | `googleads/swift-package-manager-google-mobile-ads` | 24 | 13 | ✅ | ✅ | ✅ | ✅ | ✅ | Active; legacy Android SDK in maintenance mode, so the adapter uses Next-Gen |
+| AdMob | **GMA Next-Gen** `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0` | `GoogleMobileAds` 13.11.0 | `googleads/swift-package-manager-google-mobile-ads` | 24 | 13 | ✅ | ✅ | ✅ | ✅ | ✅ | Active; legacy Android SDK in maintenance mode, so the adapter uses Next-Gen |
 | Google UMP | `com.google.android.ump:user-messaging-platform:4.0.0` | `GoogleUserMessagingPlatform` 3.1.0 | `googleads/swift-package-manager-google-user-messaging-platform` | 23 | — | | | | | | Active (AdMob's `ConsentProvider`) |
-| Unity Ads | `com.unity3d.ads:unity-ads:4.21.0` | `UnityAds` 4.21.0 | `Unity-Technologies/Unity-Ads-Swift-Package` | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗ | ✗ | Active; static API deprecated (4.19), removed in 5.0; adapter uses instance APIs |
-| ironSource / LevelPlay | `com.unity3d.ads-mediation:mediation-sdk:9.6.1` | `IronSourceSDK` 9.6.1.0 | `ironsource-mobile/LevelPlay-Swift-Package` (product `UnityMediationSDK`) | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗ | ✗ | Renamed LevelPlay; 9.0 removed all `IronSource.*` APIs; ironSource Ads direct demand sunset 30 Apr 2026 |
+| Unity Ads | `com.unity3d.ads:unity-ads:4.21.0` | `UnityAds` 4.21.0 | `Unity-Technologies/Unity-Ads-Swift-Package` | ≤ 23 | 13 | ✅ | ✅ | ✅ | ✗ | ✗ | Active; static API deprecated (4.19), scheduled for removal in 5.0.0 (not released); adapter uses instance APIs |
+| ironSource / LevelPlay | `com.unity3d.ads-mediation:mediation-sdk:9.7.0` | `IronSourceSDK` 9.7.0 | `ironsource-mobile/LevelPlay-Swift-Package` (product `UnityMediationSDK`) | ≤ 23 | 12 | ✅ | ✅ | ✅ | ✗ | ✗ | Renamed LevelPlay; 9.0 removed all `IronSource.*` APIs; ironSource Ads direct demand sunset 30 Apr 2026 |
 | AppLovin MAX | `com.applovin:applovin-sdk:13.6.4` | `AppLovinSDK` 13.6.4 | `AppLovin/AppLovin-MAX-Swift-Package` | 24 | 12 | ✅ | ✅ | ✅ | ✗ | ✅ | Active; COPPA support removed in 13.0 |
-| Facebook Audience Network | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 | `facebook/FBAudienceNetwork` | 14 | **15** | ✅ | ✅ | ✅ | — | ✗ | **Bidding-only since 2021**; direct load serves test ads only; 6.22 is the last CocoaPods release |
-| Start.io | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK` 4.15.0 | `StartApp-SDK/StartAppSDK-SwiftPackage` (product `StartApp`) | 23 | 9 | ✅ | ✅ | ✅ | ✗ | ✗ (splash only) | Active; rebranded, artifacts keep the StartApp names |
-| InMobi | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.0` | `InMobiSDK` 11.5.0 | `InMobi/InMobiSDK-Swift-Package` | 21 | 12–13 | ✅ | ✅ | ✅ | ✗ | ✗ | Active; Java artifact `inmobi-ads` abandoned at 10.1.4 |
+| Facebook Audience Network | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.1 | `facebook/FBAudienceNetwork` | 21 | **15** | ✅ | ✅ | ✅ | — | ✗ | **Bidding-only since 2021**; direct load serves test ads only; 6.22 is the last CocoaPods release |
+| Start.io | `com.startapp:inapp-sdk:5.4.0` | `StartAppSDK` 4.15.0 | `StartApp-SDK/StartAppSDK-SwiftPackage` (product `StartApp`) | 23 | 11 | ✅ | ✅ | ✅ | ✗ | ✗ (splash only) | Active; rebranded, artifacts keep the StartApp names |
+| InMobi | `com.inmobi.monetization:inmobi-ads-kotlin:11.5.1` | `InMobiSDK` 11.5.0 | `InMobi/InMobiSDK-Swift-Package` | 21 | 12 | ✅ | ✅ | ✅ | ✗ | ✗ | Active; Java artifact `inmobi-ads` abandoned at 10.1.4 |
 
 B/I/R = Banner/Interstitial/Rewarded, RI = Rewarded Interstitial. Package floors are minSdk 24 and iOS 13 (15 with Facebook).
 
-**Meta (Facebook) bidding adapters** (all built for FAN 6.22.0, all need iOS 15):
+**Meta (Facebook) bidding adapters** (all built for FAN 6.22.x, all need iOS 15):
 
 | Mediation | Android (Maven) | Brings FAN? | Detected class (Android / iOS) |
 |---|---|---|---|
 | AdMob | `com.google.ads.mediation:facebook:6.22.0.1` | yes, plus legacy `play-services-ads` which **must be excluded** | `com.google.ads.mediation.facebook.FacebookMediationAdapter` / `GADMediationAdapterFacebook` |
 | AppLovin MAX | `com.applovin.mediation:facebook-adapter:6.22.0.1` | yes | `com.applovin.mediation.adapters.FacebookMediationAdapter` / `ALFacebookMediationAdapter` |
-| LevelPlay | `com.unity3d.ads-mediation:facebook-adapter:5.5.0` | **no**: add `audience-network-sdk:6.22.0` | `com.ironsource.adapters.facebook.FacebookAdapter` / `ISFacebookAdapter` |
+| LevelPlay | `com.unity3d.ads-mediation:facebook-adapter:5.6.0` | yes (since 5.6.0) | `com.ironsource.adapters.facebook.FacebookAdapter` / `ISFacebookAdapter` |
+
+On iOS the Meta Swift packages pin Audience Network exactly: Google's (`6.22.000`) pins **6.22.0**, AppLovin's
+`6220100.0.0` and LevelPlay's `5.6.0` pin **6.22.1**, the same as `unified_ads_facebook` 1.1.0. So `unified_ads_facebook`
+1.1.0 can't share an iOS app with AdMob's Meta adapter (Meta discourages running both paths anyway).
 
 ### Test-mode capability per network
 
@@ -915,6 +935,8 @@ B/I/R = Banner/Interstitial/Rewarded, RI = Rewarded Interstitial. Package floors
 - **Toolchain:** minSdk 24, Kotlin ≥ 2.1 (2.3.20 used), compileSdk ≥ 35 (36 used), AGP 9 + R8 (Unity Ads 4.20+),
   Xcode ≥ 26.2 (AdMob iOS 13.4+).
 - **Unity placements** are bidding-only since 11 Aug 2026.
+- **Re-verified 2026-10-28 (1.1.0)** against every vendor's current Android and iOS guide; the iOS names were checked
+  against the shipped `.swiftinterface` / headers of Unity Ads, LevelPlay, InMobi, Start.io and Audience Network.
 - **Verification state:** Android code of every adapter is compiler-verified against the pinned SDKs; AdMob, Unity Ads,
   Start.io and Facebook served test ads on a physical device. iOS is built and smoke-tested in CI on simulators; it
   hasn't run on a physical device yet.
@@ -960,6 +982,10 @@ immediately; InMobi initializes but returns no-fill; AppLovin MAX and LevelPlay 
 - **1.1.0: iOS is Swift Package Manager only.** Podspecs were removed. Enable SPM (Flutter 3.44+, Xcode 26.2+), set the
   deployment target on the Runner target, and remove unified_ads pods from your `Podfile`. Android and the Dart API are
   unchanged. Can't move yet? Pin `'>=1.0.0 <1.1.0'`.
+- **1.1.0 also refreshes the SDKs** (no API change): GMA Next-Gen 1.6.0, LevelPlay 9.7.0, InMobi Android 11.5.1, Audience Network
+  iOS 6.22.1. On iOS add Start.io's SKAdNetwork ID `5l3tpt7t6e.skadnetwork`, and `-ObjC` on the Runner target if you
+  use InMobi or LevelPlay. With Meta bidding through LevelPlay on Android, `facebook-adapter:5.6.0` brings Audience
+  Network itself; on iOS use AppLovin's Meta package `6220100.0.0` / LevelPlay's `5.6.0` (both pin FAN 6.22.1).
 - **1.0.0: AdMob Android → GMA Next-Gen SDK.** The Dart API and the manifest App ID are unchanged; set
   `NetworkConfig.appId` to the same ID (a mismatch is logged). `AdError.nativeCode` on Android is now an enum name
   (`NO_FILL`, `NETWORK_ERROR`, …). Exclude legacy `play-services-ads` if anything pulls it.

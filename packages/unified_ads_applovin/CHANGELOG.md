@@ -10,6 +10,11 @@
 * Meta (Facebook) bidding on iOS is now added as a Swift package to the Runner target instead of a pod line; see
   the setup doc and the migration guide.
 * Pigeon bindings regenerated with pigeon ^29.0.8.
+* iOS: with an opt-in Meta bidding adapter, `FBAdSettings.setAdvertiserTrackingEnabled` is now set from the ATT status
+  on iOS 15–16 (Meta requires it below iOS 17).
+* Docs: MAX banners are fixed 320×50 unless adaptive is requested (the "adaptive by default" note was wrong); AppLovin's
+  Meta Swift package is now `6220100.0.0` (FAN 6.22.1). SDK 13.6.4 is still the latest.
+* README: package-specific.
 * No Dart API changes.
 
 ## 1.0.0

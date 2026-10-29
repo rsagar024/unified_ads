@@ -11,6 +11,13 @@
 * Meta (Facebook) bidding on iOS is now added as a Swift package to the Runner target instead of a pod line; see
   the setup doc and the migration guide.
 * Pigeon bindings regenerated with pigeon ^29.0.8.
+* Android: GMA Next-Gen `ads-mobile-sdk` 1.5.0 → **1.6.0** (no breaking changes; fixes `onUserEarnedReward` arriving
+  after `onAdDismissedFullScreenContent`, the Activity context for mediated full-screen ads, and an R8 full-mode crash).
+* Android: banners set `bannerAdRefreshCallback`, so an inline-adaptive banner that changes height on refresh is
+  re-sized in Flutter (`BannerSized`).
+* iOS: with an opt-in Meta bidding adapter, `FBAdSettings.setAdvertiserTrackingEnabled` is now set from the ATT status
+  on iOS 15–16 (Meta requires it below iOS 17), through the Objective-C runtime as before.
+* README: package-specific, with setup, IDs, consent and error mapping; docs re-verified against Google's guides.
 * No Dart API changes.
 
 ## 1.0.0

@@ -3,9 +3,9 @@
 * **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
   deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
   target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
-* iOS SDK comes from `LevelPlay-Swift-Package` 9.6.1 (`UnityMediationSDK`); version unchanged. `Package.swift`
-  passes `-ObjC` to the linker (⚠ to be confirmed by CI; fallback: add `-ObjC` to the Runner target's Other Linker
-  Flags).
+* iOS SDK comes from `LevelPlay-Swift-Package` (`UnityMediationSDK`; 9.7.0, see below). `Package.swift` passes
+  `-ObjC` to the linker (⚠ to be confirmed by CI); also add `-ObjC` to the Runner target's Other Linker Flags, as
+  LevelPlay requires.
 * Android: `com.google.android.gms:play-services-appset` 16.0.0 → 16.1.0 and
   `com.google.android.gms:play-services-ads-identifier` 18.1.0 → 18.3.0.
 * Opt-in linking on iOS now works through SPM: the vendor SDK is declared only in this package's `Package.swift`,
@@ -14,6 +14,14 @@
 * Meta (Facebook) bidding on iOS is now added as a Swift package to the Runner target instead of a pod line; see
   the setup doc and the migration guide.
 * Pigeon bindings regenerated with pigeon ^29.0.8.
+* LevelPlay 9.6.1 → **9.7.0** on Android and iOS (vendor: general improvements and bug fixes).
+* **iOS fix:** the Meta mixed-audience metadata call is now `LevelPlay.setMetaData(withKey:value:)`, the Swift name of
+  `+setMetaDataWithKey:value:` in the 9.7.0 headers (the previous spelling didn't compile).
+* iOS: adaptive banners now pass the requested width (`createAdaptive(withWidth:)`), as on Android.
+* iOS: with an opt-in Meta bidding adapter, `FBAdSettings.setAdvertiserTrackingEnabled` is set on iOS 15–16.
+* Docs: `-ObjC` on the Runner target is required; Meta adapter `facebook-adapter` 5.6.0 (brings Audience Network on
+  Android) and Swift package 5.6.0; dashboard path "Mediation → Setup → SDK Networks".
+* README: package-specific.
 * No Dart API changes.
 
 ## 1.0.0

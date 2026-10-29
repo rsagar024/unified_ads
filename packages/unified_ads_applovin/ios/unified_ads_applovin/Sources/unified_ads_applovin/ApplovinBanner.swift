@@ -41,7 +41,7 @@ final class ApplovinBannerView: NSObject, FlutterPlatformView, MAAdViewAdDelegat
     case "leaderboard":
       view = MAAdView(adUnitIdentifier: unit, adFormat: .leader)
     case "adaptiveAnchored", "adaptiveInline":
-      // ⚠ Swift spelling of the MAAdViewConfiguration builder (verify in CI).
+      // Builder spelling as in AppLovin's iOS banner guide (13.2.0+).
       let inline = size?["type"] as? String == "adaptiveInline"
       let maxHeight = (size?["maxHeight"] as? NSNumber).map { CGFloat($0.doubleValue) }
       let configuration = MAAdViewConfiguration { builder in

@@ -9,6 +9,11 @@
   so `FlutterGeneratedPluginSwiftPackage` resolves it only when the app depends on this package (checked against
   `Package.resolved` in CI).
 * Pigeon bindings regenerated with pigeon ^29.0.8.
+* Expired ads are now handled on both platforms (`onAdExpired`, as Unity's guides require): an expired interstitial /
+  rewarded ad is dropped, so `show()` reports `notReady` and the core cache loads a fresh one.
+* iOS names re-checked against the UnityAds 4.21.0 `.swiftinterface` (`showDidFail(_:error:)` etc.); comments and docs
+  corrected (4.21.0 has no adaptive banner size; Xcode 26.0.1+). SDK 4.21.0 is still the latest.
+* README: package-specific.
 * No Dart API changes.
 
 ## 1.0.0
