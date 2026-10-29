@@ -1,6 +1,6 @@
 # Publishable packages in dependency order: the platform interface first, then
 # the core (both depended on by every adapter), then the adapters. Shared by
-# tool/publish.sh and tool/release_tags.sh. Source it; defines PACKAGES only.
+# tool/publish.sh (mirrored in tool/publish.ps1). Source it; defines PACKAGES only.
 PACKAGES=(
   unified_ads_platform_interface
   unified_ads

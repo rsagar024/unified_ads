@@ -1177,8 +1177,8 @@ opt-in check, a publish dry-run per package, and pana. [`.github/workflows/ios.y
 the example and a scratch app per adapter for the simulator on free GitHub macOS runners (no signing), runs
 `example/integration_test/ad_smoke_test.dart` against public test ads, and uploads screenshots and logs.
 
-**Releases:** merges to `master` run CI and iOS (nothing runs on PRs or `development`); a green merge publishes every
-package whose version changed to pub.dev. Contributions: [CONTRIBUTING.md](https://github.com/rsagar024/unified_ads/blob/master/CONTRIBUTING.md).
+**Releases:** merges to `master` run CI and iOS (nothing runs on PRs or `development`); after a green merge the maintainer publishes every
+package whose version changed to pub.dev by hand ([guide](https://github.com/rsagar024/unified_ads/blob/master/doc/publishing.md)). Contributions: [CONTRIBUTING.md](https://github.com/rsagar024/unified_ads/blob/master/CONTRIBUTING.md).
 
 <a id="further-reading"></a>
 

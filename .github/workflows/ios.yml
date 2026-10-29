@@ -7,7 +7,7 @@ name: iOS simulator
 # Results feed SDK_STATUS.md ("Verification status").
 
 on:
-  # Merges into master only (they also gate release.yml).
+  # Merges into master only. Publishing to pub.dev is manual (doc/publishing.md).
   push:
     branches: [master]
   workflow_dispatch:

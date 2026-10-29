@@ -77,28 +77,18 @@ Notes for the scripts in `tool/`:
 ## Branches and releases
 
 ```
-feature branch ──PR──▶ development ──PR──▶ master ──(CI ✔ + iOS ✔)──▶ tags ──▶ pub.dev
+feature branch ──PR──▶ development ──PR──▶ master ──(CI ✔ + iOS ✔)──▶ maintainer publishes manually ──▶ pub.dev
 ```
 
 | Event | What runs |
 |---|---|
 | PR to any branch | Nothing. Run the checks above locally, or start `ci.yaml` / `ios.yml` by hand (Actions → Run workflow) |
-| Merge (push) to `development` | Nothing. **Nothing is published.** |
-| Merge (push) to `master` | `ci.yaml` + `ios.yml`; when **both** pass, `release.yml` tags and `publish.yml` publishes |
+| Merge (push) to `development` | Nothing |
+| Merge (push) to `master` | `ci.yaml` + `ios.yml`. **Nothing is published automatically** |
 
-How the automatic release works:
-
-1. `release.yml` runs when CI or the iOS workflow completes for a push to `master`. It continues only when both
-   succeeded for that commit.
-2. It runs [`tool/release_tags.sh`](tool/release_tags.sh). In dependency order (platform interface → core → adapters,
-   [`tool/lib/packages.sh`](tool/lib/packages.sh)), it pushes the tag `<package>-v<version>` for each package whose
-   pubspec `version` is **not on pub.dev yet**, then waits until pub.dev lists it before tagging the next package.
-   Packages whose version didn't change are skipped.
-3. Each tag runs `publish.yml`, which checks that the tag matches the pubspec and is on `master`, then runs
-   `flutter pub publish --force` with GitHub OIDC. No pub.dev credential is stored.
-
-pub.dev only accepts automated publishes from **tag** pushes, and tags pushed with the default `GITHUB_TOKEN` don't
-trigger workflows. That's why the tags are pushed with a PAT.
+Publishing is manual: after a green merge to `master`, the maintainer pulls `master` and runs `tool\publish.ps1
+-Publish` (or `tool/publish.sh --publish`). The script publishes every package whose version isn't on pub.dev yet, in
+dependency order ([`tool/lib/packages.sh`](tool/lib/packages.sh)).
 
 ### To release
 
@@ -109,33 +99,10 @@ trigger workflows. That's why the tags are pushed with a PAT.
      `unified_ads_platform_interface: ^1.1.0`).
 2. Every package must pass `flutter pub publish --dry-run` with 0 warnings. CI runs this check on `master`, so run it
    locally (or start CI by hand on your branch) before merging.
-3. Merge `development` into `master`. Preview what will be tagged with `bash tool/release_tags.sh --dry-run`.
+3. Merge `development` into `master` and wait for CI + iOS to pass.
+4. Publish from `master` by following the step-by-step guide in [doc/publishing.md](doc/publishing.md).
 
 A breaking change to the public API needs a note in `doc/migration/` (CLAUDE.md non-negotiable).
-
-### One-time setup (repository owner)
-
-1. **GitHub secret `RELEASE_TAG_TOKEN`:**
-   - create a fine-grained personal access token under Settings → Developer settings, scoped to this repository only,
-     with **Contents: Read and write**;
-   - add it under Repository → Settings → Secrets and variables → Actions.
-2. **pub.dev, for each of the 9 packages:** package page → **Admin** → **Automated publishing** → *Enable publishing
-   from GitHub Actions*:
-   - repository: `rsagar024/unified_ads`
-   - tag pattern: `<package>-v{{version}}`, for example `unified_ads-v{{version}}` or
-     `unified_ads_admob-v{{version}}`
-3. **Recommended:** add a tag ruleset (Settings → Rules) for `unified_ads*-v*` that only you (the PAT owner) can
-   create. Anyone who can push a matching tag on `master` history can publish.
-4. **Optional manual approval:** create a `pub.dev` environment with required reviewers, add `environment: pub.dev`
-   to the `publish` job in `publish.yml`, and tick *Require GitHub Actions environment* on pub.dev.
-
-`release.yml` runs from the copy on the default branch, so the flow starts working once these workflows are on
-`master`.
-
-Step-by-step guide covering both paths: [doc/publishing.md](doc/publishing.md).
-
-**Manual fallback:** for a brand-new package, run `tool/publish.sh --publish` (or `tool\publish.ps1`). pub.dev only
-allows automated publishing for packages that already exist, so the first version has to be published by hand.
 
 ## Pull requests
 
