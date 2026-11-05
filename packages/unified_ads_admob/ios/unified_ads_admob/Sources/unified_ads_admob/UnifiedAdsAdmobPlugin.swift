@@ -122,6 +122,8 @@ public final class UnifiedAdsAdmobPlugin: NSObject, FlutterPlugin, AdmobHostApi 
     testDeviceIds = request.testDeviceIds
     applyRequestConfiguration()
     let info = InitInfo(metaBiddingAdapter: MetaBidding.detect())
+    // The ATT prompt may have been answered since consent was applied.
+    if info.metaBiddingAdapter != nil { MetaBidding.applyAdvertiserTracking() }
     if initialized { return info }
     _ = await MobileAds.shared.start()
     initialized = true

@@ -125,8 +125,8 @@ final status = await UnifiedAds.requestTrackingAuthorization();
 final current = await UnifiedAds.trackingAuthorizationStatus(); // no prompt
 ```
 
-- The helper lives in the core package's iOS code, so it needs no ad SDK. `AppTrackingTransparency` is weak-linked, so
-  iOS 13 builds still work.
+- The helper lives in the core package's iOS code, so it needs no ad SDK. `AppTrackingTransparency` is weak-linked (a
+  `-weak_framework` linker flag in the core's `Package.swift`, ⚠ to be confirmed by CI), so iOS 13 builds still work.
 - `Info.plist` must contain `NSUserTrackingUsageDescription`. Without it iOS terminates the app when the prompt is
   requested.
 
@@ -136,5 +136,8 @@ final current = await UnifiedAds.trackingAuthorizationStatus(); // no prompt
   ```
 - iOS only shows the prompt while the app is **active**. Call the helper after the first frame, not in `main()` before
   `runApp`.
+- Audience Network (`unified_ads_facebook`, or Meta bidding through AdMob / MAX / LevelPlay): below iOS 17 the adapters
+  set `FBAdSettings.setAdvertiserTrackingEnabled` from this status, as Meta requires. Request ATT before
+  `init` so the flag reflects the user's answer.
 - Each network also needs its **SKAdNetwork IDs** in `Info.plist`, for attribution without the IDFA. The lists are in
   each `doc/setup/<network>.md`.

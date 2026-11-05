@@ -4,10 +4,9 @@ import UIKit
 
 let startappBannerViewType = "dev.arovyx.plugin.unifiedads/startapp/banner"
 
-/// Start.io adapter plugin. The SDK is Objective-C; delegate methods are
-/// pinned to their Objective-C selectors with `@objc(...)` so dispatch does
-/// not depend on the importer's Swift renaming; the Swift method names
-/// match the SDK's `NS_SWIFT_NAME`s (`didLoad(_:)`, …), which Swift enforces.
+/// Start.io adapter plugin. The SDK is Objective-C with no `NS_SWIFT_NAME`s;
+/// delegate methods are pinned to their Objective-C selectors with `@objc(...)`
+/// so dispatch does not depend on the importer's Swift renaming.
 /// iOS splash and return ads are no-ops in 4.15 (deprecated by Start.io).
 public final class UnifiedAdsStartappPlugin: NSObject, FlutterPlugin, StartappHostApi {
   private let events: StartappEventsApi
@@ -110,16 +109,28 @@ public final class UnifiedAdsStartappPlugin: NSObject, FlutterPlugin, StartappHo
     let holder = StartappAdHolder(id: "startapp-\(counter)", format: format, ad: ad, plugin: self)
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       holder.loadContinuation = continuation
-      if format == .rewarded {
-        ad.loadRewardedVideoAd(withDelegate: holder)
-      } else {
-        // The per-format ad tag is Android-only for now (⚠ iOS preferences API).
-        ad.load(withDelegate: holder)
-      }
+      Self.load(ad, rewarded: format == .rewarded, delegate: holder, adTag: adUnitId)
     }
     ads[holder.id] = holder
     emit(AdEventMessage(kind: .loaded, adId: holder.id, format: format))
     return holder.id
+  }
+
+  /// Loads with the per-format value as the request's ad tag (as on Android).
+  /// The 4.15.0 `…WithDelegate:withAdPreferences:` selectors are called by
+  /// name, so the call doesn't depend on how Swift imports their labels.
+  private static func load(_ ad: STAStartAppAd, rewarded: Bool, delegate: STADelegateProtocol, adTag: String) {
+    let selector = NSSelectorFromString(
+      rewarded ? "loadRewardedVideoAdWithDelegate:withAdPreferences:" : "loadAdWithDelegate:withAdPreferences:")
+    if !adTag.isEmpty, ad.responds(to: selector) {
+      let preferences = STAAdPreferences()
+      preferences.adTag = adTag
+      _ = ad.perform(selector, with: delegate, with: preferences)
+    } else if rewarded {
+      ad.loadRewardedVideoAd(withDelegate: delegate)
+    } else {
+      ad.load(withDelegate: delegate)
+    }
   }
 
   @MainActor
@@ -130,6 +141,28 @@ public final class UnifiedAdsStartappPlugin: NSObject, FlutterPlugin, StartappHo
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       holder.showContinuation = continuation
       holder.ad.show()
+    }
+  }
+}
+
+/// `STAError` (4.15.0 `STAErrorCodes.h`) → `AdErrorCode` name.
+enum StartappErrors {
+  static func loadCode(_ code: Int) -> String {
+    switch code {
+    case 1: return "networkError"  // NoInternetConnection
+    case 3, 4, 6: return "invalidConfig"  // AppIDNotSet, InvalidParams, ExpectedAdParamsMissingOrInvalid
+    case 7: return "unsupportedFormat"  // AdTypeNotSupported
+    case 0, 2: return "internal"  // Unexpected, Internal
+    default: return "noFill"  // AdRules, NoContent, …
+    }
+  }
+
+  static func showCode(_ code: Int) -> String {
+    switch code {
+    case 8: return "alreadyShowing"  // AdAlreadyDisplayed
+    case 9, 10: return "notReady"  // AdExpired, AdNotReady
+    case 1: return "networkError"
+    default: return "showFailed"
     }
   }
 }
@@ -162,8 +195,10 @@ final class StartappAdHolder: NSObject, STADelegateProtocol {
 
   @objc(failedLoadAd:withError:)
   func failedLoad(_ ad: STAAbstractAd, withError error: Error) {
+    let code = (error as NSError).code
     loadContinuation?.resume(
-      throwing: PigeonError(code: "noFill", message: error.localizedDescription, details: String((error as NSError).code)))
+      throwing: PigeonError(
+        code: StartappErrors.loadCode(code), message: error.localizedDescription, details: String(code)))
     loadContinuation = nil
   }
 
@@ -179,12 +214,14 @@ final class StartappAdHolder: NSObject, STADelegateProtocol {
 
   @objc(failedShowAd:withError:)
   func failedShow(_ ad: STAAbstractAd, withError error: Error) {
+    let nativeCode = (error as NSError).code
+    let code = StartappErrors.showCode(nativeCode)
     plugin?.emit(
       AdEventMessage(
-        kind: .failedToShow, adId: id, format: format, errorCode: "showFailed",
-        errorMessage: error.localizedDescription, nativeCode: String((error as NSError).code)))
+        kind: .failedToShow, adId: id, format: format, errorCode: code,
+        errorMessage: error.localizedDescription, nativeCode: String(nativeCode)))
     showContinuation?.resume(
-      throwing: PigeonError(code: "showFailed", message: error.localizedDescription, details: nil))
+      throwing: PigeonError(code: code, message: error.localizedDescription, details: String(nativeCode)))
     showContinuation = nil
     plugin?.remove(id)
   }

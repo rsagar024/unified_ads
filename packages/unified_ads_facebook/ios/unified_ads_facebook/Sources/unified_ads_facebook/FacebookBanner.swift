@@ -52,7 +52,7 @@ final class FacebookBannerView: NSObject, FlutterPlatformView, FBAdViewDelegate 
       view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
     ])
     adView = view
-    view.loadAd()  // deprecated in 6.22 (bidding-only); still the direct path
+    view.loadAd()  // deprecated since 6.11 (bidding-only); still the direct path
   }
 
   deinit {

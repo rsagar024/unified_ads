@@ -143,7 +143,24 @@ class _StatusHeader extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    controller.adFree
+                        ? 'Ad-free (Pro): banners and interstitials are '
+                              'blocked'
+                        : 'Actions recorded: ${UnifiedAds.actionCount}',
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: controller.recordAction,
+                  icon: const Icon(Icons.add_task),
+                  label: const Text('Record action'),
+                ),
+              ],
+            ),
             Row(
               children: [
                 const Text('Banner size: '),

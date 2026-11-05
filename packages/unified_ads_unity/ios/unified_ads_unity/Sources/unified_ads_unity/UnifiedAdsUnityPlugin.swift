@@ -143,11 +143,13 @@ public final class UnifiedAdsUnityPlugin: NSObject, FlutterPlugin, UnityHostApi 
       if format == .rewarded {
         UADSRewardedAd.load(configuration) { ad, error in
           holder.rewarded = ad
+          ad?.onAdExpired = { [weak holder] _ in holder?.expired() }
           Self.finishLoad(continuation, loaded: ad != nil, error: error)
         }
       } else {
         UADSInterstitialAd.load(configuration) { ad, error in
           holder.interstitial = ad
+          ad?.onAdExpired = { [weak holder] _ in holder?.expired() }
           Self.finishLoad(continuation, loaded: ad != nil, error: error)
         }
       }
@@ -254,6 +256,14 @@ final class UnityAdHolder: NSObject {
     send(.impression)
     showContinuation?.resume()
     showContinuation = nil
+  }
+
+  /// Unity expired the loaded ad: drop it, so show() reports notReady and the
+  /// core cache loads a fresh one. An ad already being presented is kept.
+  fileprivate func expired() {
+    DispatchQueue.main.async {
+      if self.showContinuation == nil { self.plugin?.remove(self.id) }
+    }
   }
 
   fileprivate func completed() {

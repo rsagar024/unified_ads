@@ -54,6 +54,9 @@ ValidationReport validateConfig(AdConfig config) {
   if (config.initTimeout <= Duration.zero) {
     global.add(invalid('initTimeout must be positive'));
   }
+  if (config.showTimeout <= Duration.zero) {
+    global.add(invalid('showTimeout must be positive'));
+  }
   if (config.cacheTtl <= Duration.zero) {
     global.add(invalid('cacheTtl must be positive'));
   }
@@ -69,6 +72,19 @@ ValidationReport validateConfig(AdConfig config) {
           'frequencyCaps.${format.id}: maxShows and per must be positive',
         ),
       );
+    }
+  });
+  config.pacing.forEach((format, rules) {
+    final path = 'pacing.${format.id}';
+    if (!format.isFullScreen) {
+      global.add(invalid('$path: only full-screen formats'));
+    }
+    if (rules.minInterval < Duration.zero ||
+        rules.initialDelay < Duration.zero) {
+      global.add(invalid('$path: durations must not be negative'));
+    }
+    if (rules.showEveryActions < 1) {
+      global.add(invalid('$path: showEveryActions must be at least 1'));
     }
   });
 

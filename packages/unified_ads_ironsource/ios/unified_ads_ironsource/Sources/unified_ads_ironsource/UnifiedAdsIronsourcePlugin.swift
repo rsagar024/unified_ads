@@ -70,7 +70,7 @@ public final class UnifiedAdsIronsourcePlugin: NSObject, FlutterPlugin, Ironsour
     // initializes the adapter (consent is applied before init).
     if MetaBidding.detect() != nil {
       MetaBidding.applyPrivacy(ccpaOptOut: consent.ccpaOptOut, coppa: consent.coppa)
-      LevelPlay.setMetaDataWithKey("Meta_Mixed_Audience", value: consent.coppa ? "true" : "false")
+      LevelPlay.setMetaData(withKey: "Meta_Mixed_Audience", value: consent.coppa ? "true" : "false")
     }
   }
 
@@ -87,6 +87,8 @@ public final class UnifiedAdsIronsourcePlugin: NSObject, FlutterPlugin, Ironsour
       NSLog("[unified_ads_ironsource] LevelPlay has no test-ads flag: use the test suite.")
     }
     let info = InitInfo(metaBiddingAdapter: MetaBidding.detect())
+    // The ATT prompt may have been answered since consent was applied.
+    if info.metaBiddingAdapter != nil { MetaBidding.applyAdvertiserTracking() }
     if initialized { return info }
     let builder = LPMInitRequestBuilder(appKey: request.appId)
     if let userId = request.userId { _ = builder.withUserId(userId) }

@@ -8,7 +8,7 @@ artifacts still carry the Facebook name. In unified_ads it is `AdNetwork.faceboo
 
 | | Android | iOS |
 |---|---|---|
-| SDK | `com.facebook.android:audience-network-sdk:6.22.0` | `FBAudienceNetwork` 6.22.0 (pod, or SPM `github.com/facebook/FBAudienceNetwork`) |
+| SDK | `com.facebook.android:audience-network-sdk:6.22.0` (latest on Maven) | `FBAudienceNetwork` 6.22.1 (Swift Package Manager: `github.com/facebook/FBAudienceNetwork`; rewarded / interstitial fixes) |
 | Minimum OS | minSdk 24 (plugin-wide) | **iOS 15.0**: higher than the other adapters (iOS 13) |
 | Formats | banner, interstitial, rewarded | banner, interstitial, rewarded |
 
@@ -52,7 +52,9 @@ AdNetwork.facebook: NetworkConfig(
 - **Test mode** (`TestModeSupport.testDevices`): the SDK logs a hashed device ID on first request
   (logcat: `Test mode device hash: …`; Xcode console on iOS). Put it in `testDeviceIds` and set `testMode: true`. The
   adapter then calls `AdSettings.addTestDevices` / `FBAdSettings.addTestDevices`. The `IMG_16_9_APP_INSTALL#` prefix also
-  forces a test creative without registering a device.
+  forces a test creative without registering a device. On iOS (since 1.0.1), `testMode: true` with an empty
+  `testDeviceIds` registers the current device (`FBAdSettings.testDeviceHash()`), because iOS serves no test ads, even
+  on the simulator, to an unregistered device.
 - **Rewards:** Audience Network reports "video completed" without an amount or type. `onEarnedReward` uses
   `extras['rewardAmount']` / `extras['rewardType']` (default `1` / `'reward'`). Server-side reward verification (Meta's
   `RewardData` S2S callback) is **not implemented yet**: `extras['userId']` reaches the native side but is not used.
@@ -83,15 +85,18 @@ R8 rules ship inside the SDK AAR; the plugin adds a keep rule for its entry poin
 
 ## iOS
 
-- **Deployment target 15.0** (FBAudienceNetwork 6.22). In `ios/Podfile`: `platform :ios, '15.0'`.
-- **CocoaPods:** the podspec pins `FBAudienceNetwork` 6.22.0, which ships as a **dynamic** xcframework (⚠ linkage with
-  and without `use_frameworks!` to be confirmed by the CI iOS build). ⚠ Meta has said 6.22 is the last CocoaPods release. Later versions are SPM-only; the plugin's
-  `Package.swift` already declares the SPM package (product name `FBAudienceNetwork` ⚠ to be confirmed by CI).
+- **Deployment target 15.0** (FBAudienceNetwork 6.22). Set it on the Runner target in Xcode
+  (`IPHONEOS_DEPLOYMENT_TARGET`).
+- **Swift Package Manager only** (since 1.1.0): the adapter's `Package.swift` pins
+  `https://github.com/facebook/FBAudienceNetwork` exact 6.22.1, product `FBAudienceNetwork`, which ships as a
+  **dynamic** xcframework. Meta has said 6.22 is the last CocoaPods release, so later upgrades stay on SPM.
 - **SKAdNetwork:** add Meta's IDs `v9wttpbfk9.skadnetwork` and `n38lu8286q.skadnetwork` to `SKAdNetworkItems` in Info.plist.
-- **ATT:** request tracking authorization with `UnifiedAds.requestTrackingAuthorization()` before init. Since SDK 6.15 /
-  iOS 17 the SDK reads the ATT status itself; the deprecated `setAdvertiserTrackingEnabled:` is not used.
-- `loadAd` is marked deprecated in 6.22 ("use loadAdWithBidPayload") because of bidding. It is still the direct-load path
-  and produces a compiler warning.
+- **ATT:** request tracking authorization with `UnifiedAds.requestTrackingAuthorization()` before init. On iOS 15–16
+  the adapter sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status (at consent time and again just
+  before init), as Meta requires below iOS 17. On iOS 17+ SDK 6.15+ reads `ATTrackingManager` itself and the setter is
+  deprecated, so it isn't called.
+- `loadAd` has been deprecated since 6.11 ("use loadAdWithBidPayload") because of bidding. It is still the direct-load
+  path and produces a compiler warning.
 
 ## Privacy
 
@@ -99,7 +104,8 @@ R8 rules ship inside the SDK AAR; the plugin adds a keep rule for its entry poin
 |---|---|
 | `ccpaOptOut: true` | `setDataProcessingOptions(["LDU"], 0, 0)` (Limited Data Use, geolocated) |
 | `ccpaOptOut: false` | `setDataProcessingOptions([])` |
-| `coppa` | `AdSettings.setMixedAudience` / `FBAdSettings.mixedAudience` |
+| `coppa` | `AdSettings.setMixedAudience` / `FBAdSettings.isMixedAudience` |
+| ATT status (iOS 15–16 only) | `FBAdSettings.setAdvertiserTrackingEnabled` (iOS 17+: read by the SDK) |
 | GDPR | Audience Network has no GDPR consent API; Meta relies on your CMP / TCF string |
 
 ## Errors
@@ -138,11 +144,12 @@ Using the `IMG_16_9_APP_INSTALL#` test placements published in the example app o
   - `InterstitialAdListener`, `RewardedVideoAdListener` (`onRewardedVideoCompleted`, `onRewardedVideoClosed`)
   - `AdView(ctx, id, AdSize.BANNER_HEIGHT_50 | BANNER_HEIGHT_90 | RECTANGLE_HEIGHT_250)` + `AdListener`
   - `AdError` code constants
-- ⚠ **iOS: not yet compiled** (Phase 6 CI). Names come from the 6.22.0 headers:
+- ⚠ **iOS: not yet compiled** (Phase 6 CI). Names come from the 6.22.0 / 6.22.1 headers and Meta's Swift samples:
   - `FBAudienceNetworkAds.initialize(with:completionHandler:)`
-  - `FBAdSettings.addTestDevices`, `setDataProcessingOptions(_:country:state:)`, `mixedAudience`
-  - `FBInterstitialAd(placementID:)` / `FBRewardedVideoAd(placementID:)`, `loadAd()`, `isAdValid`,
-    `showAd(fromRootViewController:)`
+  - `FBAdSettings.addTestDevices`, `setDataProcessingOptions(_:country:state:)`, `isMixedAudience`,
+    `setAdvertiserTrackingEnabled(_:)` (deprecated from iOS 17; called only below it)
+  - `FBInterstitialAd(placementID:)` / `FBRewardedVideoAd(placementID:)`, `load()`, `isAdValid`,
+    `show(fromRootViewController:)`
   - `FBAdView(placementID:adSize:rootViewController:)`, `kFBAdSize*`
   - the delegate method Swift spellings
 

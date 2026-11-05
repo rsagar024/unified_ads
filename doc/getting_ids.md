@@ -61,7 +61,9 @@ Format: `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY` (note the **`~`**).
    `RewardItem` you receive. ([help](https://support.google.com/admob/answer/7311346), [rewarded](https://support.google.com/admob/answer/7311747))
 3. The **ad unit ID** appears on the confirmation screen and later in **Ad units** → **Ad unit** column.
    Format: `ca-app-pub-XXXXXXXXXXXXXXXX/NNNNNNNNNN` (note the **`/`**).
-4. New ad units usually take **a few hours** to serve. ⚠ Google gives no exact figure.
+4. For the stretch formats, create a **Rewarded interstitial** unit (`rewardedInterstitialAdUnitId`, used by
+   `RewardedInterstitialAd`) and an **App open** unit (`appOpenAdUnitId`, used by `AppOpenAd`) the same way.
+5. New ad units usually take **a few hours** to serve. ⚠ Google gives no exact figure.
 
 ### 5. Testing, consent, app-ads.txt
 - **Test devices:** **Settings** → **Test devices** → **Add test device** (advertising ID/IDFA; takes up to 24 h). Or put the
@@ -93,6 +95,8 @@ AdNetwork.admob: NetworkConfig(
   bannerAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/1111', ios: 'ca-app-pub-…/2222'),
   interstitialAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/3333', ios: 'ca-app-pub-…/4444'),
   rewardedAdUnitId: PlatformValue.select(android: 'ca-app-pub-…/5555', ios: 'ca-app-pub-…/6666'),
+  rewardedInterstitialAdUnitId: PlatformValue.select(android: '…', ios: '…'),   // optional
+  appOpenAdUnitId: PlatformValue.select(android: '…', ios: '…'),                // optional
 ),
 ```
 More: [`doc/setup/admob.md`](setup/admob.md).
@@ -124,6 +128,9 @@ More: [`doc/setup/admob.md`](setup/admob.md).
 3. Find your app by name, package name, or bundle ID. Not live yet? Click **Manually Add Your Package Name**. **The package
    name / bundle ID is case-sensitive and must match your app exactly**: the ad unit only serves to that app.
 4. Save. Create one ad unit per format per platform. Copy each **Ad Unit ID** from the Ad Units list (⚠ exact column label).
+5. `AppOpenAd` needs an **App Open** ad unit (`appOpenAdUnitId`). ⚠ AppLovin's create-ad-unit help page lists only
+   Banner, Interstitial, MRec, Native and Rewarded; if App Open isn't offered in your dashboard, ask your AppLovin
+   account manager to enable it.
    ([help](https://support.applovin.com/en/max/max-dashboard/ad-units/create-an-ad-unit))
 
 ### 4. Testing
@@ -142,6 +149,7 @@ AdNetwork.applovin: NetworkConfig(
   bannerAdUnitId: PlatformValue.select(android: '<android banner unit>', ios: '<ios banner unit>'),
   interstitialAdUnitId: PlatformValue.select(android: '…', ios: '…'),
   rewardedAdUnitId: PlatformValue.select(android: '…', ios: '…'),
+  appOpenAdUnitId: PlatformValue.select(android: '…', ios: '…'),   // optional
   testDeviceIds: ['<your GAID / IDFA>'],
 ),
 ```
@@ -181,7 +189,7 @@ Open **project Settings → Game IDs**. There are two read-only IDs, **one for A
 ### 4. Testing
 - `testMode: true` makes the adapter initialize Unity with test mode.
 - Or use the dashboard: **Monetization → Settings → Test devices** → select the app → edit **Test mode** → **Override client test
-  mode** → **Force test mode ON**. You can also register devices there.
+  mode** → **Force test mode ON for all devices**. Register individual devices there with **Create test device**.
   ([help](https://docs.unity.com/en-us/ads-unity/latest/sdk-integration/test-integration))
 
 ```dart
@@ -225,12 +233,14 @@ approval** until you answer the verification emails. ([help](https://docs.unity.
 1. **Mediation → Setup → SDK Networks** → choose a network, e.g. **Unity Ads** → enter its **API Key** and **Organization core
    ID** (from the Unity dashboard; auto-setup also needs a service-account Key ID / Secret).
 2. For each app, open the network's row → **Add bidder** (auto-creates the Unity placements), or enter the Game ID and
-   **bidding** placement ID by hand. ([help](https://docs.unity.com/en-us/grow/levelplay/sdk/android/networks/guides/unity-ads))
+   **bidding** placement ID by hand. In the app, add LevelPlay's Unity adapter
+   (`com.unity3d.ads-mediation:unityads-adapter`; from 5.15.0 it bundles the Unity Ads SDK). ([help](https://docs.unity.com/en-us/grow/levelplay/sdk/android/networks/guides/unity-ads))
 3. Other networks: **Instances** → app → network → **Add instance** → set it **Active**.
    ([help](https://docs.unity.com/en-us/grow/levelplay/platform/get-started/instances))
 
 > The native SDK of every network you enable here must also be in your app (LevelPlay adapters). unified_ads ships only
-> the LevelPlay core SDK. Adding LevelPlay network adapters is your app's Gradle / Podfile job.
+> the LevelPlay core SDK. Adding LevelPlay network adapters is your app's job: Gradle on Android, and Swift packages
+> added to the Runner target in Xcode on iOS.
 
 ### 5. Testing
 - **LevelPlay → Settings → Test devices** → **Add test device** (name, advertising ID, platform) → pick a network and ad units →
@@ -316,7 +326,7 @@ Register at the Start.io publisher portal (email, or Google / GitHub). ([help](h
 
 ### 3. Ad tags (optional)
 There are no ad unit IDs. A value you put in `interstitialAdUnitId` / `rewardedAdUnitId` / `bannerAdUnitId` is sent as a
-free-form **ad tag** (English letters, ≤ 200 characters), which appears in the portal reports.
+free-form **ad tag** (Android: every format; iOS: interstitial and rewarded) (English letters, ≤ 200 characters), which appears in the portal reports.
 ([help](https://support.start.io/hc/en-us/articles/360006662474-Advanced-Usage))
 
 ### 4. Testing and payment
@@ -375,3 +385,30 @@ Android also needs cleartext allowed for `127.0.0.1`, and iOS needs a deployment
 
 Use these **only for development**, and only in the example or a test build. The `example/` app's
 `integration_test/network_smoke_test.dart` runs any of them with `--dart-define`, so nothing is written to your code.
+
+### Public test IDs used by CI
+
+The iOS simulator pipeline (`.github/workflows/ios.yml`) runs `example/integration_test/ad_smoke_test.dart` with these
+**interstitial** credentials. They are defined in `example/integration_test/smoke_ids.dart`; keep the two in sync.
+Results: [SDK_STATUS.md](../SDK_STATUS.md).
+
+| Network | Platform | App / account ID | Interstitial unit | Source | Tier in the smoke test |
+|---|---|---|---|---|---|
+| AdMob | iOS | `ca-app-pub-3940256099942544~1458002511` | `ca-app-pub-3940256099942544/4411468910` | [Google iOS test ads](https://developers.google.com/admob/ios/test-ads) | **required** (must load + show) |
+| AdMob | Android | `ca-app-pub-3940256099942544~3347511713` | `ca-app-pub-3940256099942544/1033173712` | [Google Android test ads](https://developers.google.com/admob/android/test-ads) | required |
+| Unity Ads | iOS | Game ID `14850` | `video` | [unity-ads-ios sample](https://github.com/Unity-Technologies/unity-ads-ios/blob/master/Example/UnityAdsExample/ViewController.m) | best-effort |
+| Unity Ads | Android | Game ID `14851` | `rewardedVideo` | [unity-ads-android sample](https://github.com/Unity-Technologies/unity-ads-android) | best-effort |
+| LevelPlay | iOS | app key `25c43a4a5` | `obg6ohwts3y690ks` | [Mediation-Demo-Apps (iOS)](https://github.com/ironsource-mobile/Mediation-Demo-Apps/blob/master/iOS/Swift/LevelPlayDemo/DemoViewController.swift) | best-effort |
+| LevelPlay | Android | app key `25b63cf85` | `h3xw38h9214adgxo` | [Mediation-Demo-Apps](https://github.com/ironsource-mobile/Mediation-Demo-Apps) | best-effort |
+| InMobi | iOS | account `4028cb8b2c3a0b45012c406824e800ba` | `1672200162238` | [sdk-sample-code-ios](https://github.com/InMobi/sdk-sample-code-ios) | best-effort |
+| InMobi | Android | account `8ba05e170e914971a0b45d977809a6cf` | `1476878485960` | [sdk-sample-code-android](https://github.com/InMobi/sdk-sample-code-android) | best-effort |
+| Facebook | both | (none needed) | `IMG_16_9_APP_INSTALL#2312433698835503_2650502525028617` | `facebook_audience_network` example (an Android app; ⚠ unverified on iOS) | best-effort |
+| Start.io | iOS | ⛔ none public (Start.io's iOS samples use a placeholder) | n/a | [ios-swift-sample](https://github.com/StartApp-SDK/ios-swift-sample) | skipped |
+| Start.io | Android | `205489527` | (no unit IDs) | [android-sdk-demo](https://github.com/StartApp-SDK/android-sdk-demo) | best-effort |
+| AppLovin MAX | both | ⛔ no public SDK key | n/a | [MAX integration](https://support.applovin.com/en/max/ios/overview/integration) | skipped |
+
+- **required**: init, load and show must succeed, or the run fails.
+- **best-effort**: init must succeed. A `noFill`, `timeout` or `networkError` on load is reported as **SKIP** with the
+  reason, because these demo accounts don't reliably fill a CI simulator.
+- **skipped**: there are no public credentials. The adapter is still built and linked in CI.
+- An uncaught platform exception always fails the run.

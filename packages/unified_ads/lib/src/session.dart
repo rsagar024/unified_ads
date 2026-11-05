@@ -18,12 +18,24 @@ class AdsSession {
     required this.clock,
     required FrequencyStore frequencyStore,
     required this.eventSink,
-  }) : cache = AdCache(ttl: config.cacheTtl, now: clock),
+    DateTime? startedAt,
+    ActionCounter? actions,
+    bool Function(AdFormat format)? isBlocked,
+  }) : isBlocked = isBlocked ?? _neverBlocked,
+       cache = AdCache(ttl: config.cacheTtl, now: clock),
        frequency = FrequencyLimiter(
          caps: config.frequencyCaps,
+         pacing: config.pacing,
          store: frequencyStore,
          now: clock,
+         startedAt: startedAt,
+         actions: actions,
        );
+
+  static bool _neverBlocked(AdFormat format) => false;
+
+  /// Whether the ad-free switch blocks `format`.
+  final bool Function(AdFormat format) isBlocked;
 
   /// The configuration this session was created with.
   final AdConfig config;
@@ -200,7 +212,7 @@ class AdsSession {
     );
 
     if (config.preload.onInit) {
-      for (final format in config.preload.formats) {
+      for (final format in config.preload.formats.where((f) => !isBlocked(f))) {
         unawaited(refill(format));
       }
     }
@@ -252,7 +264,24 @@ class AdsSession {
         ),
       );
     }
-    return guardCall(handle.network, 'show', () => adapter.show(handle));
+    // A native show only completes on the SDK's "shown" or "failed to show"
+    // callback; an SDK that sends neither must not hang the caller.
+    return guardCall(
+      handle.network,
+      'show',
+      () => adapter.show(handle),
+    ).timeout(
+      config.showTimeout,
+      onTimeout: () => AdFailure(
+        AdError(
+          code: AdErrorCode.timeout,
+          message:
+              'show timed out after ${config.showTimeout.inSeconds} s without '
+              'a shown or failed-to-show callback',
+          network: handle.network,
+        ),
+      ),
+    );
   }
 
   /// Releases [handle] through its adapter.
@@ -306,6 +335,16 @@ class AdsSession {
         ),
       );
     }
+    if (isBlocked(format)) {
+      return Future.value(
+        AdFailure(
+          AdError(
+            code: AdErrorCode.adsBlocked,
+            message: '${format.id} is blocked by UnifiedAds.setAdFree',
+          ),
+        ),
+      );
+    }
     if (cache.has(format)) return Future.value(const AdSuccess(null));
     // The callback must not return the removed future: whenComplete would
     // then wait for the very future it belongs to and never complete.
@@ -319,11 +358,19 @@ class AdsSession {
     if (config.preload.isEnabledFor(format)) await refill(format);
   }
 
+  /// Destroys the cached ads of every format [blocked] matches.
+  Future<void> dropBlocked(bool Function(AdFormat format) blocked) async {
+    for (final format in AdFormat.values.where(blocked)) {
+      final handle = cache.take(format);
+      if (handle != null) await destroy(handle);
+    }
+  }
+
   Future<AdResult<void>> _doRefill(AdFormat format) async {
     final result = await waterfall.load(format);
     switch (result) {
       case AdSuccess(:final value):
-        if (_disposed) {
+        if (_disposed || isBlocked(format)) {
           await destroy(value);
           return const AdSuccess(null);
         }

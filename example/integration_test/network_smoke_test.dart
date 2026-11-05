@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:unified_ads/unified_ads.dart';
 
+import 'support.dart';
+
 const _network = String.fromEnvironment('NETWORK');
 const _appId = String.fromEnvironment('APP_ID');
 const _bannerId = String.fromEnvironment('BANNER_ID');
@@ -21,23 +23,6 @@ const _rewardedId = String.fromEnvironment('REWARDED_ID');
 const _testMode = bool.fromEnvironment('TEST_MODE', defaultValue: true);
 
 String? _nonEmpty(String value) => value.isEmpty ? null : value;
-
-String _describe(AdError? e) => e == null
-    ? 'unknown error'
-    : '${e.code.name}${e.nativeCode == null ? '' : ' (native ${e.nativeCode})'}: '
-          '${e.message}';
-
-Future<void> _waitFor(
-  WidgetTester tester,
-  bool Function() done, {
-  Duration timeout = const Duration(seconds: 30),
-}) async {
-  final end = DateTime.now().add(timeout);
-  while (!done() && DateTime.now().isBefore(end)) {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await tester.pump();
-  }
-}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -80,7 +65,7 @@ void main() {
       record(
         'init',
         ok: init.ready.contains(network),
-        detail: _describe(initError),
+        detail: describeError(initError),
       );
 
       if (init.ready.contains(network)) {
@@ -95,7 +80,7 @@ void main() {
             ),
           ),
         );
-        await _waitFor(
+        await waitFor(
           tester,
           () =>
               banner.state == BannerAdState.loaded ||
@@ -106,7 +91,7 @@ void main() {
           'banner',
           ok: banner.state == BannerAdState.loaded,
           detail: banner.state == BannerAdState.failed
-              ? _describe(banner.error)
+              ? describeError(banner.error)
               : 'still ${banner.state.name}',
         );
 
@@ -115,7 +100,7 @@ void main() {
         record(
           'rewarded load',
           ok: rewardedLoad.isSuccess,
-          detail: _describe(rewardedLoad.errorOrNull),
+          detail: describeError(rewardedLoad.errorOrNull),
         );
 
         var shown = false;
@@ -124,11 +109,11 @@ void main() {
         record(
           'interstitial load',
           ok: load.isSuccess,
-          detail: _describe(load.errorOrNull),
+          detail: describeError(load.errorOrNull),
         );
         if (load.isSuccess) {
           final show = await interstitial.show();
-          await _waitFor(
+          await waitFor(
             tester,
             () => shown,
             timeout: const Duration(seconds: 10),
@@ -138,7 +123,7 @@ void main() {
             ok: show.isSuccess && shown,
             detail: show.isSuccess
                 ? 'no shown event within 10 s'
-                : _describe(show.errorOrNull),
+                : describeError(show.errorOrNull),
           );
         }
       }

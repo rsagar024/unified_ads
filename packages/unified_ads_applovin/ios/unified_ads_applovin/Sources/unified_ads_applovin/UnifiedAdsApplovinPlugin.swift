@@ -111,6 +111,8 @@ public final class UnifiedAdsApplovinPlugin: NSObject, FlutterPlugin, ApplovinHo
         message: "AppLovin MAX must not be initialized for child-directed users", details: nil)
     }
     let info = InitInfo(metaBiddingAdapter: MetaBidding.detect())
+    // The ATT prompt may have been answered since consent was applied.
+    if info.metaBiddingAdapter != nil { MetaBidding.applyAdvertiserTracking() }
     if initialized { return info }
     let testIds = request.testMode ? request.testDeviceIds : []
     let configuration = ALSdkInitializationConfiguration(sdkKey: request.appId) { builder in

@@ -22,8 +22,9 @@ internal class UnityBannerFactory(private val plugin: UnifiedAdsUnityPlugin) :
 }
 
 /**
- * A Unity `BannerAd` in a Flutter platform view. Adaptive sizes are not
- * documented for the 4.19+ API, so they fall back to 320×50.
+ * A Unity `BannerAd` in a Flutter platform view. 4.21.0's `BannerSize` has
+ * only fixed sizes (standard, IAB standard, leaderboard), so adaptive requests
+ * fall back to 320×50.
  */
 internal class UnityBannerView(
     context: Context,

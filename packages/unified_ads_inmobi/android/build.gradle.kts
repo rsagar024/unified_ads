@@ -68,7 +68,7 @@ kotlin {
 dependencies {
     // The ONLY place the InMobi SDK is declared: apps that do not depend on
     // unified_ads_inmobi never resolve it (see ARCHITECTURE.md section 4.1).
-    implementation("com.inmobi.monetization:inmobi-ads-kotlin:11.5.0")
+    implementation("com.inmobi.monetization:inmobi-ads-kotlin:11.5.1")
     // Required by the Pigeon-generated suspend host API.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
