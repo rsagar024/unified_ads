@@ -6,9 +6,9 @@ See `ARCHITECTURE.md` for the design and `IMPLEMENTATION.md` for the roadmap.
 
 ## Prerequisites
 
-- Flutter stable (3.44+) / Dart 3.12+
+- Flutter stable (3.44+) / Dart 3.12+. CI uses Flutter 3.47.8 (Dart 3.13.7)
 - Android Studio + JDK 17 (Android builds)
-- Xcode 26.2+ + CocoaPods (iOS builds, macOS only)
+- Xcode 26.2+ (iOS builds, macOS only). No CocoaPods: since 1.1.0 iOS builds use Swift Package Manager only
 - bash (Git Bash on Windows) for the scripts in `tool/`
 
 ## Setup
@@ -36,7 +36,7 @@ dart run melos run test
 ## Rules
 
 1. **Core must never depend on an adapter.** Adapters depend on the platform interface only.
-2. **A native SDK dependency lives only in its adapter's** `build.gradle.kts` / podspec / `Package.swift`.
+2. **A native SDK dependency lives only in its adapter's** `build.gradle.kts` / `Package.swift`.
 3. **No real ad-unit or app IDs** in any package. Test IDs belong in `example/` only.
 4. **Never crash the host app.** Map every native exception to `AdError`.
 5. **Document every public symbol** (`public_member_api_docs` is enabled).
@@ -63,7 +63,7 @@ Follow the `TEMPLATE.md` checklist in `packages/unified_ads_admob`. Then add the
 | `flutter pub publish --dry-run` (in each package) | pub validation, archive contents (`.pubignore`) | `dart` |
 | `dart run melos run build:example` | the example APK with all 7 adapters | `android` |
 | `dart run melos run test:kotlin` | each adapter's Kotlin `ErrorsTest` (after `build:example`) | `android` |
-| `bash tool/ios_build.sh <mode>` | `flutter build ios --no-codesign` with `spm`, `cocoapods-dynamic` or `cocoapods-static` (macOS) | `ios` |
+| `bash tool/ios_build.sh` | `flutter build ios --no-codesign` with Swift Package Manager (macOS) | `ios` |
 | `dart run melos run verify:opt-in` | an app with AdMob + Unity + InMobi resolves only those SDKs (`tool/verify_opt_in.sh android`; `ios` on macOS) | `opt-in` |
 | `dart run melos run pana` | pub.dev score per package (Linux/macOS only: pana's sandbox rejects Windows paths) | `pana` |
 
@@ -74,17 +74,33 @@ Notes for the scripts in `tool/`:
 - On Windows, Gradle needs `JAVA_HOME` set to the JDK root (for example
   `C:\Program Files\Android\Android Studio\jbr`), not its `bin` folder.
 
-## Releasing
+## Branches and releases
 
-Packages are published separately, in dependency order. Every package must pass `flutter pub publish --dry-run` with 0
-warnings first.
+```
+feature branch ──PR──▶ development ──PR──▶ master ──(CI ✔ + iOS ✔)──▶ maintainer publishes manually ──▶ pub.dev
+```
 
-1. Bump `version` in each package that changed, and update its `CHANGELOG.md`. If a sibling now needs a newer
-   version, update the inter-package constraints (for example `unified_ads_platform_interface: ^1.1.0`).
-2. Publish `unified_ads_platform_interface`.
-3. Publish `unified_ads`.
-4. Publish the adapters (any order).
-5. Tag the release as `<package>-v<version>` for each published package.
+| Event | What runs |
+|---|---|
+| PR to any branch | Nothing. Run the checks above locally, or start `ci.yaml` / `ios.yml` by hand (Actions → Run workflow) |
+| Merge (push) to `development` | Nothing |
+| Merge (push) to `master` | `ci.yaml` + `ios.yml`. **Nothing is published automatically** |
+
+Publishing is manual: after a green merge to `master`, the maintainer pulls `master` and runs `tool\publish.ps1
+-Publish` (or `tool/publish.sh --publish`). The script publishes every package whose version isn't on pub.dev yet, in
+dependency order ([`tool/lib/packages.sh`](tool/lib/packages.sh)).
+
+### To release
+
+1. In a PR to `development`, for each changed package:
+   - bump `version` in its pubspec;
+   - add a `CHANGELOG.md` entry;
+   - if a sibling now needs a newer version, update the inter-package constraints (for example
+     `unified_ads_platform_interface: ^1.1.0`).
+2. Every package must pass `flutter pub publish --dry-run` with 0 warnings. CI runs this check on `master`, so run it
+   locally (or start CI by hand on your branch) before merging.
+3. Merge `development` into `master` and wait for CI + iOS to pass.
+4. Publish from `master` by following the step-by-step guide in [doc/publishing.md](doc/publishing.md).
 
 A breaking change to the public API needs a note in `doc/migration/` (CLAUDE.md non-negotiable).
 

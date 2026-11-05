@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:unified_ads_platform_interface/unified_ads_platform_interface.dart';
 
 import 'banner_ad.dart';
 
@@ -40,7 +41,8 @@ class UnifiedBannerWidget extends StatefulWidget {
   /// Shown while no native view exists yet.
   final Widget? placeholder;
 
-  /// Whether to take no space when every network failed.
+  /// Whether to take no space when every network failed. A banner blocked by
+  /// `UnifiedAds.setAdFree` always collapses.
   final bool collapseWhenFailed;
 
   /// Builds the native view. Replaced in widget tests.
@@ -97,7 +99,9 @@ class _UnifiedBannerWidgetState extends State<UnifiedBannerWidget> {
           });
         }
         if (ad.state == BannerAdState.disposed ||
-            (ad.state == BannerAdState.failed && widget.collapseWhenFailed)) {
+            (ad.state == BannerAdState.failed &&
+                (widget.collapseWhenFailed ||
+                    ad.error?.code == AdErrorCode.adsBlocked))) {
           return const SizedBox.shrink();
         }
 

@@ -1,0 +1,62 @@
+name: Device verification report
+description: Report how a network behaved on a real device (feeds SDK_STATUS.md "Device-verified").
+title: "[device] <network> on <iOS|Android> <version>"
+labels: ["device-verification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing on real hardware! Steps: SDK_STATUS.md → "Device verification wanted".
+        Use **test ads only** (public test IDs from doc/getting_ids.md, or your own units with test mode on).
+        Never paste real ad-unit IDs or account keys; the diagnostics report already leaves them out.
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options: [AdMob, Unity Ads, AppLovin MAX, ironSource / LevelPlay, Facebook Audience Network, Start.io, InMobi]
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [iOS, Android]
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS version
+      placeholder: iPhone 13, iOS 18.6 / Pixel 8, Android 15
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: unified_ads version or commit
+      placeholder: 1.0.1 / a1b2c3d
+    validations:
+      required: true
+  - type: checkboxes
+    id: results
+    attributes:
+      label: What worked (tick only what you saw on screen)
+      options:
+        - label: init succeeded
+        - label: banner loaded and rendered
+        - label: interstitial loaded and showed, and closing it worked
+        - label: rewarded loaded and showed, and a reward was earned
+        - label: no crash
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics report
+      description: Example app → Log tab → bug icon ("Copy diagnostics"), then paste here.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes, screenshots, native logs
+      description: Xcode console / `adb logcat` excerpts for failures are very welcome.

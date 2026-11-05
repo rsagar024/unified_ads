@@ -25,6 +25,7 @@ class FakeAdNetworkAdapter extends AdNetworkAdapter {
     this.loadError,
     this.loadDelay = Duration.zero,
     this.showError,
+    this.showDelay = Duration.zero,
     this.reward = const RewardItem(amount: 10, type: 'coins'),
     this.autoCloseOnShow = false,
     this.bannerError,
@@ -60,6 +61,9 @@ class FakeAdNetworkAdapter extends AdNetworkAdapter {
 
   /// When set, [show] fails with this error.
   AdError? showError;
+
+  /// Delay before [show] completes.
+  Duration showDelay;
 
   /// Reward emitted when a rewarded ad is shown.
   RewardItem reward;
@@ -160,6 +164,7 @@ class FakeAdNetworkAdapter extends AdNetworkAdapter {
         ),
       );
     }
+    if (showDelay > Duration.zero) await Future<void>.delayed(showDelay);
     final error = showError;
     if (error != null) return AdFailure(error.copyWith(network: network));
     _loaded.remove(handle.id);

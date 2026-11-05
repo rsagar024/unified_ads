@@ -6,12 +6,12 @@
 | Platform | SDK (pinned) | Minimum |
 |---|---|---|
 | Android | `com.applovin:applovin-sdk:13.6.4` | **minSdk 24** (13.6.3+) |
-| iOS | `AppLovinSDK` 13.6.4 (CocoaPods; SPM `AppLovin/AppLovin-MAX-Swift-Package`, product `AppLovinSDK`) | iOS 13 (SDK: 12) |
+| iOS | `AppLovinSDK` 13.6.4 (Swift Package Manager: `AppLovin/AppLovin-MAX-Swift-Package`, product `AppLovinSDK`) | iOS 13 (SDK: 12) |
 
 ```yaml
 dependencies:
-  unified_ads: ^1.0.0
-  unified_ads_applovin: ^1.0.0
+  unified_ads: ^1.1.0
+  unified_ads_applovin: ^1.1.0
 ```
 
 ## Config
@@ -28,9 +28,10 @@ AdNetwork.applovin: NetworkConfig(
 - **Test mode** (`TestModeSupport.testDevices`): `testDeviceIds` are registered as MAX test devices when `testMode` is
   on. MAX has no public demo ad units, so you need a dashboard app with real ad units. The Mediation Debugger helps
   validate the integration.
-- **Banner sizes:** standard = `MaxAdFormat.BANNER` (adaptive by default on MAX); MREC = `MaxAdFormat.MREC`; leaderboard =
-  `MaxAdFormat.LEADER`; adaptive anchored / inline use `MaxAdViewConfiguration` (`ANCHORED` / `INLINE`, adaptive width,
-  inline max height). The resolved size comes from `MaxAd.size`.
+- **Banner sizes:** standard = a fixed 320×50 banner (`MaxAdFormat.BANNER`; on Android through
+  `MaxAdViewConfiguration` with `AdaptiveType.NONE`); MREC = `MaxAdFormat.MREC`; leaderboard = `MaxAdFormat.LEADER`;
+  adaptive anchored / inline use `MaxAdViewConfiguration` / `MAAdViewConfiguration` (`ANCHORED` / `INLINE`, adaptive
+  width, inline max height; MAX 13.2.0+), which AppLovin documents as opt-in. The resolved size comes from `MaxAd.size`.
 - **App open:** `AppOpenAd` loads a `MaxAppOpenAd`, which MAX presents from its own window (`showAd()` takes no
   Activity / view controller). MAX has no rewarded-interstitial format; the waterfall skips MAX for
   `RewardedInterstitialAd`.
@@ -53,8 +54,9 @@ AdNetwork.applovin: NetworkConfig(
 - **Android:** use `google()` + `mavenCentral()`. ProGuard rules are bundled in the AAR. Permissions (INTERNET,
   ACCESS_NETWORK_STATE, AD_ID) are merged from the SDK manifest.
 - **iOS:** add the SKAdNetwork IDs from https://skadnetwork-ids.applovin.com/v1/skadnetworkids.json and
-  `NSUserTrackingUsageDescription`. The pod sets `-ObjC` itself and works with `use_frameworks!`. The framework ships its own privacy
-  manifest.
+  `NSUserTrackingUsageDescription`. Swift Package Manager only since 1.1.0. The adapter's `Package.swift` adds no
+  `-ObjC` flag (⚠ to be confirmed by CI); if MAX fails with undefined symbols or unrecognized selectors, add `-ObjC` to
+  the Runner target's Other Linker Flags. The framework ships its own privacy manifest.
 
 ## Error mapping (`MaxErrorCode`)
 
@@ -88,15 +90,15 @@ dependencies {
 
 Audience Network also needs cleartext to `127.0.0.1`. See [facebook.md](facebook.md#android).
 
-**iOS:** iOS **15.0+**.
+**iOS:** iOS **15.0+** (Runner target deployment target). In Xcode, **File > Add Package Dependencies…**, add it to
+the **Runner** target:
 
-```ruby
-# ios/Podfile, inside `target 'Runner'`, and `platform :ios, '15.0'`
-pod 'AppLovinMediationFacebookAdapter', '6.22.0.4'
-```
+| Package | Dependency rule | Product |
+|---|---|---|
+| `https://github.com/AppLovin/AppLovin-MAX-Swift-Package-Meta` | Exact `6220100.0.0` (pins `FBAudienceNetwork` exact 6.22.1, the same as `unified_ads_facebook` 1.1.0) | `AppLovinMediationFacebookAdapter` |
 
-AppLovin also publishes the adapter as a Swift package (see AppLovin's integration manager for the URL). The adapter does not call `FBAdSettings.setAdvertiserTrackingEnabled`. Since FAN 6.15, on iOS 17+ the SDK reads the
-ATT status itself. Also add Meta's SKAdNetwork IDs.
+On iOS 15–16 the adapter sets `FBAdSettings.setAdvertiserTrackingEnabled` from the ATT status before MAX starts (Meta
+requires it there); on iOS 17+ Audience Network 6.15+ reads the ATT status itself. Also add Meta's SKAdNetwork IDs.
 
 **Dashboards:** Select Meta as a bidder on your MAX ad units. Meta says existing placement IDs can be reused, and Monetization Manager must
 list AppLovin as the mediation partner.
@@ -114,11 +116,12 @@ Verification: `META_BIDDING=applovin bash tool/verify_opt_in.sh android` checks 
   - `AppLovinSdkInitializationConfiguration.builder(key)`
   - `MaxInterstitialAd(unit)`
   - `MaxRewardedAd.getInstance(unit)`
-  - `MaxAppOpenAd(unit)` + `showAd()` (Phase 7)
+  - `MaxAppOpenAd(unit)` + `showAd()` (Phase 7; AppLovin's guide only shows `showAd(placement)`)
   - `MaxAdView(unit, …)`
   - `com.applovin.mediation.MaxAdViewConfiguration`
-- ⚠ **iOS: not yet compiled** (Phase 6 CI). The names come from the 13.6.4 headers and the docs. The Swift spelling of the
-  `MAAdViewConfiguration` builder needs checking. `MAAppOpenAd(adUnitIdentifier:)`, `showAd()` and the
+- ⚠ **iOS: not yet compiled** (Phase 6 CI). The names come from the 13.6.4 headers and the docs. The
+  `MAAdViewConfiguration` builder (`adaptiveType`, `adaptiveWidth`, `inlineMaximumHeight`) matches AppLovin's iOS banner
+  guide. `MAAppOpenAd(adUnitIdentifier:)`, `showAd()` and the
   `delegate` / `revenueDelegate` properties were checked against the 13.6.4 `MAAppOpenAd.h` (Phase 7).
 - Meta bidding detection (Phase 7): the adapter classes were checked in the vendor binaries:
   - Android `com.applovin.mediation.adapters.FacebookMediationAdapter`, from the 6.22.0.1 AAR;

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'ad_format.dart';
 import 'ad_network.dart';
+import 'ad_pacing.dart';
 import 'frequency_cap.dart';
 import 'network_config.dart';
 import 'preload_policy.dart';
@@ -29,8 +30,10 @@ class AdConfig {
     this.networks = const {},
     this.loadTimeout = const Duration(seconds: 10),
     this.initTimeout = const Duration(seconds: 20),
+    this.showTimeout = const Duration(seconds: 15),
     this.preload = const PreloadPolicy(),
     this.frequencyCaps = const {},
+    this.pacing = const {},
     this.cacheTtl = const Duration(hours: 1),
   });
 
@@ -54,11 +57,22 @@ class AdConfig {
   /// Maximum time for one network's SDK initialization.
   final Duration initTimeout;
 
+  /// Maximum time for a full-screen ad to start presenting after `show()`.
+  ///
+  /// When the network's SDK reports neither "shown" nor "failed to show"
+  /// within this time, `show()` fails with `AdErrorCode.timeout` instead of
+  /// waiting forever.
+  final Duration showTimeout;
+
   /// Automatic preloading of full-screen ads.
   final PreloadPolicy preload;
 
   /// Optional frequency caps per full-screen format.
   final Map<AdFormat, FrequencyCap> frequencyCaps;
+
+  /// Optional timing rules per full-screen format: cooldown between shows,
+  /// "show every N actions" and an initial delay after launch.
+  final Map<AdFormat, AdPacing> pacing;
 
   /// How long a cached (preloaded) ad stays valid.
   final Duration cacheTtl;
@@ -79,8 +93,10 @@ class AdConfig {
     Map<AdNetwork, NetworkConfig>? networks,
     Duration? loadTimeout,
     Duration? initTimeout,
+    Duration? showTimeout,
     PreloadPolicy? preload,
     Map<AdFormat, FrequencyCap>? frequencyCaps,
+    Map<AdFormat, AdPacing>? pacing,
     Duration? cacheTtl,
   }) {
     return AdConfig(
@@ -89,8 +105,10 @@ class AdConfig {
       networks: networks ?? this.networks,
       loadTimeout: loadTimeout ?? this.loadTimeout,
       initTimeout: initTimeout ?? this.initTimeout,
+      showTimeout: showTimeout ?? this.showTimeout,
       preload: preload ?? this.preload,
       frequencyCaps: frequencyCaps ?? this.frequencyCaps,
+      pacing: pacing ?? this.pacing,
       cacheTtl: cacheTtl ?? this.cacheTtl,
     );
   }
@@ -103,8 +121,10 @@ class AdConfig {
       mapEquals(other.networks, networks) &&
       other.loadTimeout == loadTimeout &&
       other.initTimeout == initTimeout &&
+      other.showTimeout == showTimeout &&
       other.preload == preload &&
       mapEquals(other.frequencyCaps, frequencyCaps) &&
+      mapEquals(other.pacing, pacing) &&
       other.cacheTtl == cacheTtl;
 
   @override
@@ -114,8 +134,10 @@ class AdConfig {
     Object.hashAllUnordered(networks.keys),
     loadTimeout,
     initTimeout,
+    showTimeout,
     preload,
     Object.hashAllUnordered(frequencyCaps.keys),
+    Object.hashAllUnordered(pacing.keys),
     cacheTtl,
   );
 }

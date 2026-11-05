@@ -11,6 +11,7 @@ import com.google.android.libraries.ads.mobile.sdk.banner.AdSize
 import com.google.android.libraries.ads.mobile.sdk.banner.AdView
 import com.google.android.libraries.ads.mobile.sdk.banner.BannerAd
 import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdEventCallback
+import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRefreshCallback
 import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest
 import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
 import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
@@ -93,6 +94,19 @@ internal class AdmobBannerView(
                 main.post { plugin.emit(AdEventMessage(AdEventKind.CLICKED, adId, AdFormatMessage.BANNER)) }
             }
         }
+        // An inline-adaptive banner can change height on refresh: report it again.
+        ad.bannerAdRefreshCallback = object : BannerAdRefreshCallback {
+            override fun onAdRefreshed() {
+                main.post { if (adView != null) emitSized(ad) }
+            }
+
+            override fun onAdFailedToRefresh(adError: LoadAdError) {}
+        }
+        emitSized(ad)
+        plugin.emit(AdEventMessage(AdEventKind.LOADED, adId, AdFormatMessage.BANNER))
+    }
+
+    private fun emitSized(ad: BannerAd) {
         val size = ad.getAdSize()
         plugin.emit(
             AdEventMessage(
@@ -103,14 +117,16 @@ internal class AdmobBannerView(
                 height = size.height.toDouble(),
             ),
         )
-        plugin.emit(AdEventMessage(AdEventKind.LOADED, adId, AdFormatMessage.BANNER))
     }
 
     override fun getView(): View = container
 
     override fun dispose() {
         adView?.let {
-            it.getBannerAd()?.adEventCallback = null
+            it.getBannerAd()?.let { ad ->
+                ad.adEventCallback = null
+                ad.bannerAdRefreshCallback = null
+            }
             container.removeView(it)
             it.destroy()
         }

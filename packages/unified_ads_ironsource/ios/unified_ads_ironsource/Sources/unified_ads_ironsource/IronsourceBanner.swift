@@ -31,14 +31,18 @@ final class IronsourceBannerView: NSObject, FlutterPlatformView, LPMBannerAdView
     self.plugin = plugin
     super.init()
 
-    // `banner()` and `createAdaptive()` are confirmed by the official demo;
-    // ⚠ the other Swift factory names are importer-derived (verify in CI).
+    // Swift imports the 9.7.0 `LPMAdSize.h` factories (`bannerSize`,
+    // `largeSize`, `createAdaptiveAdSizeWithWidth:`, …) without the "Size"
+    // suffix; `banner()` and `createAdaptive()` are confirmed by the official demo.
     let adSize: LPMAdSize
     switch (params["size"] as? [String: Any])?["type"] as? String {
     case "largeBanner": adSize = LPMAdSize.large()
     case "mediumRectangle": adSize = LPMAdSize.mediumRectangle()
     case "leaderboard": adSize = LPMAdSize.leaderBoard()
-    case "adaptiveAnchored", "adaptiveInline": adSize = LPMAdSize.createAdaptive() ?? LPMAdSize.banner()
+    case "adaptiveAnchored", "adaptiveInline":
+      // Width ≤ 0 makes the SDK use the screen width, as Android does.
+      let width = ((params["size"] as? [String: Any])?["width"] as? NSNumber)?.doubleValue ?? 0
+      adSize = LPMAdSize.createAdaptive(withWidth: CGFloat(width)) ?? LPMAdSize.banner()
     default: adSize = LPMAdSize.banner()
     }
     let config = LPMBannerAdViewConfigBuilder().set(adSize: adSize).build()

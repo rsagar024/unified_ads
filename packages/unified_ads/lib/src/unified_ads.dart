@@ -151,6 +151,42 @@ abstract final class UnifiedAds {
     }
   }
 
+  /// Switches ads off (`true`) or back on (`false`) for the whole app, for
+  /// example for a Pro subscriber.
+  ///
+  /// While ads are off, banners collapse (a displayed banner removes its
+  /// native view and reloads when ads are switched back on), and
+  /// interstitial and app open `load()` / `show()` / [preload] fail with
+  /// [AdErrorCode.adsBlocked] without contacting any network. Cached ads of
+  /// blocked formats are released.
+  ///
+  /// Rewarded formats stay available, because the user opts in to them; set
+  /// [blockRewarded] to block them too.
+  ///
+  /// May be called before [init] and survives re-initialization, but not an
+  /// app restart: call it at startup with the user's purchase state.
+  static Future<void> setAdFree(bool adFree, {bool blockRewarded = false}) =>
+      _runtime.setAdFree(adFree, blockRewarded: blockRewarded);
+
+  /// Whether ads are switched off with [setAdFree].
+  static bool get isAdFree => _runtime.adFree;
+
+  /// Whether ads of [format] are currently blocked by [setAdFree].
+  static bool isBlocked(AdFormat format) => _runtime.isBlocked(format);
+
+  /// Emits the new value whenever [isAdFree] changes.
+  static Stream<bool> get adFreeChanges => _runtime.adFreeChanges;
+
+  /// Counts one user action (a finished level, a saved item, a screen
+  /// change…) for `AdPacing.showEveryActions`, and returns the new count.
+  ///
+  /// The count is written to the `FrequencyStore` passed to [init], so a
+  /// persistent store keeps it across launches.
+  static Future<int> recordAction() => _runtime.recordAction();
+
+  /// The number of actions recorded with [recordAction].
+  static int get actionCount => _runtime.actions.count;
+
   /// Disposes every adapter and cached ad. [init] may be called again later.
   static Future<void> dispose() => _runtime.dispose();
 }

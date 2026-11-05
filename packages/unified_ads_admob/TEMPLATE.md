@@ -36,9 +36,11 @@
 - [ ] Put the error mapping in a pure `Errors` object, unit-tested in `src/test/kotlin`.
 
 ## 5. iOS (`ios/`)
-- [ ] Podspec with `s.dependency '<SDK pod>', '<exact version>'` **only here**, plus `static_framework` if the SDK is
-      static, `platform :ios, '13.0'`, and the privacy-manifest bundle.
-- [ ] `Package.swift` only if the vendor ships SPM. Otherwise the adapter is CocoaPods-only; document that.
+- [ ] `ios/<package>/Package.swift` (**required**; no podspec, since 1.1.0 iOS is Swift Package Manager only): the
+      vendor's Swift package as `.package(url: …, exact: "<version>")` **only here**, `.iOS("13.0")`, a dependency on
+      `FlutterFramework`, and `PrivacyInfo.xcprivacy` as a processed resource. Add linker flags the SDK needs (for
+      example `-ObjC`) in this manifest's `linkerSettings`, never in core. If the vendor ships no Swift package, the
+      adapter can't ship iOS support: make it a documented stub.
 - [ ] Each Pigeon `async` host method delegates to a `@MainActor` implementation. Use the vendor's documented Swift
       API (prefer async forms that are documented).
 - [ ] Send events through the ordered queue (`emit`), and find the top view controller from the key window scene.
@@ -49,5 +51,6 @@
       `handlePlatformMessage`, banner params, and unsupported formats.
 - [ ] `test/integration_with_core_test.dart`: drive the adapter through `UnifiedAds`.
 - [ ] `doc/setup/<network>.md`: manifest / Info.plist, SKAdNetwork source, test mode, privacy, R8, frameworks, and the error table.
-- [ ] Add the adapter to `example/` and verify **on a device**. Check that `./gradlew :app:dependencies` and `Podfile.lock`
-      contain only the opted-in SDKs.
+- [ ] Add the adapter to `example/` and verify **on a device**. Check that `./gradlew :app:dependencies` and
+      `ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved` contain only the opted-in SDKs
+      (`tool/verify_opt_in.sh`).

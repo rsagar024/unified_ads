@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:unified_ads/unified_ads.dart';
 
+import 'diagnostics.dart';
 import 'event_log.dart';
 
 /// The live event console: every callback with a timestamp, filterable by
@@ -19,6 +21,20 @@ class LogScreen extends StatefulWidget {
 class _LogScreenState extends State<LogScreen> {
   AdNetwork? _network;
   bool _errorsOnly = false;
+
+  /// Copies a diagnostics report (for "Device verification" issues).
+  Future<void> _copyDiagnostics() async {
+    final report = buildDiagnosticsReport(
+      widget.log,
+      config: UnifiedAds.config,
+      initResult: UnifiedAds.lastInitResult,
+    );
+    await Clipboard.setData(ClipboardData(text: report));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Diagnostics copied to the clipboard')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +82,11 @@ class _LogScreenState extends State<LogScreen> {
                 ),
                 const Spacer(),
                 Text('${entries.length} event(s)'),
+                IconButton(
+                  tooltip: 'Copy diagnostics',
+                  onPressed: _copyDiagnostics,
+                  icon: const Icon(Icons.bug_report_outlined),
+                ),
                 IconButton(
                   tooltip: 'Clear',
                   onPressed: widget.log.clear,

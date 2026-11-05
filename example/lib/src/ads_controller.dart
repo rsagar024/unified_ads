@@ -38,6 +38,8 @@ class AdsController extends ChangeNotifier {
   InitResult? _result;
   bool _busy = false;
   bool _privacyDone = false;
+  bool _adFree = false;
+  bool _blockRewarded = false;
   int _generation = 0;
 
   /// The current configuration (null until [start]).
@@ -48,6 +50,12 @@ class AdsController extends ChangeNotifier {
 
   /// Whether init is running.
   bool get busy => _busy;
+
+  /// Whether ads are switched off ("Pro user").
+  bool get adFree => _adFree;
+
+  /// Whether the ad-free switch also blocks rewarded ads.
+  bool get blockRewarded => _blockRewarded;
 
   /// Bumped on every init so ad widgets recreate their ad objects.
   int get generation => _generation;
@@ -74,6 +82,11 @@ class AdsController extends ChangeNotifier {
   /// Loads the saved configuration and initializes.
   Future<void> start() async {
     _config = await store.load();
+    final saved = await store.loadAdFree();
+    _adFree = saved.adFree;
+    _blockRewarded = saved.blockRewarded;
+    // Before init, so no blocked format is preloaded.
+    await UnifiedAds.setAdFree(_adFree, blockRewarded: _blockRewarded);
     notifyListeners();
     await _initialize();
   }
@@ -84,6 +97,32 @@ class AdsController extends ChangeNotifier {
     _config = config;
     log.add('settings', 'saved; re-initializing');
     await _initialize();
+  }
+
+  /// Switches ads off or on, saves the choice and applies it immediately
+  /// (no re-init needed).
+  Future<void> setAdFree({
+    required bool adFree,
+    required bool blockRewarded,
+  }) async {
+    _adFree = adFree;
+    _blockRewarded = blockRewarded;
+    await store.saveAdFree(adFree: adFree, blockRewarded: blockRewarded);
+    await UnifiedAds.setAdFree(adFree, blockRewarded: blockRewarded);
+    log.add(
+      'settings',
+      adFree
+          ? 'ad-free on${blockRewarded ? ' (rewarded blocked too)' : ''}'
+          : 'ad-free off',
+    );
+    notifyListeners();
+  }
+
+  /// Counts one user action for `AdPacing.showEveryActions`.
+  Future<void> recordAction() async {
+    final count = await UnifiedAds.recordAction();
+    log.add('pacing', 'action recorded ($count total)');
+    notifyListeners();
   }
 
   /// Restores the public test credentials and re-initializes.

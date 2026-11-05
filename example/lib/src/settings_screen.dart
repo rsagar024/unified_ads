@@ -4,7 +4,8 @@ import 'package:unified_ads/unified_ads.dart';
 import 'ads_controller.dart';
 
 /// Edits the configuration: which networks are enabled, their App / ad-unit
-/// IDs, test mode, and the waterfall order. "Save & re-initialize" persists it
+/// IDs, test mode, the waterfall order, the ad-free switch and interstitial
+/// pacing. "Save & re-initialize" persists it
 /// and re-runs `UnifiedAds.init`.
 class SettingsScreen extends StatefulWidget {
   /// Creates the screen.
@@ -21,6 +22,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _testMode = true;
   List<AdNetwork> _waterfall = [];
   final Map<AdNetwork, _NetworkForm> _forms = {};
+  final _cooldown = TextEditingController();
+  final _everyActions = TextEditingController();
+  final _initialDelay = TextEditingController();
   AdConfig? _source;
 
   @override
@@ -36,6 +40,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     for (final form in _forms.values) {
       form.dispose();
     }
+    _cooldown.dispose();
+    _everyActions.dispose();
+    _initialDelay.dispose();
     super.dispose();
   }
 
@@ -56,6 +63,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             config.networks[n] ?? const NetworkConfig(enabled: false),
           ),
       });
+    final pacing = config.pacing[AdFormat.interstitial] ?? const AdPacing();
+    _cooldown.text = '${pacing.minInterval.inSeconds}';
+    _everyActions.text = '${pacing.showEveryActions}';
+    _initialDelay.text = '${pacing.initialDelay.inSeconds}';
     final order = config.effectiveWaterfall;
     setState(() {
       _testMode = config.testMode;
@@ -68,10 +79,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   AdConfig _build() {
     final base = widget.controller.config ?? const AdConfig();
+    int read(TextEditingController c, int fallback) =>
+        int.tryParse(c.text.trim()) ?? fallback;
+    final pacing = AdPacing(
+      minInterval: Duration(seconds: read(_cooldown, 0).clamp(0, 86400)),
+      showEveryActions: read(_everyActions, 1).clamp(1, 1000),
+      initialDelay: Duration(seconds: read(_initialDelay, 0).clamp(0, 86400)),
+    );
     return base.copyWith(
       testMode: _testMode,
       waterfall: _waterfall,
       networks: {for (final n in _waterfall) n: _forms[n]!.toConfig()},
+      pacing: {...base.pacing, AdFormat.interstitial: pacing}
+        ..removeWhere((_, rules) => rules == const AdPacing()),
     );
   }
 
@@ -114,6 +134,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             value: _testMode,
             onChanged: (v) => setState(() => _testMode = v),
+          ),
+        ),
+        Card(
+          child: ListenableBuilder(
+            listenable: widget.controller,
+            builder: (context, _) {
+              final controller = widget.controller;
+              return Column(
+                children: [
+                  SwitchListTile(
+                    title: const Text('Ad-free (Pro user)'),
+                    subtitle: const Text(
+                      'UnifiedAds.setAdFree: banners collapse, interstitial '
+                      'and app open are blocked. Applies immediately.',
+                    ),
+                    value: controller.adFree,
+                    onChanged: (v) => controller.setAdFree(
+                      adFree: v,
+                      blockRewarded: controller.blockRewarded,
+                    ),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Block rewarded too'),
+                    value: controller.blockRewarded,
+                    onChanged: controller.adFree
+                        ? (v) => controller.setAdFree(
+                            adFree: true,
+                            blockRewarded: v,
+                          )
+                        : null,
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text('Interstitial pacing', style: theme.textTheme.titleMedium),
+        Text(
+          'AdPacing for interstitials. show() returns frequencyCapped until '
+          'every rule is met. Applied on "Save & re-initialize".',
+          style: theme.textTheme.bodySmall,
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                for (final (label, controller) in [
+                  ('Cooldown (s)', _cooldown),
+                  ('Every N actions', _everyActions),
+                  ('Initial delay (s)', _initialDelay),
+                ]) ...[
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: label,
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  if (label != 'Initial delay (s)') const SizedBox(width: 8),
+                ],
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 8),

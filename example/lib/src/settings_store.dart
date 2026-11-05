@@ -12,6 +12,8 @@ class SettingsStore {
   const SettingsStore();
 
   static const _key = 'unified_ads_example.config';
+  static const _adFreeKey = 'unified_ads_example.adFree';
+  static const _blockRewardedKey = 'unified_ads_example.blockRewarded';
 
   /// The saved configuration, or [TestCredentials.defaults] when nothing (or
   /// nothing valid) is saved.
@@ -27,6 +29,25 @@ class SettingsStore {
   Future<void> save(AdConfig config) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, jsonEncode(AdConfigLoader.toJson(config)));
+  }
+
+  /// The saved ad-free ("Pro user") switch.
+  Future<({bool adFree, bool blockRewarded})> loadAdFree() async {
+    final prefs = await SharedPreferences.getInstance();
+    return (
+      adFree: prefs.getBool(_adFreeKey) ?? false,
+      blockRewarded: prefs.getBool(_blockRewardedKey) ?? false,
+    );
+  }
+
+  /// Saves the ad-free switch.
+  Future<void> saveAdFree({
+    required bool adFree,
+    required bool blockRewarded,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_adFreeKey, adFree);
+    await prefs.setBool(_blockRewardedKey, blockRewarded);
   }
 
   /// Forgets the saved configuration and returns the defaults.

@@ -1,3 +1,24 @@
+## 1.1.0
+
+* README restyled (✨ Features, 🚀 Getting Started, 📖 Usage, …), with usage for interstitial pacing and ad-free mode
+  (`AdPacing`, `UnifiedAds.recordAction`, `UnifiedAds.setAdFree`, all from `unified_ads` 1.1.0). No adapter code
+  changes.
+* **BREAKING (iOS):** CocoaPods support is removed; iOS builds use **Swift Package Manager only** (the podspec is
+  deleted). Requires Flutter >= 3.44 with SPM enabled and Xcode 26.2+. The deployment target is now set on the Runner
+  target in Xcode. See the [migration guide](https://github.com/rsagar024/unified_ads/blob/master/doc/migration/1.1.0-swift-package-manager.md).
+* New `Package.swift`: the iOS SDK now comes from Unity's official Swift package
+  `https://github.com/Unity-Technologies/Unity-Ads-Swift-Package` 4.21.0 (`UnityAds`); version unchanged.
+* Opt-in linking on iOS now works through SPM: the vendor SDK is declared only in this package's `Package.swift`,
+  so `FlutterGeneratedPluginSwiftPackage` resolves it only when the app depends on this package (checked against
+  `Package.resolved` in CI).
+* Pigeon bindings regenerated with pigeon ^29.0.8.
+* Expired ads are now handled on both platforms (`onAdExpired`, as Unity's guides require): an expired interstitial /
+  rewarded ad is dropped, so `show()` reports `notReady` and the core cache loads a fresh one.
+* iOS names re-checked against the UnityAds 4.21.0 `.swiftinterface` (`showDidFail(_:error:)` etc.); comments and docs
+  corrected (4.21.0 has no adaptive banner size; Xcode 26.0.1+). SDK 4.21.0 is still the latest.
+* README: package-specific.
+* No Dart API changes.
+
 ## 1.0.0
 
 Initial release: the Unity Ads adapter for `unified_ads`.
