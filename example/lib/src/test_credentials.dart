@@ -1,90 +1,99 @@
 import 'package:unified_ads/unified_ads.dart';
 
-/// Public **test / demo** credentials, used as the example app's defaults.
+/// Placeholder credentials for the example app.
 ///
-/// They live only in this example app, never in the packages. Each one is
-/// documented in `doc/getting_ids.md` ("Testing without your own IDs"). Values
-/// with no known public iOS equivalent are `null` on iOS: enter your own in
-/// Settings.
+/// Every value below is a **placeholder** that you must replace with your own
+/// IDs from each ad network's dashboard before building a release. Leaving
+/// placeholders in place means the example will initialize but will not receive
+/// real fill — and will not attribute revenue to any demo/vendor account.
+///
+/// **Never copy these placeholder values into a production app.** They are
+/// intentionally invalid. See `doc/getting_ids.md` for how to obtain real IDs
+/// per network, and the Settings tab of this example to enter them at runtime.
+///
+/// The former public demo IDs (AdMob `ca-app-pub-3940256099942544~…`, Unity
+/// game `14851`, Start.io `205489527`, InMobi `8ba05e170e914971a0b45d977809a6cf`,
+/// Facebook `IMG_16_9_APP_INSTALL#…` placements, LevelPlay demo key
+/// `25b63cf85`) have been removed. CI smoke tests that need real test IDs use
+/// `example/integration_test/smoke_ids.dart` instead; that file is CI-only and
+/// is not part of the example app's default configuration.
 abstract final class TestCredentials {
-  /// Google's AdMob demo App ID and ad units: they always serve test ads.
+  /// AdMob: replace with your AdMob App ID and ad unit IDs from the AdMob UI.
   static final NetworkConfig admob = NetworkConfig(
     appId: PlatformValue.select(
-      android: 'ca-app-pub-3940256099942544~3347511713',
-      ios: 'ca-app-pub-3940256099942544~1458002511',
+      android: 'YOUR_ADMOB_APP_ID_ANDROID',
+      ios: 'YOUR_ADMOB_APP_ID_IOS',
     ),
     bannerAdUnitId: PlatformValue.select(
-      android: 'ca-app-pub-3940256099942544/9214589741',
-      ios: 'ca-app-pub-3940256099942544/2435281174',
+      android: 'YOUR_ADMOB_BANNER_AD_UNIT_ID_ANDROID',
+      ios: 'YOUR_ADMOB_BANNER_AD_UNIT_ID_IOS',
     ),
     interstitialAdUnitId: PlatformValue.select(
-      android: 'ca-app-pub-3940256099942544/1033173712',
-      ios: 'ca-app-pub-3940256099942544/4411468910',
+      android: 'YOUR_ADMOB_INTERSTITIAL_AD_UNIT_ID_ANDROID',
+      ios: 'YOUR_ADMOB_INTERSTITIAL_AD_UNIT_ID_IOS',
     ),
     rewardedAdUnitId: PlatformValue.select(
-      android: 'ca-app-pub-3940256099942544/5224354917',
-      ios: 'ca-app-pub-3940256099942544/1712485313',
+      android: 'YOUR_ADMOB_REWARDED_AD_UNIT_ID_ANDROID',
+      ios: 'YOUR_ADMOB_REWARDED_AD_UNIT_ID_IOS',
     ),
     rewardedInterstitialAdUnitId: PlatformValue.select(
-      android: 'ca-app-pub-3940256099942544/5354046379',
-      ios: 'ca-app-pub-3940256099942544/6978759866',
+      android: 'YOUR_ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID_ANDROID',
+      ios: 'YOUR_ADMOB_REWARDED_INTERSTITIAL_AD_UNIT_ID_IOS',
     ),
     appOpenAdUnitId: PlatformValue.select(
-      android: 'ca-app-pub-3940256099942544/9257395921',
-      ios: 'ca-app-pub-3940256099942544/5575463023',
+      android: 'YOUR_ADMOB_APP_OPEN_AD_UNIT_ID_ANDROID',
+      ios: 'YOUR_ADMOB_APP_OPEN_AD_UNIT_ID_IOS',
     ),
   );
 
-  /// Facebook Audience Network test placements (`IMG_16_9_APP_INSTALL#`
-  /// prefix) from the `facebook_audience_network` plugin's example. There is
-  /// no public rewarded placement.
+  /// Facebook Audience Network: replace with your Meta placement IDs.
+  /// There is no public rewarded placement.
   static final NetworkConfig facebook = NetworkConfig(
-    bannerAdUnitId: _android(
-      'IMG_16_9_APP_INSTALL#2312433698835503_2964944860251047',
-    ),
-    interstitialAdUnitId: _android(
-      'IMG_16_9_APP_INSTALL#2312433698835503_2650502525028617',
-    ),
+    bannerAdUnitId: _android('YOUR_FACEBOOK_BANNER_PLACEMENT_ID'),
+    interstitialAdUnitId: _android('YOUR_FACEBOOK_INTERSTITIAL_PLACEMENT_ID'),
   );
 
-  /// Unity's sample game 14851. It has no interstitial placement, so the
-  /// full-screen `rewardedVideo` placement is used for interstitials too.
+  /// Unity Ads: replace with your Unity Game ID and placement IDs from
+  /// cloud.unity.com. Unity Ads and LevelPlay cannot run in the same app.
   static final NetworkConfig unity = NetworkConfig(
-    appId: _android('14851'),
-    bannerAdUnitId: _android('bannerads'),
-    interstitialAdUnitId: _android('rewardedVideo'),
-    rewardedAdUnitId: _android('rewardedVideo'),
+    appId: _android('YOUR_UNITY_GAME_ID'),
+    bannerAdUnitId: _android('YOUR_UNITY_BANNER_PLACEMENT_ID'),
+    interstitialAdUnitId: _android('YOUR_UNITY_INTERSTITIAL_PLACEMENT_ID'),
+    rewardedAdUnitId: _android('YOUR_UNITY_REWARDED_PLACEMENT_ID'),
   );
 
-  /// Start.io's demo App ID; Start.io needs no ad-unit IDs.
+  /// Start.io: replace with your Start.io App ID from portal.start.io.
+  /// Start.io needs no per-format ad-unit IDs.
   static final NetworkConfig startapp = NetworkConfig(
-    appId: _android('205489527'),
+    appId: _android('YOUR_STARTIO_APP_ID'),
   );
 
-  /// InMobi's sample account and placements. They initialize but usually
-  /// return no fill outside InMobi's own sample app.
+  /// InMobi: replace with your InMobi Account ID and numeric placement IDs
+  /// from publisher.inmobi.com.
   static final NetworkConfig inmobi = NetworkConfig(
-    appId: _android('8ba05e170e914971a0b45d977809a6cf'),
-    bannerAdUnitId: _android('1651462467602'),
-    interstitialAdUnitId: _android('1476878485960'),
-    rewardedAdUnitId: _android('1623469928141'),
+    appId: _android('YOUR_INMOBI_ACCOUNT_ID'),
+    bannerAdUnitId: _android('YOUR_INMOBI_BANNER_PLACEMENT_ID'),
+    interstitialAdUnitId: _android('YOUR_INMOBI_INTERSTITIAL_PLACEMENT_ID'),
+    rewardedAdUnitId: _android('YOUR_INMOBI_REWARDED_PLACEMENT_ID'),
   );
 
-  /// LevelPlay's official demo app key and ad units. Disabled by default:
-  /// LevelPlay and Unity Ads cannot run in the same app (A11), and the demo
-  /// key does not fill outside the vendor's demo app.
+  /// LevelPlay: replace with your LevelPlay App Key and ad units from
+  /// platform.ironsrc.com. Disabled by default: LevelPlay and Unity Ads cannot
+  /// run in the same app (A11).
   static final NetworkConfig ironsource = NetworkConfig(
     enabled: false,
-    appId: _android('25b63cf85'),
-    bannerAdUnitId: _android('4fpetq4lhe5lsw3e'),
-    interstitialAdUnitId: _android('h3xw38h9214adgxo'),
-    rewardedAdUnitId: _android('syz3d8ekts22q0or'),
+    appId: _android('YOUR_LEVELPLAY_APP_KEY'),
+    bannerAdUnitId: _android('YOUR_LEVELPLAY_BANNER_PLACEMENT_ID'),
+    interstitialAdUnitId: _android('YOUR_LEVELPLAY_INTERSTITIAL_PLACEMENT_ID'),
+    rewardedAdUnitId: _android('YOUR_LEVELPLAY_REWARDED_PLACEMENT_ID'),
   );
 
-  /// AppLovin MAX publishes no test SDK key: enter yours in Settings.
+  /// AppLovin MAX: no public test SDK key exists. Enter your SDK key in
+  /// Settings, then enable the network.
   static const NetworkConfig applovin = NetworkConfig(enabled: false);
 
-  /// The example's default configuration: every network, test mode on.
+  /// The example's default configuration: every network listed, test mode on,
+  /// but all IDs are placeholders — replace them before release.
   static AdConfig defaults() => AdConfig(
     testMode: true,
     waterfall: const [

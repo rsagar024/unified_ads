@@ -4,8 +4,7 @@ This app tests every ad network supported by `unified_ads` from one screen. It i
 network gets its own card with buttons that load and show its **banner**, **interstitial** and **rewarded** ads right there.
 A **Settings** tab lets you enter your own IDs, and a live **Log** tab shows every callback.
 
-It ships with **public test credentials** for most networks, so it works out of the box with no account needed. Test IDs
-live only in this example (`lib/src/test_credentials.dart`), never in the packages.
+It ships with **placeholder credentials** for most networks, so it compiles and runs out of the box. Replace every `YOUR_*` value in `lib/src/test_credentials.dart` with your own IDs before release. Test IDs live only in this example (`lib/src/test_credentials.dart`), never in the packages.
 
 ## Run it
 
@@ -64,18 +63,17 @@ badge counts the entries.
 
 ## Built-in test credentials
 
-| Network | Enabled by default | What you get (Android 10 device: banner + interstitial through this app on 2026-10-08; rewarded from the 2026-10-07 smoke tests) |
+| Network | Enabled by default | What you get |
 |---|---|---|
-| AdMob | ✅ | Google demo units: banner ✅, interstitial ✅ (shown) |
-| Facebook Audience Network | ✅ | `IMG_16_9_APP_INSTALL#` test placements: banner ✅, interstitial ✅. **No public rewarded placement**, so rewarded fails until you add yours |
-| Unity Ads | ✅ | Sample game 14851: banner ✅, interstitial ✅ (uses the `rewardedVideo` placement), rewarded ✅ |
-| Start.io | ✅ | Demo App ID 205489527: banner ✅, interstitial ✅, rewarded ✅ |
-| InMobi | ✅ | Sample account: initializes, but returns `noFill` (sample placements only fill in InMobi's own app) |
-| LevelPlay | ❌ | Demo app key: initializes, but no fill. Off because **LevelPlay and Unity Ads can't run together**: enabling both makes unified_ads skip Unity (`configConflict`) |
-| AppLovin MAX | ❌ | No public test key exists: enter your SDK key and ad units, then enable it |
+| AdMob | ✅ | Placeholder IDs (`YOUR_ADMOB_*`). Replace with your own AdMob App ID and ad unit IDs in Settings; Google's public demo units (`ca-app-pub-3940256099942544~…`) serve test ads but must not be copied into production. |
+| Facebook Audience Network | ✅ | Placeholder placement IDs (`YOUR_FACEBOOK_*`). Replace with your own Meta placement IDs. |
+| Unity Ads | ✅ | Placeholder Game ID and placement IDs (`YOUR_UNITY_*`). Replace with your own from cloud.unity.com. |
+| Start.io | ✅ | Placeholder App ID (`YOUR_STARTIO_APP_ID`). Replace with your own from portal.start.io. |
+| InMobi | ✅ | Placeholder Account ID and placement IDs (`YOUR_INMOBI_*`). Replace with your own from publisher.inmobi.com. |
+| LevelPlay | ❌ | Placeholder App Key (`YOUR_LEVELPLAY_APP_KEY`). Off because **LevelPlay and Unity Ads can't run together**: enabling both makes unified_ads skip Unity (`configConflict`). |
+| AppLovin MAX | ❌ | No placeholder key; enter your SDK key and ad units in Settings, then enable. |
 
-Most presets are **Android-only**. On iOS, those networks show `invalidConfig` until you enter iOS IDs in Settings
-(AdMob has demo IDs for both platforms).
+All presets are **placeholders**. On any platform, networks show `invalidConfig` until you enter real IDs in Settings (AdMob has demo IDs for both platforms, but those are Google's public test units — see the note below).
 
 ## Using your own IDs
 

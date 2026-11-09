@@ -52,6 +52,8 @@ jobs:
             (cd "$p" && flutter pub publish --dry-run)
             echo "::endgroup::"
           done
+      - name: Verify no demo/test ad IDs outside example/ (CROSS-01)
+        run: dart run tool/verify_no_demo_ids.dart
 
   android:
     name: Android build + Kotlin tests

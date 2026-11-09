@@ -10,7 +10,11 @@ import 'src/log_screen.dart';
 import 'src/settings_screen.dart';
 import 'src/test_credentials.dart';
 
-/// Google's public AdMob demo configuration (used by the integration test).
+/// AdMob configuration used by the integration test.
+///
+/// [TestCredentials.admob] now holds only placeholders (`YOUR_ADMOB_*`); the
+/// integration test supplies its own Google test ad units inline so it can
+/// actually verify load/show on a device. Do not use this value in production.
 final NetworkConfig admobTestConfig = TestCredentials.admob;
 
 void main() {

@@ -1,10 +1,24 @@
 // Runs on a device or emulator:
 //   flutter test integration_test/plugin_integration_test.dart -d <device-id>
+//
+// Uses Google's public AdMob test ad units (documented in
+// doc/getting_ids.md, "Testing without your own IDs"). These are test-only
+// credentials for CI verification and are NOT part of the example app's
+// default configuration (see lib/src/test_credentials.dart for placeholders).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:unified_ads/unified_ads.dart';
 import 'package:unified_ads_example/main.dart';
+
+/// Google's public AdMob test App ID and ad units (Android). These always
+/// serve test ads and need no account. iOS equivalents exist but this test
+/// runs on Android by default.
+const _admobTestAppId = 'ca-app-pub-3940256099942544~3347511713';
+const _admobBannerUnitId = 'ca-app-pub-3940256099942544/9214589741';
+const _admobInterstitialUnitId =
+    'ca-app-pub-3940256099942544/1033173712';
+const _admobRewardedUnitId = 'ca-app-pub-3940256099942544/5224354917';
 
 Future<void> _waitFor(
   WidgetTester tester,
@@ -32,7 +46,14 @@ void main() {
       AdConfig(
         testMode: true,
         preload: PreloadPolicy.none,
-        networks: {AdNetwork.admob: admobTestConfig},
+        networks: {
+          AdNetwork.admob: NetworkConfig(
+            appId: _admobTestAppId,
+            bannerAdUnitId: _admobBannerUnitId,
+            interstitialAdUnitId: _admobInterstitialUnitId,
+            rewardedAdUnitId: _admobRewardedUnitId,
+          ),
+        },
       ),
     );
     expect(result.ready, contains(AdNetwork.admob), reason: '$result');
