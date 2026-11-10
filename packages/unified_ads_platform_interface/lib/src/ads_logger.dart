@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'ad_error.dart';
 import 'ad_network.dart';
 
 /// Log severity, from most to least verbose. [none] disables logging.
@@ -182,4 +183,23 @@ String maskId(String? id) {
   if (id == null || id.isEmpty) return '<none>';
   if (id.length <= 8) return '****';
   return '${id.substring(0, 4)}…${id.substring(id.length - 4)}';
+}
+
+/// Redacts ad-related identifiers from [message] so they are not leaked in
+/// logs. Currently redacts AdMob app IDs (`ca-app-pub-…~…`) and ad unit IDs
+/// (`ca-app-pub-…/…`) by applying [maskId] to each identifier found.
+String maskAdIds(String message) {
+  // Match ca-app-pub-<16 digits>~<10 digits> (app ID) and
+  // ca-app-pub-<16 digits>/<10 digits> (ad unit ID).
+  final adMobIdRegExp = RegExp(
+    r'ca-app-pub-\d{16}~?\d{10}|ca-app-pub-\d{16}/\d{10}',
+  );
+  return message.replaceAllMapped(adMobIdRegExp, (match) {
+    return maskId(match.group(0)!);
+  });
+}
+
+/// Returns a sanitized copy of [error] with ad IDs redacted from its message.
+AdError maskAdError(AdError error) {
+  return error.copyWith(message: maskAdIds(error.message));
 }

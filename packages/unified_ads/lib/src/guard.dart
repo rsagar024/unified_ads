@@ -17,7 +17,7 @@ Future<AdResult<T>> guardCall<T>(
     AdsLogger.current.error(
       '$operation threw',
       network: network,
-      error: e,
+      error: maskAdIds(e.toString()),
       stackTrace: st,
     );
     return AdFailure(AdError.fromException(e, network: network));
@@ -37,7 +37,7 @@ Future<void> guardVoid(
     AdsLogger.current.error(
       '$operation threw',
       network: network,
-      error: e,
+      error: maskAdIds(e.toString()),
       stackTrace: st,
     );
   }
@@ -56,7 +56,7 @@ T guardSync<T>(
     AdsLogger.current.error(
       '$operation threw',
       network: network,
-      error: e,
+      error: maskAdIds(e.toString()),
       stackTrace: st,
     );
     return fallback;
@@ -71,7 +71,7 @@ void safeCallback(String name, void Function() callback) {
   } catch (e, st) {
     AdsLogger.current.error(
       'App callback $name threw',
-      error: e,
+      error: maskAdIds(e.toString()),
       stackTrace: st,
     );
   }

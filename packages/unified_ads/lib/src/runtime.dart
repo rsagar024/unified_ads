@@ -180,11 +180,13 @@ class AdsRuntime {
         _session = session;
       }
       lastInitResult = result;
-      AdsLogger.current.info('init: $result');
+      AdsLogger.current.info(
+        'init: ready=${result.ready.map((n) => n.id).toList()}, '
+        'failed=${result.failed.length}, skipped=${result.skipped.length}');
       for (final MapEntry(key: network, value: error)
           in result.failed.entries) {
         AdsLogger.current.warning(
-          'init failed: ${error.code.name} ${error.message}'
+          'init failed: ${error.code.name} ${maskAdIds(error.message)}'
           '${error.nativeCode == null ? '' : ' [${error.nativeCode}]'}',
           network: network,
         );

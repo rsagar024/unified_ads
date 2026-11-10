@@ -125,7 +125,7 @@ class WaterfallEngine {
           return result;
         case AdFailure(:final error):
           logger.info(
-            'failed ${format.id}: ${error.message}',
+            'failed ${format.id}: ${maskAdIds(error.message)}',
             network: c.network,
           );
           attempts.add(error);

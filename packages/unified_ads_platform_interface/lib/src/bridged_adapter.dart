@@ -140,7 +140,8 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
     try {
       await nativeDestroy(handle.id);
     } on PlatformException catch (e) {
-      AdsLogger.current.debug('destroy failed: ${e.message}', network: network);
+      AdsLogger.current.debug(
+        'destroy failed: ${maskAdIds(e.message ?? '')}', network: network);
     }
   }
 
@@ -152,7 +153,7 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
       AdsLogger.current.warning(
         'applyConsent failed',
         network: network,
-        error: e,
+        error: maskAdIds(e.message ?? ''),
       );
     }
   }
@@ -166,7 +167,8 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
     try {
       await nativeDispose();
     } on PlatformException catch (e) {
-      AdsLogger.current.debug('dispose failed: ${e.message}', network: network);
+      AdsLogger.current.debug(
+        'dispose failed: ${maskAdIds(e.message ?? '')}', network: network);
     }
   }
 
@@ -216,7 +218,7 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
     }
     AdError error() => AdError(
       code: errorCodeFromName(errorCode, AdErrorCode.internal),
-      message: errorMessage ?? '${network.displayName} error',
+      message: maskAdIds(errorMessage ?? '${network.displayName} error'),
       network: network,
       nativeCode: nativeCode,
     );
@@ -266,7 +268,7 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
 
   AdError _error(PlatformException e, AdErrorCode fallback) => AdError(
     code: errorCodeFromName(e.code, fallback),
-    message: e.message ?? e.code,
+    message: maskAdIds(e.message ?? e.code),
     network: network,
     nativeCode: e.details?.toString(),
   );
