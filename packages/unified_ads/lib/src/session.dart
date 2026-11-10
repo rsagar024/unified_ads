@@ -403,6 +403,9 @@ class AdsSession {
   }
 
   /// Destroys cached ads, disposes every adapter and stops event delivery.
+  /// Note: `_events` (the runtime-wide broadcast controller) is owned by
+  /// `AdsRuntime` and is closed/recreated there in `_disposeSession()`;
+  /// this session must not close it.
   Future<void> dispose() async {
     if (_disposed) return;
     for (final handle in cache.clear()) {
@@ -420,6 +423,5 @@ class AdsSession {
     );
     _ready.clear();
     _attached.clear();
-    await _events.close();
   }
 }
