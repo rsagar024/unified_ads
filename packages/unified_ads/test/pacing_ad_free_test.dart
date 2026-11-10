@@ -223,16 +223,16 @@ void main() {
     });
 
     test('works before init and survives re-init', () async {
-      final changes = <bool>[];
-      final sub = UnifiedAds.adFreeChanges.listen(changes.add);
       await UnifiedAds.setAdFree(true);
       await init();
       expect(UnifiedAds.isBlocked(AdFormat.interstitial), isTrue);
 
+      final changes = <bool>[];
+      final sub = UnifiedAds.adFreeChanges.listen(changes.add);
       await UnifiedAds.setAdFree(false);
       expect(await showOnce(), isNull);
       await flush();
-      expect(changes, [true, false]);
+      expect(changes, [false]);
       await sub.cancel();
     });
 

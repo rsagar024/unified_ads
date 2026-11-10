@@ -28,11 +28,14 @@ class AdsRuntime {
   /// Result of the most recent init.
   InitResult? lastInitResult;
 
-  // Lives as long as the process; never closed by design.
-  // ignore: close_sinks
-  final StreamController<AdEvent> _events = StreamController.broadcast();
-  // ignore: close_sinks
-  final StreamController<bool> _adFreeChanges = StreamController.broadcast();
+  /// Events of every session; closed and recreated on every init/dispose
+  /// cycle so that stale subscribers cannot receive events from a disposed
+  /// session and the controllers are never leaked.
+  StreamController<AdEvent> _events = StreamController.broadcast();
+
+  /// Emits the new value whenever [adFree] changes; closed and recreated on
+  /// every init/dispose cycle.
+  StreamController<bool> _adFreeChanges = StreamController.broadcast();
   FrequencyStore _defaultFrequencyStore = InMemoryFrequencyStore();
   FrequencyStore? _frequencyStore;
   AdsSession? _session;
@@ -176,6 +179,10 @@ class AdsRuntime {
     final s = _session;
     _session = null;
     if (s != null) await s.dispose();
+    await _events.close();
+    await _adFreeChanges.close();
+    _events = StreamController.broadcast();
+    _adFreeChanges = StreamController.broadcast();
   }
 
   /// Stores [state] and forwards it to the current session's adapters.
