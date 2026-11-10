@@ -60,7 +60,7 @@ abstract final class UnifiedAds {
   /// The logger used by unified_ads and its adapters. Silent by default.
   static AdsLogger get logger => AdsLogger.current;
 
-  static set logger(AdsLogger logger) => AdsLogger.current = logger;
+  static set logger(AdsLogger logger) => AdsLogger.setLogger(logger);
 
   /// The consent state currently applied.
   static ConsentState get consent => _runtime.consent;

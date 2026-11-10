@@ -46,7 +46,7 @@ AdConfig configFor(
 Future<void> resetAll() async {
   await AdsRuntime.instance.reset();
   AdapterRegistry.instance.clear();
-  AdsLogger.current = AdsLogger.silent;
+  AdsLogger.setLogger(AdsLogger.silent);
 }
 
 /// Lets queued events travel through the broadcast streams.

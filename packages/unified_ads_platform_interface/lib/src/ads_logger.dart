@@ -83,9 +83,24 @@ class AdsLogger {
   /// A logger that discards everything.
   static const silent = AdsLogger();
 
-  /// The logger used by unified_ads and its adapters. Set it through
-  /// `UnifiedAds.logger`.
-  static AdsLogger current = silent;
+  /// The logger used by unified_ads and its adapters. Silent by default.
+  ///
+  /// Read [current] to inspect the active logger. To replace it, use
+  /// [setLogger] (or `UnifiedAds.logger = ...`) so the change goes through a
+  /// controlled entry point rather than direct field assignment.
+  static AdsLogger _current = silent;
+
+  /// The active logger. Read-only: use [setLogger] to replace it.
+  static AdsLogger get current => _current;
+
+  /// Replaces the active logger with [logger].
+  ///
+  /// This is the only supported way to change the logger at runtime. It is
+  /// exposed publicly so apps can call `AdsLogger.setLogger(...)` or, more
+  /// idiomatically, `UnifiedAds.logger = ...`.
+  static void setLogger(AdsLogger logger) {
+    _current = logger;
+  }
 
   /// Minimum level that is forwarded.
   final AdsLogLevel level;

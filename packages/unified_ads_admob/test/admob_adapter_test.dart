@@ -56,11 +56,11 @@ void main() {
 
     test('logs whether the opt-in Meta bidding adapter is present', () async {
       final records = <AdsLogRecord>[];
-      AdsLogger.current = AdsLogger(
+      AdsLogger.setLogger(AdsLogger(
         level: AdsLogLevel.verbose,
         sink: records.add,
-      );
-      addTearDown(() => AdsLogger.current = AdsLogger.silent);
+      ));
+      addTearDown(() => AdsLogger.setLogger(AdsLogger.silent));
 
       host.metaBiddingAdapter =
           'com.google.ads.mediation.facebook.FacebookMediationAdapter';
