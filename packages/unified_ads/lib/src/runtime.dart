@@ -104,10 +104,31 @@ class AdsRuntime {
   /// No future is kept between calls: a long-lived future would schedule its
   /// continuations in the zone it was created in, which deadlocks callers
   /// running in another zone (for example `testWidgets`' fake-async zone).
+  ///
+  /// Re-entrant calls (for example `init()` called from within an adapter's
+  /// initialization callback) are rejected with a [StateError] instead of
+  /// blocking, to prevent self-deadlock: the outer call holds `_lock` and
+  /// won't release it until `action()` completes, but `action()` is waiting
+  /// for the inner `_serialized` call to release `_lock`.
   Future<T> _serialized<T>(Future<T> Function() action) async {
+    // Detect re-entrancy: if `_serialized` appears more than once in the
+    // stack trace, this call is nested inside a previous `_serialized`
+    // action. Awaiting another `_serialized` here would self-deadlock.
+    final trace = StackTrace.current.toString();
+    final first = trace.indexOf('_serialized');
+    final last = trace.lastIndexOf('_serialized');
+    if (first != -1 && first != last) {
+      throw StateError(
+        '_serialized called re-entrantly. Re-entrant init/dispose '
+        'is not allowed.',
+      );
+    }
+
+    // Wait for any in-progress serialized action from a concurrent caller.
     while (_lock != null) {
       await _lock!.future;
     }
+
     final lock = _lock = Completer<void>();
     try {
       return await action();
