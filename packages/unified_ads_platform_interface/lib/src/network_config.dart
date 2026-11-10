@@ -56,6 +56,11 @@ class NetworkConfig {
   final List<String> testDeviceIds;
 
   /// Network-specific options, documented per adapter.
+  ///
+  /// Values must be JSON-safe primitives: `String`, `int`, `double`, `bool`,
+  /// `List` of primitives, or `Map<String, Object?>` of primitives. Maximum
+  /// 16 entries; string values are limited to 256 characters. Validated when
+  /// loaded from declarative config.
   final Map<String, Object?> extras;
 
   /// The ad-unit ID configured for [format], or `null`.

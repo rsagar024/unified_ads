@@ -256,7 +256,7 @@ class _Parser {
       testMode: _opt<bool>(value, 'testMode', p),
       enabledFormats: formats,
       testDeviceIds: _stringList(value, 'testDeviceIds', p),
-      extras: _opt<Map<String, Object?>>(value, 'extras', p) ?? const {},
+      extras: _parseExtras(value, p) ?? const {},
     );
   }
 
@@ -374,6 +374,16 @@ class _Parser {
     if (value == null) return null;
     if (value is! T) throw _ConfigException('$p.$key', 'expected $T');
     return value;
+  }
+
+  Map<String, Object?>? _parseExtras(Map<String, Object?> value, String p) {
+    final raw = value['extras'];
+    if (raw == null) return null;
+    if (raw is! Map<String, Object?>) {
+      throw _ConfigException('$p.extras', 'expected Map<String, Object?>');
+    }
+    validateExtras(raw, '$p.extras');
+    return Map<String, Object?>.from(raw);
   }
 
   AdNetwork _network(String id, String path) =>

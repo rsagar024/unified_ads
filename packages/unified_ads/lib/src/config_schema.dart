@@ -77,6 +77,101 @@ const configIdKeys = {
   'appOpenAdUnitId',
 };
 
+/// Maximum number of entries allowed in `extras`.
+const configExtrasMaxEntries = 16;
+
+/// Maximum length (in characters) for a string value in `extras`.
+const configExtrasMaxValueLength = 256;
+
+/// Validates that [extras] contains only JSON-safe primitive values.
+///
+/// Throws [_SchemaError] if [extras] contains disallowed types, too many
+/// entries, or values that are too large.
+void validateExtras(Map<String, Object?> extras, String path) {
+  if (extras.length > configExtrasMaxEntries) {
+    throw _SchemaError(
+      path,
+      'extras has ${extras.length} entries (max $configExtrasMaxEntries)',
+    );
+  }
+  for (final MapEntry(key: key, value: value) in extras.entries) {
+    if (key.isEmpty) {
+      throw _SchemaError(
+        '$path.$key',
+        'extras keys must be non-empty strings',
+      );
+    }
+    _validateExtrasValue(value, '$path.$key');
+  }
+}
+
+void _validateExtrasValue(Object? value, String path) {
+  if (value == null) {
+    throw _SchemaError(path, 'extras value must not be null');
+  }
+  if (value is String) {
+    if (value.length > configExtrasMaxValueLength) {
+      throw _SchemaError(
+        path,
+        'extras string value exceeds $configExtrasMaxValueLength characters',
+      );
+    }
+    return;
+  }
+  if (value is int) return;
+  if (value is double) return;
+  if (value is bool) return;
+  if (value is List<Object?>) {
+    if (value.length > configExtrasMaxEntries) {
+      throw _SchemaError(
+        path,
+        'extras list has ${value.length} entries (max $configExtrasMaxEntries)',
+      );
+    }
+    for (final (i, item) in value.indexed) {
+      if (item is! String &&
+          item is! int &&
+          item is! double &&
+          item is! bool &&
+          item != null) {
+        throw _SchemaError(
+          '$path[$i]',
+          'extras list items must be String, int, double, bool, or null',
+        );
+      }
+      if (item is String && item.length > configExtrasMaxValueLength) {
+        throw _SchemaError(
+          '$path[$i]',
+          'extras list string exceeds $configExtrasMaxValueLength characters',
+        );
+      }
+    }
+    return;
+  }
+  if (value is Map<String, Object?>) {
+    if (value.length > configExtrasMaxEntries) {
+      throw _SchemaError(
+        path,
+        'extras map has ${value.length} entries (max $configExtrasMaxEntries)',
+      );
+    }
+    for (final MapEntry(key: k, value: v) in value.entries) {
+      if (k.isEmpty) {
+        throw _SchemaError(
+          '$path.$k',
+          'extras map keys must be non-empty strings',
+        );
+      }
+      _validateExtrasValue(v, '$path.$k');
+    }
+    return;
+  }
+  throw _SchemaError(
+    path,
+    'extras value must be String, int, double, bool, List, or Map<String, Object?>',
+  );
+}
+
 /// Checks the structure of a declarative config.
 ///
 /// Returns `null` when [json] is valid, otherwise the first error as
@@ -172,7 +267,10 @@ void _validateNetwork(Object? value, String p) {
   }
   _opt<bool>(value, 'testMode', p);
   _stringList(value, 'testDeviceIds', p);
-  _opt<Map<String, Object?>>(value, 'extras', p);
+  final extras = _opt<Map<String, Object?>>(value, 'extras', p);
+  if (extras != null) {
+    validateExtras(extras, p);
+  }
 }
 
 void _id(Map<String, Object?> json, String key, String p) {
