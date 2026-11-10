@@ -1,13 +1,23 @@
 import 'dart:math' as math;
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_ads_platform_interface/unified_ads_platform_interface.dart';
 
 /// Persists show timestamps used for frequency capping and pacing, and the
 /// action counter used by `AdPacing.showEveryActions`.
 ///
 /// The default [InMemoryFrequencyStore] forgets everything when the app
-/// restarts. Extend this class (for example on top of shared_preferences) to
-/// keep caps and pacing across launches.
+/// restarts. For production use, pass a persistent store such as
+/// [SharedPreferencesFrequencyStore] to `UnifiedAds.init` so that frequency
+/// caps and pacing survive app restarts. Without a persistent store, a user
+/// can bypass frequency limits by killing and relaunching the app.
+///
+/// ```dart
+/// await UnifiedAds.init(
+///   config,
+///   frequencyStore: SharedPreferencesFrequencyStore(),
+/// );
+/// ```
 ///
 /// The action-counter methods have default bodies that persist nothing, so
 /// stores written for unified_ads 1.0 keep working when they `extend` this
@@ -65,6 +75,86 @@ class InMemoryFrequencyStore extends FrequencyStore {
   @override
   Future<void> writeActionMark(AdFormat format, int count) async =>
       _marks[format] = count;
+}
+
+/// A [FrequencyStore] that persists data using `shared_preferences`, so
+/// frequency caps and pacing survive app restarts.
+///
+/// Show timestamps, action count, and action marks are stored as
+/// key/value pairs in `SharedPreferences`. Each format uses its own key
+/// derived from `[AdFormat.id]`:
+/// - `unified_ads_freq_${format.id}` → list of ISO-8601 timestamp strings
+/// - `unified_ads_freq_action_count` → int
+/// - `unified_ads_freq_action_mark_${format.id}` → int
+///
+/// **Important:** `SharedPreferences` writes are asynchronous and are not
+/// guaranteed to be flushed to disk before the process is terminated. For
+/// production apps that require strict frequency-cap enforcement across
+/// restarts, consider wrapping this store or using a more durable storage
+/// mechanism.
+class SharedPreferencesFrequencyStore extends FrequencyStore {
+  /// Creates a store backed by `_sharedPreferences`.
+  ///
+  /// If `_sharedPreferences` is omitted, the default instance from
+  /// `SharedPreferences.getInstance()` is used lazily on first access.
+  SharedPreferencesFrequencyStore({this._sharedPreferences});
+
+  final SharedPreferences? _sharedPreferences;
+
+  Future<SharedPreferences> _prefs() async {
+    return _sharedPreferences ?? await SharedPreferences.getInstance();
+  }
+
+  static String _showsKey(AdFormat format) =>
+      'unified_ads_freq_${format.id}';
+
+  static String _actionCountKey() => 'unified_ads_freq_action_count';
+
+  static String _actionMarkKey(AdFormat format) =>
+      'unified_ads_freq_action_mark_${format.id}';
+
+  @override
+  Future<List<DateTime>> read(AdFormat format) async {
+    final prefs = await _prefs();
+    final strings = prefs.getStringList(_showsKey(format)) ?? <String>[];
+    return strings
+        .map(DateTime.tryParse)
+        .whereType<DateTime>()
+        .toList();
+  }
+
+  @override
+  Future<void> write(AdFormat format, List<DateTime> shows) async {
+    final prefs = await _prefs();
+    await prefs.setStringList(
+      _showsKey(format),
+      shows.map((d) => d.toIso8601String()).toList(),
+    );
+  }
+
+  @override
+  Future<int?> readActionCount() async {
+    final prefs = await _prefs();
+    return prefs.getInt(_actionCountKey());
+  }
+
+  @override
+  Future<void> writeActionCount(int count) async {
+    final prefs = await _prefs();
+    await prefs.setInt(_actionCountKey(), count);
+  }
+
+  @override
+  Future<int?> readActionMark(AdFormat format) async {
+    final prefs = await _prefs();
+    return prefs.getInt(_actionMarkKey(format));
+  }
+
+  @override
+  Future<void> writeActionMark(AdFormat format, int count) async {
+    final prefs = await _prefs();
+    await prefs.setInt(_actionMarkKey(format), count);
+  }
 }
 
 /// The action counter behind `UnifiedAds.recordAction`. Lives in the runtime

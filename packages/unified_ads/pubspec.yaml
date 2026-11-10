@@ -22,6 +22,7 @@ dependencies:
     sdk: flutter
   unified_ads_platform_interface: ^1.1.0
   yaml: ^3.1.3
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_lints: ^6.0.0

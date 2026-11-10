@@ -36,6 +36,9 @@ class AdsRuntime {
   /// Emits the new value whenever [adFree] changes; closed and recreated on
   /// every init/dispose cycle.
   StreamController<bool> _adFreeChanges = StreamController.broadcast();
+  /// Default frequency store: in-memory only. Caps and pacing are lost on
+  /// app restart. For production, pass a persistent store (for example
+  /// `SharedPreferencesFrequencyStore`) to `UnifiedAds.init`.
   FrequencyStore _defaultFrequencyStore = InMemoryFrequencyStore();
   FrequencyStore? _frequencyStore;
   AdsSession? _session;
