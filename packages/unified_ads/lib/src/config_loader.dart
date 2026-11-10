@@ -96,6 +96,16 @@ abstract final class AdConfigLoader {
         ),
       );
     }
+    try {
+      validateJsonStructure(decoded);
+    } on SchemaError catch (e) {
+      return AdFailure(
+        AdError(
+          code: AdErrorCode.invalidConfig,
+          message: '${e.path}: ${e.message}',
+        ),
+      );
+    }
     return fromJson(decoded, platform: platform);
   }
 
