@@ -428,7 +428,16 @@ class AdsSession {
   Future<void> dispose() async {
     if (_disposed) return;
     for (final handle in cache.clear()) {
-      await destroy(handle);
+      try {
+        await destroy(handle);
+      } catch (e, st) {
+        AdsLogger.current.error(
+          'destroy failed for ${handle.network}/${handle.format}',
+          network: handle.network,
+          error: maskAdIds(e.toString()),
+          stackTrace: st,
+        );
+      }
     }
     _disposed = true;
     for (final s in _subscriptions) {
