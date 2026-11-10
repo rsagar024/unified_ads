@@ -1,0 +1,55 @@
+version: 2
+updates:
+  # Gradle dependencies (ad SDKs and Android Gradle Plugin)
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "android"
+    groups:
+      ad-sdks:
+        patterns:
+          - "com.google.android.*"
+          - "com.facebook.android:*"
+          - "com.unity3d.*"
+          - "com.applovin:*"
+          - "com.startapp:*"
+          - "com.inmobi.*"
+    open-pull-requests-limit: 10
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # Dart/pub dependencies
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "dart"
+
+  # Example app dependencies
+  - package-ecosystem: "pub"
+    directory: "/example"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "example"

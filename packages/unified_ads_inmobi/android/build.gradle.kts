@@ -75,3 +75,15 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("junit:junit:4.13.2")
 }
+
+dependencyVerification {
+    metadata {
+        dependencies(
+            "com.inmobi.monetization:inmobi-ads-kotlin:11.5.1",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0",
+        )
+    }
+    // Warn on unverified dependencies; do not fail the build yet.
+    // Once SHA-256 hashes are collected for each artifact, add them here
+    // and switch to failOnError().
+}

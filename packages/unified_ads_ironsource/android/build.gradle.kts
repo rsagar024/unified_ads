@@ -77,3 +77,17 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("junit:junit:4.13.2")
 }
+
+dependencyVerification {
+    metadata {
+        dependencies(
+            "com.unity3d.ads-mediation:mediation-sdk:9.7.0",
+            "com.google.android.gms:play-services-appset:16.1.0",
+            "com.google.android.gms:play-services-ads-identifier:18.3.0",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0",
+        )
+    }
+    // Warn on unverified dependencies; do not fail the build yet.
+    // Once SHA-256 hashes are collected for each artifact, add them here
+    // and switch to failOnError().
+}

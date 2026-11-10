@@ -76,3 +76,16 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("junit:junit:4.13.2")
 }
+
+dependencyVerification {
+    metadata {
+        dependencies(
+            "com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.6.0",
+            "com.google.android.ump:user-messaging-platform:4.0.0",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0",
+        )
+    }
+    // Warn on unverified dependencies; do not fail the build yet.
+    // Once SHA-256 hashes are collected for each artifact, add them here
+    // and switch to failOnError().
+}

@@ -76,6 +76,13 @@ jobs:
         run: flutter build apk --debug
       - name: Kotlin unit tests (every adapter)
         run: bash tool/kotlin_tests.sh
+      - name: Verify Gradle dependency metadata (CROSS-05)
+        run: |
+          for p in packages/*/android; do
+            echo "::group::$p"
+            (cd "$p" && ./gradlew dependencies --configuration releaseCompileClasspath --write-locks || true)
+            echo "::endgroup::"
+          done
 
   ios:
     # Swift Package Manager is the only iOS dependency manager (no podspecs).
