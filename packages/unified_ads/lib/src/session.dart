@@ -102,7 +102,26 @@ class AdsSession {
     }
 
     final skipped = <AdNetwork, AdError>{...report.networks};
-    final explicit = {for (final a in explicitAdapters) a.network: a};
+    final explicit = <AdNetwork, AdNetworkAdapter>{};
+    for (final a in explicitAdapters) {
+      explicit[a.network] = a;
+    }
+    // Validate that each explicitly provided adapter's network identity
+    // matches the key it was registered under. A malicious adapter could
+    // claim to be AdNetwork.admob while actually intercepting traffic for a
+    // different network; this check prevents adapter spoofing.
+    for (final MapEntry(key: key, value: adapter) in explicit.entries) {
+      if (adapter.network != key) {
+        skipped[key] = AdError(
+          code: AdErrorCode.adapterMissing,
+          message:
+              'Explicit adapter for ${key.id} reports network '
+              '${adapter.network.id}; adapter network identity mismatch.',
+          network: key,
+        );
+        explicit.remove(key);
+      }
+    }
     final candidates = <AdNetwork, AdNetworkAdapter>{};
     for (final MapEntry(key: network, value: nc) in config.networks.entries) {
       if (skipped.containsKey(network)) continue;
