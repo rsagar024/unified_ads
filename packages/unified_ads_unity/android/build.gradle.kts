@@ -47,6 +47,7 @@ android {
     defaultConfig {
         // Project-wide minimum (see SDK_STATUS.md).
         minSdk = 24
+        targetSdk = 36
         consumerProguardFiles("consumer-rules.pro")
     }
 

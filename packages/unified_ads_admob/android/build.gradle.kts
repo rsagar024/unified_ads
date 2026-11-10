@@ -47,6 +47,7 @@ android {
     defaultConfig {
         // GMA Next-Gen and UMP require minSdk 24 (see SDK_STATUS.md).
         minSdk = 24
+        targetSdk = 36
         consumerProguardFiles("consumer-rules.pro")
     }
 
