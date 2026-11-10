@@ -84,15 +84,22 @@ class AdsLogger {
   /// A logger that discards everything.
   static const silent = AdsLogger();
 
-  /// The logger used by unified_ads and its adapters. Silent by default.
+  /// The logger used by unified_ads and its adapters.
   ///
-  /// Read [current] to inspect the active logger. To replace it, use
-  /// [setLogger] (or `UnifiedAds.logger = ...`) so the change goes through a
-  /// controlled entry point rather than direct field assignment.
+  /// In debug builds, defaults to `AdsLogger.console(level: warning)` so
+  /// adapter errors are visible during development, unless the app has
+  /// explicitly set a logger via [setLogger] or `UnifiedAds.logger = ...`.
+  /// In release builds, defaults to `silent`.
   static AdsLogger _current = silent;
+  static bool _loggerExplicitlySet = false;
 
-  /// The active logger. Read-only: use [setLogger] to replace it.
-  static AdsLogger get current => _current;
+  static AdsLogger get current {
+    if (_loggerExplicitlySet) return _current;
+    if (kDebugMode) {
+      return AdsLogger.console(level: AdsLogLevel.warning);
+    }
+    return _current;
+  }
 
   /// Replaces the active logger with [logger].
   ///
@@ -101,6 +108,7 @@ class AdsLogger {
   /// idiomatically, `UnifiedAds.logger = ...`.
   static void setLogger(AdsLogger logger) {
     _current = logger;
+    _loggerExplicitlySet = true;
   }
 
   /// Minimum level that is forwarded.

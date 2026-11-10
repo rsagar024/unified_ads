@@ -310,6 +310,8 @@ class BannerAd extends ChangeNotifier {
         safeCallback('onClicked', () => onClicked?.call(this));
       case AdShown() || AdClosed() || AdFailedToShow() || AdEarnedReward():
         break;
+      case AdapterError():
+        break;
     }
   }
 

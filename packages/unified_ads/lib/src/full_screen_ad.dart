@@ -247,6 +247,8 @@ abstract class FullScreenAd<T extends FullScreenAd<T>> {
         _showFailed(error);
       case AdLoaded() || AdFailedToLoad() || BannerSized():
         break;
+      case AdapterError():
+        break;
     }
   }
 

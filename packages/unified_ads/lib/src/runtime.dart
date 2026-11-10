@@ -54,6 +54,14 @@ class AdsRuntime {
   final ActionCounter actions = ActionCounter();
   Completer<void>? _lock;
 
+  /// Counter of swallowed exceptions per network, keyed by [AdNetwork].
+  ///
+  /// Incremented every time [guardCall], [guardVoid], [guardSync], or
+  /// [safeCallback] catches an exception from an adapter. Apps can inspect
+  /// this map to monitor adapter health and detect repeatedly failing
+  /// adapters.
+  final Map<AdNetwork, int> swallowedExceptions = {};
+
   /// Events of every session; survives re-initialization.
   Stream<AdEvent> get events => _events.stream;
 
@@ -76,6 +84,39 @@ class AdsRuntime {
   bool isBlocked(AdFormat format) {
     if (!_adFree) return false;
     return !format.isRewarded || _blockRewarded;
+  }
+
+  /// Records a swallowed adapter exception and emits an [AdapterError] event.
+  ///
+  /// Called by [guardCall], [guardVoid], [guardSync], and [safeCallback]
+  /// when an adapter throws. Increments [swallowedExceptions] for [network]
+  /// and emits an [AdapterError] event on the runtime event stream so apps
+  /// can monitor adapter health.
+  void recordSwallowedException(
+    AdNetwork network,
+    String operation,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    swallowedExceptions[network] = (swallowedExceptions[network] ?? 0) + 1;
+    _events.add(
+      AdapterError(
+        network: network,
+        adId: '',
+        format: AdFormat.banner,
+        error: AdError(
+          code: AdErrorCode.internal,
+          message: '$operation threw: ${maskAdIds(error.toString())}',
+          network: network,
+        ),
+      ),
+    );
+    AdsLogger.current.error(
+      '$operation threw',
+      network: network,
+      error: maskAdIds(error.toString()),
+      stackTrace: stackTrace,
+    );
   }
 
   /// Switches ads on or off for the whole app.

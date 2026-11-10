@@ -1,5 +1,7 @@
 import 'package:unified_ads_platform_interface/unified_ads_platform_interface.dart';
 
+import 'runtime.dart';
+
 /// Runs an adapter call that returns an [AdResult], converting anything it
 /// throws into an [AdFailure] so a faulty adapter can never crash the app.
 Future<AdResult<T>> guardCall<T>(
@@ -14,11 +16,11 @@ Future<AdResult<T>> guardCall<T>(
     }
     return result;
   } catch (e, st) {
-    AdsLogger.current.error(
-      '$operation threw',
-      network: network,
-      error: maskAdIds(e.toString()),
-      stackTrace: st,
+    AdsRuntime.instance.recordSwallowedException(
+      network,
+      operation,
+      e,
+      st,
     );
     return AdFailure(AdError.fromException(e, network: network));
   }
@@ -34,11 +36,11 @@ Future<void> guardVoid(
   try {
     await body();
   } catch (e, st) {
-    AdsLogger.current.error(
-      '$operation threw',
-      network: network,
-      error: maskAdIds(e.toString()),
-      stackTrace: st,
+    AdsRuntime.instance.recordSwallowedException(
+      network,
+      operation,
+      e,
+      st,
     );
   }
 }
@@ -53,11 +55,11 @@ T guardSync<T>(
   try {
     return body();
   } catch (e, st) {
-    AdsLogger.current.error(
-      '$operation threw',
-      network: network,
-      error: maskAdIds(e.toString()),
-      stackTrace: st,
+    AdsRuntime.instance.recordSwallowedException(
+      network,
+      operation,
+      e,
+      st,
     );
     return fallback;
   }

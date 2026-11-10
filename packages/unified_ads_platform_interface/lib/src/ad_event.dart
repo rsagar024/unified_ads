@@ -180,3 +180,26 @@ final class BannerSized extends AdEvent {
   @override
   String get kind => 'bannerSized';
 }
+
+/// An adapter threw an exception that was swallowed by unified_ads.
+///
+/// This event is emitted whenever [guardCall], [guardVoid], [guardSync], or
+/// [safeCallback] catches an exception from an adapter. Apps can subscribe
+/// to `UnifiedAds.events` and listen for this event to monitor adapter health
+/// and detect repeatedly failing adapters.
+final class AdapterError extends AdEvent {
+  /// Creates the event.
+  AdapterError({
+    required super.network,
+    required super.adId,
+    required super.format,
+    required this.error,
+    super.timestamp,
+  });
+
+  /// The swallowed error.
+  final AdError error;
+
+  @override
+  String get kind => 'adapterError';
+}
