@@ -29,6 +29,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - run: flutter pub outdated
       - run: dart run melos run format
       - run: dart run melos run analyze
       - run: dart run melos run test
