@@ -5,9 +5,26 @@ import 'package:flutter/foundation.dart';
 /// `null` fields mean "unknown / not applicable"; adapters leave the
 /// corresponding SDK setting untouched. IAB TCF / GPP strings written to
 /// platform storage by a CMP are also read directly by several SDKs.
+///
+/// ## Tamper evidence
+///
+/// [signature] and [issuer] allow adapters to verify that a [ConsentState]
+/// originated from the app's CMP and was not forged by a compromised
+/// dependency. When present, adapters should verify [signature] against the
+/// app's CMP public key identified by [issuer] before applying the consent
+/// state. If verification fails, adapters should treat the consent as
+/// unknown and not forward personalized-ad signals to the native SDK.
+///
+/// At minimum, [ConsentState] should only be constructed by the app's CMP
+/// integration; adapters should not accept consent states with a
+/// [signature] they cannot verify.
 @immutable
 class ConsentState {
   /// Creates a consent state.
+  ///
+  /// [signature] is an optional cryptographic signature over the consent
+  /// fields, produced by the app's CMP. [issuer] identifies the CMP that
+  /// produced the signature, so adapters can look up the correct public key.
   const ConsentState({
     this.gdprApplies,
     this.consentGiven,
@@ -15,6 +32,8 @@ class ConsentState {
     this.gppString,
     this.ccpaOptOut,
     this.coppa = false,
+    this.signature,
+    this.issuer,
   });
 
   /// Nothing is known yet.
@@ -40,6 +59,15 @@ class ConsentState {
   /// be initialized at all in this case (AppLovin MAX).
   final bool coppa;
 
+  /// Optional cryptographic signature over the consent fields, produced by
+  /// the app's CMP. Adapters should verify this against the CMP public key
+  /// identified by [issuer] before applying the consent state.
+  final String? signature;
+
+  /// Identifier of the CMP that produced [signature], used to look up the
+  /// correct public key for verification.
+  final String? issuer;
+
   /// Returns a copy with the given fields replaced.
   ConsentState copyWith({
     bool? gdprApplies,
@@ -48,6 +76,8 @@ class ConsentState {
     String? gppString,
     bool? ccpaOptOut,
     bool? coppa,
+    String? signature,
+    String? issuer,
   }) {
     return ConsentState(
       gdprApplies: gdprApplies ?? this.gdprApplies,
@@ -56,8 +86,14 @@ class ConsentState {
       gppString: gppString ?? this.gppString,
       ccpaOptOut: ccpaOptOut ?? this.ccpaOptOut,
       coppa: coppa ?? this.coppa,
+      signature: signature ?? this.signature,
+      issuer: issuer ?? this.issuer,
     );
   }
+
+  /// Whether this consent state carries a verifiable [signature] from a
+  /// known [issuer]. Returns `false` when either field is missing.
+  bool get isSigned => signature != null && issuer != null;
 
   @override
   bool operator ==(Object other) =>
@@ -67,7 +103,9 @@ class ConsentState {
       other.tcString == tcString &&
       other.gppString == gppString &&
       other.ccpaOptOut == ccpaOptOut &&
-      other.coppa == coppa;
+      other.coppa == coppa &&
+      other.signature == signature &&
+      other.issuer == issuer;
 
   @override
   int get hashCode => Object.hash(
@@ -77,12 +115,15 @@ class ConsentState {
     gppString,
     ccpaOptOut,
     coppa,
+    signature,
+    issuer,
   );
 
   @override
   String toString() =>
       'ConsentState(gdprApplies: $gdprApplies, consentGiven: $consentGiven, '
-      'ccpaOptOut: $ccpaOptOut, coppa: $coppa)';
+      'ccpaOptOut: $ccpaOptOut, coppa: $coppa, signature: $signature, '
+      'issuer: $issuer)';
 }
 
 /// A consent management platform (CMP) integration.

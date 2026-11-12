@@ -80,6 +80,12 @@ abstract class AdNetworkAdapter {
   Map<String, Object?> bannerCreationParams(BannerRequest request);
 
   /// Forwards privacy signals to the SDK. May be called before [initialize].
+  ///
+  /// If [state.isSigned] is true, the adapter should verify [state.signature]
+  /// against the app's CMP public key identified by [state.issuer] before
+  /// forwarding the consent to the native SDK. If verification fails, the
+  /// adapter should treat the consent as unknown and not forward
+  /// personalized-ad signals.
   Future<void> applyConsent(ConsentState state);
 
   /// Stream of events for every ad of this adapter. The controller is closed
