@@ -190,6 +190,10 @@ class AdsRuntime {
     FrequencyStore? frequencyStore,
   }) {
     return _serialized(() async {
+      // Freeze the adapter registry before any adapter is looked up, so no
+      // package can register a rogue adapter after initialization begins.
+      // Idempotent: re-init calls lock again (no-op when already locked).
+      AdapterRegistry.instance.lock();
       await _disposeSession();
       if (consent != null) this.consent = consent;
       startedAt ??= clock();
