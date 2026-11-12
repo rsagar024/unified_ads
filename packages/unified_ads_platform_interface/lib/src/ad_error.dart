@@ -14,6 +14,14 @@ enum AdErrorCode {
   /// LevelPlay), or a network cannot run under the current consent state.
   configConflict,
 
+  /// Consent was not gathered for a network that requires it
+  /// (for example GDPR applies but consentGiven is unknown/false).
+  consentRequired,
+
+  /// A network cannot run under the current privacy/consent policy
+  /// (for example AppLovin MAX under COPPA, which removed COPPA support).
+  policyViolation,
+
   /// The configuration enables a network whose adapter package is not
   /// installed.
   adapterMissing,

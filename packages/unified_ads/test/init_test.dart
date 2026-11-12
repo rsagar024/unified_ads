@@ -109,7 +109,7 @@ void main() {
     expect(result.ready, {AdNetwork.admob});
     expect(
       result.skipped[AdNetwork.applovin]?.code,
-      AdErrorCode.configConflict,
+      AdErrorCode.policyViolation,
     );
   });
 

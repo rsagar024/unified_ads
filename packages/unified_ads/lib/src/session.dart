@@ -243,7 +243,7 @@ class AdsSession {
   }
 
   static const _maxCoppaError = AdError(
-    code: AdErrorCode.configConflict,
+    code: AdErrorCode.policyViolation,
     message:
         'AppLovin MAX removed COPPA support (SDK 13.0) and must not be '
         'initialized for child-directed users.',
