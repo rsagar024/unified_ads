@@ -110,6 +110,19 @@ ValidationReport validateConfig(AdConfig config) {
         }
       }
     }
+    // Validate that at least one required format has an ad-unit ID.
+    if (nc.requiredFormats != null) {
+      final hasUnit = nc.requiredFormats!.any(
+        (f) => (nc.adUnitIdFor(f)?.trim() ?? '').isNotEmpty,
+      );
+      if (!hasUnit) {
+        perNetwork[network] = invalid(
+          '$path: at least one of ${nc.requiredFormats!.map((f) => f.id).join(', ')} ad-unit IDs is required',
+          network: network,
+        );
+        return;
+      }
+    }
   });
 
   return ValidationReport(global: global, networks: perNetwork);

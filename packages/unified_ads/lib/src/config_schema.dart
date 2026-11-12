@@ -46,6 +46,7 @@ const configNetworkKeys = {
   'appOpenAdUnitId',
   'testMode',
   'enabledFormats',
+  'requiredFormats',
   'testDeviceIds',
   'extras',
 };

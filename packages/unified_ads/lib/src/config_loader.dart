@@ -144,6 +144,8 @@ abstract final class AdConfigLoader {
       if (nc.testMode != null) 'testMode': nc.testMode,
       if (nc.enabledFormats != null)
         'enabledFormats': [for (final f in nc.enabledFormats!) f.id],
+      if (nc.requiredFormats != null)
+        'requiredFormats': [for (final f in nc.requiredFormats!) f.id],
       if (nc.testDeviceIds.isNotEmpty) 'testDeviceIds': nc.testDeviceIds,
       if (nc.extras.isNotEmpty) 'extras': nc.extras,
     };
@@ -265,6 +267,16 @@ class _Parser {
       appOpenAdUnitId: _id(value, 'appOpenAdUnitId', p),
       testMode: _opt<bool>(value, 'testMode', p),
       enabledFormats: formats,
+      requiredFormats: value.containsKey('requiredFormats')
+          ? {
+              for (final (i, id) in _stringList(
+                value,
+                'requiredFormats',
+                p,
+              ).indexed)
+                _format(id, '$p.requiredFormats[$i]'),
+            }
+          : null,
       testDeviceIds: _stringList(value, 'testDeviceIds', p),
       extras: _parseExtras(value, p) ?? const {},
     );

@@ -34,6 +34,7 @@ class NetworkConfig {
     this.appOpenAdUnitId,
     this.testMode,
     this.enabledFormats,
+    this.requiredFormats,
     this.testDeviceIds = const [],
     this.extras = const {},
   });
@@ -64,6 +65,15 @@ class NetworkConfig {
 
   /// Formats this network may serve; `null` means all supported formats.
   final Set<AdFormat>? enabledFormats;
+
+  /// Formats for which at least one ad-unit ID is mandatory. When `null`,
+  /// no ad-unit ID presence check is performed by the config validator. When
+  /// set, at least one listed format must have a non-empty ad-unit ID,
+  /// otherwise the network is skipped during initialization. Use this for
+  /// networks that require at least one placement to be useful (for example
+  /// AdMob, Unity, LevelPlay). Leave null for app-ID-only networks such as
+  /// Start.io.
+  final Set<AdFormat>? requiredFormats;
 
   /// Test device identifiers (AdMob test device IDs, AppLovin GAIDs, …).
   final List<String> testDeviceIds;
@@ -122,6 +132,7 @@ class NetworkConfig {
     String? appOpenAdUnitId,
     bool? testMode,
     Set<AdFormat>? enabledFormats,
+    Set<AdFormat>? requiredFormats,
     List<String>? testDeviceIds,
     Map<String, Object?>? extras,
   }) {
@@ -142,6 +153,7 @@ class NetworkConfig {
       appOpenAdUnitId: appOpenAdUnitId ?? this.appOpenAdUnitId,
       testMode: testMode ?? this.testMode,
       enabledFormats: enabledFormats ?? this.enabledFormats,
+      requiredFormats: requiredFormats ?? this.requiredFormats,
       testDeviceIds: testDeviceIds ?? this.testDeviceIds,
       extras: resolvedExtras,
     );
@@ -159,6 +171,7 @@ class NetworkConfig {
       other.appOpenAdUnitId == appOpenAdUnitId &&
       other.testMode == testMode &&
       setEquals(other.enabledFormats, enabledFormats) &&
+      setEquals(other.requiredFormats, requiredFormats) &&
       listEquals(other.testDeviceIds, testDeviceIds) &&
       mapEquals(other.extras, extras);
 
@@ -173,6 +186,7 @@ class NetworkConfig {
     appOpenAdUnitId,
     testMode,
     enabledFormats == null ? null : Object.hashAllUnordered(enabledFormats!),
+    requiredFormats == null ? null : Object.hashAllUnordered(requiredFormats!),
     Object.hashAll(testDeviceIds),
     Object.hashAllUnordered(extras.keys),
   );
