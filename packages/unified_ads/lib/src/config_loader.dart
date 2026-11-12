@@ -392,7 +392,7 @@ class _Parser {
     if (raw is! Map<String, Object?>) {
       throw _ConfigException('$p.extras', 'expected Map<String, Object?>');
     }
-    validateExtras(raw, '$p.extras');
+    NetworkConfig.validateExtras(raw, '$p.extras');
     return Map<String, Object?>.from(raw);
   }
 
