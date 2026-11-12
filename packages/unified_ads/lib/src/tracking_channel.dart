@@ -31,6 +31,9 @@ class MethodChannelTracking extends TrackingAuthorization {
       return TrackingStatus.values.asNameMap()[name] ??
           TrackingStatus.unavailable;
     } on MissingPluginException {
+      AdsLogger.current.warning(
+        'tracking $method failed: native tracking helper not registered on iOS',
+      );
       return TrackingStatus.unavailable;
     } on PlatformException catch (e) {
       AdsLogger.current.warning('tracking $method failed', error: e);
