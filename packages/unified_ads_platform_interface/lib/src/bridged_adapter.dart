@@ -28,7 +28,7 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
   /// Allows subclasses to call `super()`.
   BridgedAdNetworkAdapter();
 
-  final StreamController<AdEvent> _events = StreamController.broadcast();
+  StreamController<AdEvent>? _events;
   final Map<String, AdHandle> _loaded = {};
   bool _listening = false;
 
@@ -159,10 +159,13 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
   }
 
   @override
-  Stream<AdEvent> get events => _events.stream;
+  Stream<AdEvent> get events => (_events ??= StreamController.broadcast()).stream;
 
   @override
   Future<void> dispose() async {
+    _listening = false;
+    await _events?.close();
+    _events = null;
     _loaded.clear();
     try {
       await nativeDispose();
@@ -262,8 +265,10 @@ abstract class BridgedAdNetworkAdapter extends AdNetworkAdapter {
       AdsLogger.current.warning('unknown native event $kind', network: network);
       return;
     }
+    final eventsController = _events;
+    if (eventsController == null) return;
     if (event is AdClosed || event is AdFailedToShow) _loaded.remove(adId);
-    _events.add(event);
+    eventsController.add(event);
   }
 
   AdError _error(PlatformException e, AdErrorCode fallback) => AdError(

@@ -108,7 +108,7 @@ class FakeAdNetworkAdapter extends AdNetworkAdapter {
   /// Number of [dispose] calls.
   int disposeCalls = 0;
 
-  final StreamController<AdEvent> _events = StreamController.broadcast();
+  StreamController<AdEvent>? _events;
   final Map<String, AdHandle> _loaded = {};
   int _counter = 0;
 
@@ -242,16 +242,22 @@ class FakeAdNetworkAdapter extends AdNetworkAdapter {
   Future<void> applyConsent(ConsentState state) async => consents.add(state);
 
   @override
-  Stream<AdEvent> get events => _events.stream;
+  Stream<AdEvent> get events => (_events ??= StreamController.broadcast()).stream;
 
   @override
   Future<void> dispose() async {
     disposeCalls++;
+    await _events?.close();
+    _events = null;
     _loaded.clear();
   }
 
   /// Emits [event] on [events].
-  void emit(AdEvent event) => _events.add(event);
+  void emit(AdEvent event) {
+    final eventsController = _events;
+    if (eventsController == null) return;
+    eventsController.add(event);
+  }
 
   /// Emits a click for [handle].
   void simulateClick(AdHandle handle) =>

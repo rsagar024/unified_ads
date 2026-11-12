@@ -82,8 +82,9 @@ abstract class AdNetworkAdapter {
   /// Forwards privacy signals to the SDK. May be called before [initialize].
   Future<void> applyConsent(ConsentState state);
 
-  /// Stream of events for every ad of this adapter. Must stay listenable
-  /// after [dispose], because a re-initialized session subscribes again.
+  /// Stream of events for every ad of this adapter. The controller is closed
+  /// in [dispose] and re-created on re-init; the session re-subscribes after
+  /// each init. Events emitted after [dispose] are dropped.
   Stream<AdEvent> get events;
 
   /// Releases all ads and native resources. Safe to call more than once;
